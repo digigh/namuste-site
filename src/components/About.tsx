@@ -25,7 +25,7 @@ export default function About() {
           <div className="reveal-l">
             <div className="pill" style={{marginBottom:22}}>About Us</div>
             <h2 className="hf" style={{fontWeight:900,color:"#fff",fontSize:"clamp(28px,3.5vw,44px)",lineHeight:1.1,letterSpacing:"-.7px",marginBottom:20}}>
-              Building the <span className="gt2">Operating System</span> for Rural Retail
+              Building the <span className="gt2">Counter OS</span> for Rural Retail
             </h2>
             <p style={{color:"rgba(255,255,255,.45)",fontSize:16,lineHeight:1.8,marginBottom:14}}>
               Namusté Technologies is building the digital infrastructure layer for India&apos;s 12 million rural retail counters — starting at the counter, the first and most important moment of trust between brands and consumers in rural India.

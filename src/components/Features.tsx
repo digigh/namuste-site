@@ -5,11 +5,11 @@ const features = [
   {
     icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>,
     title:"Smart Retail Device",
-    desc:"A purpose-built device with an advanced OS designed for the rural retail counter. Manages every workflow — sales, inventory, campaigns, payments — from a single screen.",
+    desc:"A purpose-built device with an advanced Counter OS designed for the rural retail counter. Manages every workflow — sales, inventory, campaigns, payments — from a single screen.",
     detail:"The Namusté device runs a custom operating system built ground-up for rural retail. It replaces the counter notebook, the WhatsApp scheme group, the paper inventory ledger and the manual cash register — with one device that works even without internet.",
-    tag:"Hardware + OS", feature:"hero",
+    tag:"Hardware + Counter OS", feature:"hero",
     stat:{ val:"1 Device", sub:"replaces everything" },
-    points:["Custom OS for rural retail counters","Fully offline-capable — works without internet","Touch-first, no training required","Secure hardware with auto-updates","Handles sales, inventory, campaigns and payments"],
+    points:["Custom Counter OS for rural retail","Fully offline-capable — works without internet","Touch-first, no training required","Secure hardware with auto-updates","Handles sales, inventory, campaigns and payments"],
   },
   {
     icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zm3 3h4v4h-4z"/></svg>,
@@ -70,7 +70,7 @@ const features = [
   },
 ];
 
-const tags = ["All","Hardware + OS","Campaigns","Analytics","Operations","Finance","Brands","Security","Reliability"];
+const tags = ["All","Hardware + Counter OS","Campaigns","Analytics","Operations","Finance","Brands","Security","Reliability"];
 
 export default function Features() {
   const [active, setActive] = useState("All");

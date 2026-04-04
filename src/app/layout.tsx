@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Namusté Technologies — Operating System for Offline Agri Retail",
+  title: "Namusté Technologies — Counter OS for Rural Retail",
   description: "Namusté Technologies digitizes agri retail transactions, captures real-time demand data, enables brand campaigns, and unlocks fintech across millions of retailers.",
 };
 

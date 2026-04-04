@@ -50,12 +50,12 @@ export default function Hero() {
       <div style={{textAlign:"center",padding:"52px 24px 0",position:"relative",zIndex:10,width:"100%",maxWidth:900,margin:"0 auto"}}>
         <div style={{display:"flex",alignItems:"center",justifyContent:"center",gap:12,marginBottom:20}}>
           <div style={{height:1,width:44,background:"linear-gradient(90deg,transparent,rgba(139,92,246,.5))"}}/>
-          <span style={{color:"rgba(196,181,253,.42)",fontSize:11,fontWeight:500,letterSpacing:".08em"}}>India&apos;s First Rural Retail Operating System</span>
+          <span style={{color:"rgba(196,181,253,.42)",fontSize:11,fontWeight:500,letterSpacing:".08em"}}>India&apos;s First Rural Counter OS</span>
           <div style={{height:1,width:44,background:"linear-gradient(90deg,rgba(139,92,246,.5),transparent)"}}/>
         </div>
 
         <h1 className="hf" style={{color:"#fff",fontSize:"clamp(34px,5vw,64px)",fontWeight:900,lineHeight:1.06,letterSpacing:"-2px",marginBottom:6,textShadow:"0 0 100px rgba(139,92,246,.22)",whiteSpace:"nowrap"}}>
-          The OS for Every
+          The Counter OS for Every
         </h1>
         <h1 className="hf gt" style={{fontSize:"clamp(34px,5vw,64px)",fontWeight:900,lineHeight:1.06,letterSpacing:"-2px",marginBottom:24,whiteSpace:"nowrap"}}>
           Rural Retail Counter.
