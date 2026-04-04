@@ -58,16 +58,7 @@ export default function About() {
               </div>
             ))}
 
-            {/* What sectors we serve */}
-            <div style={{background:"rgba(139,92,246,.08)",borderRadius:14,padding:"22px",border:"1px solid rgba(139,92,246,.18)"}}>
-              <div className="hf" style={{color:"#a78bfa",fontSize:10,fontWeight:600,letterSpacing:".12em",textTransform:"uppercase",marginBottom:14}}>Sectors We Serve</div>
-              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
-                {["Agri Retail","FMCG","Hardware & Tools","Medicines & Health","Stationery","Animal Feed","Construction Materials","Daily Essentials"].map(t=>(
-                  <span key={t} style={{background:"rgba(139,92,246,.1)",border:"1px solid rgba(139,92,246,.2)",color:"#c4b5fd",fontSize:12,fontWeight:500,padding:"4px 12px",borderRadius:6}}>{t}</span>
-                ))}
-              </div>
-            </div>
-          </div>
+            
         </div>
       </div>
       <style>{`@media(max-width:900px){.ag{grid-template-columns:1fr!important;gap:48px!important}}`}</style>
