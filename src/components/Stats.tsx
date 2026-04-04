@@ -1,0 +1,108 @@
+"use client";
+import { useEffect } from "react";
+
+const problems = [
+  { num:"01", title:"No digital record of sales", desc:"₹3 lakh crore flows through agri retail every year — virtually none of it is digitally tracked. Brands operate on gut feel and trust.", color:"#a78bfa", bg:"rgba(139,92,246,.08)", border:"rgba(139,92,246,.18)" },
+  { num:"02", title:"Schemes travel by WhatsApp", desc:"Trade schemes, loyalty rewards and campaigns travel by printout and WhatsApp — untracked, unverified, and completely invisible to brands.", color:"#6ee7b7", bg:"rgba(16,185,129,.06)", border:"rgba(16,185,129,.15)" },
+  { num:"03", title:"The counter is completely offline", desc:"The agri retail counter — where every sale happens — has zero digital infrastructure. No data, no fintech, no connection to the digital economy.", color:"#f87171", bg:"rgba(248,113,113,.06)", border:"rgba(248,113,113,.15)" },
+];
+
+const solutions = [
+  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect width="14" height="20" x="5" y="2" rx="2"/><path d="M12 18h.01"/></svg>, title:"Digitize the counter", desc:"A purpose-built device records every transaction in real time — seeds, fertilisers, crop protection — giving brands their first window into actual demand." },
+  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><path d="M14 14h3v3h-3zm3 3h4v4h-4z"/></svg>, title:"Connect brands to retailers", desc:"Brands run campaigns through our platform. Retailers and farmers participate via QR scan — no paperwork, no WhatsApp chains, fully verified." },
+  { icon:<svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="20" x2="18" y2="10"/><line x1="12" y1="20" x2="12" y2="4"/><line x1="6" y1="20" x2="6" y2="14"/><line x1="2" y1="20" x2="22" y2="20"/></svg>, title:"Unlock real purchase data", desc:"For the first time, brands see exactly what is selling, where, and to whom — giving them demand intelligence they have never had before." },
+];
+
+export default function Stats() {
+  useEffect(() => {
+    const obs = new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add("visible")),{threshold:.08});
+    document.querySelectorAll(".reveal,.reveal-l,.reveal-r").forEach(el=>obs.observe(el));
+    return()=>obs.disconnect();
+  }, []);
+
+  return (
+    <>
+      {/* PROBLEM SECTION */}
+      <section style={{padding:"104px 0",background:"var(--bg3)",position:"relative",overflow:"hidden"}}>
+        <div className="dot-grid" style={{position:"absolute",inset:0,opacity:.4,pointerEvents:"none"}}/>
+        <div style={{position:"absolute",top:0,right:"15%",width:400,height:400,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(248,113,113,.04) 0%,transparent 65%)",pointerEvents:"none"}}/>
+
+        <div style={{maxWidth:1280,margin:"0 auto",padding:"0 44px",position:"relative",zIndex:2}}>
+          <div className="reveal" style={{maxWidth:640,marginBottom:64}}>
+            <div className="pill" style={{marginBottom:20,background:"rgba(248,113,113,.08)",border:"1px solid rgba(248,113,113,.2)"}}>
+              <span style={{color:"#fca5a5"}}>The Problem</span>
+            </div>
+            <h2 className="hf" style={{fontWeight:900,color:"#fff",fontSize:"clamp(30px,4vw,50px)",lineHeight:1.1,letterSpacing:"-.8px",marginBottom:16}}>
+              India&apos;s agri retail is{" "}
+              <span style={{color:"rgba(252,165,165,.85)"}}>completely dark.</span>
+            </h2>
+            <p style={{color:"rgba(255,255,255,.42)",fontSize:17,lineHeight:1.8}}>
+              ₹3 lakh crore flows through agri retail every year — and virtually none of it is digitally tracked. The counter is blind. Brands are blind. Everyone operates on gut feel.
+            </p>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:"rgba(255,255,255,.04)",borderRadius:18,overflow:"hidden"}} className="prob-grid">
+            {problems.map((p,i)=>(
+              <div key={p.num} className="reveal" style={{background:"rgba(255,255,255,.02)",padding:"36px 28px",transitionDelay:`${i*80}ms`,transition:"background .25s",borderRight:i<2?"1px solid rgba(255,255,255,.05)":"none"}}
+                onMouseEnter={e=>(e.currentTarget.style.background=p.bg)}
+                onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,.02)")}
+              >
+                <div className="hf" style={{fontWeight:900,fontSize:34,color:p.color,opacity:.15,lineHeight:1,marginBottom:6}}>{p.num}</div>
+                <h3 className="hf" style={{fontWeight:700,fontSize:16,color:"#fff",marginBottom:12,lineHeight:1.3}}>{p.title}</h3>
+                <p style={{color:"rgba(255,255,255,.42)",fontSize:14,lineHeight:1.78}}>{p.desc}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* SOLUTION SECTION */}
+      <section style={{padding:"104px 0",background:"var(--bg)",position:"relative",overflow:"hidden"}}>
+        <div className="line-grid" style={{position:"absolute",inset:0,pointerEvents:"none"}}/>
+        <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:600,height:600,borderRadius:"50%",background:"radial-gradient(circle,rgba(139,92,246,.06) 0%,transparent 70%)",pointerEvents:"none"}}/>
+
+        <div style={{maxWidth:1280,margin:"0 auto",padding:"0 44px",position:"relative",zIndex:2}}>
+          <div className="reveal" style={{textAlign:"center",maxWidth:600,margin:"0 auto 64px"}}>
+            <div className="pill" style={{marginBottom:18}}>
+              <span className="pill-dot"/>Our Answer
+            </div>
+            <h2 className="hf" style={{fontWeight:900,color:"#fff",fontSize:"clamp(30px,4vw,50px)",lineHeight:1.1,letterSpacing:"-.8px",marginBottom:14}}>
+              We built the <span className="gt-green">missing layer.</span>
+            </h2>
+            <p style={{color:"rgba(255,255,255,.38)",fontSize:16,lineHeight:1.8}}>
+              Namusté is the digital infrastructure connecting brands, distributors, retailers and farmers — at the counter, for the first time.
+            </p>
+          </div>
+
+          <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:"rgba(139,92,246,.08)",borderRadius:18,overflow:"hidden"}}>
+            {solutions.map((s,i)=>(
+              <div key={s.title} className="reveal" style={{background:"rgba(255,255,255,.02)",padding:"40px 32px",transitionDelay:`${i*90}ms`,transition:"background .25s",position:"relative",overflow:"hidden",borderRight:i<2?"1px solid rgba(139,92,246,.1)":"none"}}
+                onMouseEnter={e=>(e.currentTarget.style.background="rgba(139,92,246,.07)")}
+                onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,.02)")}
+              >
+                <div style={{width:52,height:52,borderRadius:14,background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.22)",display:"flex",alignItems:"center",justifyContent:"center",marginBottom:22,color:"#a78bfa"}}>{s.icon}</div>
+                <h3 className="hf" style={{fontWeight:700,fontSize:17,color:"#fff",marginBottom:12,lineHeight:1.3}}>{s.title}</h3>
+                <p style={{color:"rgba(255,255,255,.42)",fontSize:14,lineHeight:1.8}}>{s.desc}</p>
+              </div>
+            ))}
+          </div>
+
+          {/* Vision quote */}
+          <div className="reveal" style={{marginTop:20,padding:"36px 44px",background:"rgba(139,92,246,.06)",border:"1px solid rgba(139,92,246,.15)",borderRadius:18,display:"flex",alignItems:"center",gap:28,flexWrap:"wrap",backdropFilter:"blur(8px)"}}>
+            <div style={{flex:1,minWidth:260}}>
+              <p className="hf" style={{fontWeight:800,fontSize:"clamp(16px,2vw,22px)",color:"rgba(196,181,253,.9)",lineHeight:1.45,fontStyle:"italic"}}>
+                &ldquo;The first company to digitize the agri retail counter owns the most valuable data asset in Indian agriculture.&rdquo;
+              </p>
+            </div>
+            <div style={{width:1,height:50,background:"rgba(139,92,246,.2)",flexShrink:0}} className="quote-div"/>
+            <div style={{flexShrink:0}}>
+              <div className="hf" style={{fontWeight:700,fontSize:14,color:"#a78bfa"}}>Namusté Technologies</div>
+              <div style={{color:"rgba(255,255,255,.35)",fontSize:12,marginTop:3}}>Our founding thesis</div>
+            </div>
+          </div>
+        </div>
+        <style>{`@media(max-width:860px){.prob-grid{grid-template-columns:1fr!important}.quote-div{display:none}}`}</style>
+      </section>
+    </>
+  );
+}
