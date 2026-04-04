@@ -111,3 +111,70 @@ body{font-family:'DM Sans',system-ui,sans-serif;background:var(--bg);color:var(-
 
 /* Divider line */
 .cosmos-divider{width:100%;height:1px;background:linear-gradient(90deg,transparent,rgba(139,92,246,.3),transparent)}
+
+/* ══════════════════════════════════════
+   MOBILE RESPONSIVENESS
+══════════════════════════════════════ */
+@media (max-width: 768px) {
+  /* Navbar */
+  .d-nav { display: none !important; }
+  .m-btn { display: block !important; }
+
+  /* Hero */
+  .hero-grid, .hero-net { grid-template-columns: 1fr !important; }
+  .hero-net { display: flex !important; flex-direction: column !important; align-items: center !important; }
+
+  /* Hero headline — prevent overflow on small screens */
+  h1[style*="whiteSpace"] { white-space: normal !important; font-size: clamp(28px, 8vw, 48px) !important; }
+
+  /* Sections padding */
+  section { padding-left: 16px !important; padding-right: 16px !important; }
+  [style*="padding:\"104px 0\""], [style*="padding:\"80px 0\""] { padding-top: 64px !important; padding-bottom: 64px !important; }
+
+  /* All inner containers */
+  [style*="maxWidth:1280"] { padding: 0 16px !important; }
+  [style*="padding:\"0 44px\""] { padding: 0 16px !important; }
+  [style*="padding:\"0 32px\""] { padding: 0 16px !important; }
+
+  /* Grids → single column */
+  .hero-grid, .about-g, .cg, .contact-g, .ag, .feat-header { grid-template-columns: 1fr !important; gap: 40px !important; }
+
+  /* Feature bento */
+  .feat-bento { grid-template-columns: 1fr !important; }
+  .feat-bento > * { grid-column: span 1 !important; }
+
+  /* Steps */
+  .steps-g { grid-template-columns: 1fr 1fr !important; }
+  .step-line { display: none !important; }
+
+  /* Stats / prob grids */
+  .prob-grid, .op-grid, .sg { grid-template-columns: 1fr !important; }
+  .ea-grid, .tg, .t-g { grid-template-columns: 1fr !important; }
+
+  /* Footer */
+  .fg { grid-template-columns: 1fr 1fr !important; }
+  .f-g { grid-template-columns: 1fr 1fr !important; }
+
+  /* Node network illustration — hide side cards on mobile */
+  .hero-side-l, .hero-side-r { display: none !important; }
+
+  /* Bottom contact bar — stack */
+  [style*="maxWidth:540"][style*="flex"] { flex-direction: column !important; align-items: flex-start !important; gap: 12px !important; }
+
+  /* Filter tabs — scrollable row */
+  [style*="flexWrap:\"wrap\""][style*="justifyContent:\"center\""] { flex-wrap: nowrap !important; overflow-x: auto !important; justify-content: flex-start !important; padding-bottom: 8px !important; scrollbar-width: none !important; }
+
+  /* Form rows */
+  .form-row { grid-template-columns: 1fr !important; }
+}
+
+@media (max-width: 480px) {
+  .steps-g { grid-template-columns: 1fr !important; }
+  .fg, .f-g { grid-template-columns: 1fr !important; }
+
+  /* Hero network — center orb + nodes only */
+  [style*="gridTemplateColumns:\"180px 1fr 180px\""] { grid-template-columns: 1fr !important; }
+
+  /* CTA banners */
+  [style*="justifyContent:\"space-between\""][style*="flexWrap:\"wrap\""] { flex-direction: column !important; align-items: flex-start !important; }
+}
