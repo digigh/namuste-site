@@ -42,31 +42,33 @@ export default function Contact() {
     if (Object.keys(errs).length > 0) return;
 
     setStatus("loading");
-    try {
-      const res = await fetch(WEBHOOK, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          name:         form.name,
-          email:        form.email,
-          mobile:       form.mobile,
-          company:      form.company,
-          role:         form.role,
-          message:      form.message,
-          submitted_at: new Date().toISOString(),
-          source:       "namuste.in contact form",
-        }),
-      });
-      // Treat any response (even non-200) as success — webhook may return 200 or other codes
-      console.log("Webhook response status:", res.status);
-      setStatus("success");
-      setTimeout(() => { setStatus("idle"); setForm(empty); setErrors({}); setTouched({}); }, 7000);
-    } catch (err) {
-      console.error("Webhook error:", err);
-      // Even on network error, show success — we don't want to block the user
-      setStatus("success");
-      setTimeout(() => { setStatus("idle"); setForm(empty); setErrors({}); setTouched({}); }, 7000);
-    }
+
+    const payload = JSON.stringify({
+      name:         form.name,
+      email:        form.email,
+      mobile:       form.mobile,
+      company:      form.company,
+      role:         form.role,
+      message:      form.message,
+      submitted_at: new Date().toISOString(),
+      source:       "namuste.in contact form",
+    });
+
+    // Fire-and-forget — use text/plain to bypass CORS preflight on cross-origin webhooks
+    fetch(WEBHOOK, {
+      method: "POST",
+      headers: { "Content-Type": "text/plain" },
+      body: payload,
+    }).catch(() => { /* silent — webhook still receives the data */ });
+
+    // Always show Thank You immediately, never block the user on a fetch error
+    setStatus("success");
+    setTimeout(() => {
+      setStatus("idle");
+      setForm(empty);
+      setErrors({});
+      setTouched({});
+    }, 7000);
   };
 
   const inp = (field: keyof FormState, extra?: React.CSSProperties): React.CSSProperties => ({
