@@ -58,7 +58,8 @@ export default function About() {
               </div>
             ))}
 
-            
+
+          </div>
         </div>
       </div>
       <style>{`@media(max-width:900px){.ag{grid-template-columns:1fr!important;gap:48px!important}}`}</style>
