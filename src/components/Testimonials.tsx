@@ -1,20 +1,19 @@
 "use client";
 import { useEffect } from "react";
 
-// Early access section — replaces fake testimonials
 const benefits = [
   "Priority onboarding and device setup at no extra cost",
   "Founding partner pricing — locked in forever",
   "Direct access to the Namusté product team",
   "Shape the features that matter to your business",
-  "Early access to embedded fintech and credit features",
-  "Be part of India's first agri retail digitization story",
+  "Early access to fintech and credit features",
+  "Be part of India's first rural retail digitization story",
 ];
 
 const opportunity = [
-  { val:"₹3L Cr+", label:"Annual agri retail market in India", color:"#a78bfa" },
-  { val:"650M+",   label:"Farmers depending on agri retail",   color:"#6ee7b7" },
-  { val:"~0%",     label:"Of transactions digitized today",    color:"#f87171" },
+  {val:"12M+",  label:"Rural retail counters across India", color:"#a78bfa"},
+  {val:"₹40L Cr+",label:"Annual rural retail market size",  color:"#6ee7b7"},
+  {val:"~0%",   label:"Of transactions digitized today",   color:"#f87171"},
 ];
 
 export default function Testimonials() {
@@ -28,28 +27,26 @@ export default function Testimonials() {
     <section style={{padding:"104px 0",background:"var(--bg2)",position:"relative",overflow:"hidden"}}>
       <div className="dot-grid" style={{position:"absolute",inset:0,opacity:.4,pointerEvents:"none"}}/>
       <div style={{position:"absolute",top:"30%",right:"-80px",width:350,height:350,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(139,92,246,.07) 0%,transparent 65%)",pointerEvents:"none"}}/>
-
       <div style={{maxWidth:1280,margin:"0 auto",padding:"0 44px",position:"relative",zIndex:2}}>
 
-        {/* Market opportunity */}
-        <div className="reveal" style={{textAlign:"center",maxWidth:600,margin:"0 auto 60px"}}>
+        <div className="reveal" style={{textAlign:"center",maxWidth:620,margin:"0 auto 60px"}}>
           <div className="pill" style={{marginBottom:18}}>Market Opportunity</div>
           <h2 className="hf" style={{fontWeight:900,color:"#fff",fontSize:"clamp(28px,3.5vw,48px)",lineHeight:1.1,letterSpacing:"-.8px",marginBottom:14}}>
             The opportunity is <span className="gt">right now.</span>
           </h2>
           <p style={{color:"rgba(255,255,255,.38)",fontSize:16,lineHeight:1.8}}>
-            India&apos;s agri retail is at an inflection point — smartphones everywhere, UPI universal, brands desperate for data. The window to build this infrastructure is open.
+            India&apos;s rural retail network is the largest untouched commerce infrastructure in the world. 12 million counters. Trillions in annual transactions. Zero digital layer.
           </p>
         </div>
 
-        {/* Opportunity stats — real market data */}
+        {/* Opportunity stats */}
         <div style={{display:"grid",gridTemplateColumns:"repeat(3,1fr)",gap:1,background:"rgba(139,92,246,.08)",borderRadius:18,overflow:"hidden",marginBottom:20}} className="op-grid">
           {opportunity.map((o,i)=>(
             <div key={o.label} className="reveal" style={{background:"rgba(255,255,255,.02)",padding:"44px 32px",textAlign:"center",transitionDelay:`${i*80}ms`,transition:"background .25s",borderRight:i<2?"1px solid rgba(139,92,246,.1)":"none"}}
               onMouseEnter={e=>(e.currentTarget.style.background="rgba(139,92,246,.06)")}
               onMouseLeave={e=>(e.currentTarget.style.background="rgba(255,255,255,.02)")}
             >
-              <div className="hf" style={{fontWeight:900,fontSize:"clamp(36px,5vw,58px)",color:o.color,lineHeight:1,marginBottom:14}}>{o.val}</div>
+              <div className="hf" style={{fontWeight:900,fontSize:"clamp(34px,5vw,56px)",color:o.color,lineHeight:1,marginBottom:14}}>{o.val}</div>
               <p style={{color:"rgba(255,255,255,.38)",fontSize:14,lineHeight:1.65,maxWidth:180,margin:"0 auto"}}>{o.label}</p>
             </div>
           ))}
@@ -57,8 +54,6 @@ export default function Testimonials() {
 
         {/* Early access split */}
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:1,background:"rgba(139,92,246,.08)",borderRadius:18,overflow:"hidden"}} className="ea-grid">
-
-          {/* Left pitch */}
           <div style={{background:"rgba(139,92,246,.06)",padding:"52px 44px",position:"relative",overflow:"hidden",backdropFilter:"blur(8px)"}}>
             <div style={{position:"absolute",top:-60,right:-60,width:200,height:200,borderRadius:"50%",background:"radial-gradient(circle,rgba(139,92,246,.12) 0%,transparent 70%)"}}/>
             <div style={{position:"relative",zIndex:2}}>
@@ -67,17 +62,14 @@ export default function Testimonials() {
                 <span className="hf" style={{color:"#fbbf24",fontSize:11,fontWeight:600,letterSpacing:".1em",textTransform:"uppercase"}}>Now Accepting Early Partners</span>
               </div>
               <h3 className="hf" style={{fontWeight:900,color:"#fff",fontSize:"clamp(20px,2.5vw,30px)",lineHeight:1.2,letterSpacing:"-.5px",marginBottom:16}}>
-                Be a founding partner.<br/>
-                <span className="gt">Shape the future</span> of agri retail.
+                Be a founding partner.<br/><span className="gt">Shape the future</span> of rural retail.
               </h3>
               <p style={{color:"rgba(255,255,255,.45)",fontSize:15,lineHeight:1.8,marginBottom:28}}>
-                We&apos;re selectively onboarding our first retailers, brands and distributors to build and validate this together. Limited spots available.
+                We&apos;re selectively onboarding our first retailers, brands and distributors to build and validate the platform together. Limited spots available.
               </p>
               <a href="#contact" className="btn-purple" style={{display:"inline-flex"}}>Apply for Early Access →</a>
             </div>
           </div>
-
-          {/* Right benefits */}
           <div style={{background:"rgba(255,255,255,.02)",padding:"52px 44px"}}>
             <div className="hf" style={{fontWeight:700,color:"#fff",fontSize:16,marginBottom:28}}>What early partners get:</div>
             <div style={{display:"flex",flexDirection:"column",gap:14}}>
@@ -92,7 +84,7 @@ export default function Testimonials() {
             </div>
             <div style={{marginTop:28,padding:"14px 18px",background:"rgba(139,92,246,.08)",borderRadius:12,border:"1px solid rgba(139,92,246,.15)"}}>
               <p style={{color:"rgba(196,181,253,.65)",fontSize:13,lineHeight:1.6}}>
-                <strong style={{color:"#c4b5fd"}}>Limited spots.</strong> We&apos;re starting with a focused cohort in select geographies to ensure every partner gets hands-on support from the Namusté team.
+                <strong style={{color:"#c4b5fd"}}>Limited spots.</strong> We start with a focused cohort in select geographies to ensure every partner gets hands-on support from the Namusté team.
               </p>
             </div>
           </div>

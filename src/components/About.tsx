@@ -2,15 +2,14 @@
 import { useEffect } from "react";
 
 const pillars = [
-  {icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,title:"Starting at the Counter",desc:"The retail counter is the first moment of trust between brands, retailers and farmers. We digitize that moment."},
-  {icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m6.08 9.5-3.48 1.58a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84l-3.5-1.58"/><path d="m6.08 14.5-3.48 1.58a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84l-3.5-1.58"/></svg>,title:"Full-Stack Platform",desc:"From device hardware to cloud analytics — we own the entire stack so every layer works seamlessly together."},
-  {icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,title:"Farmer-First Design",desc:"Every feature we build starts with what makes life simpler for the farmer standing at the shop counter."},
+  {icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/></svg>,title:"Starting at the Counter",desc:"The rural retail counter is where commerce happens for 650 million Indians. It is the first — and most important — moment of trust between brands and customers."},
+  {icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="m12.83 2.18a2 2 0 0 0-1.66 0L2.6 6.08a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.83Z"/><path d="m6.08 9.5-3.48 1.58a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84l-3.5-1.58"/><path d="m6.08 14.5-3.48 1.58a1 1 0 0 0 0 1.83l8.58 3.91a2 2 0 0 0 1.66 0l8.58-3.9a1 1 0 0 0 0-1.84l-3.5-1.58"/></svg>,title:"Full-Stack Platform",desc:"From the device hardware on the counter to the cloud analytics dashboard — we own the entire stack, so every layer works seamlessly together from day one."},
+  {icon:<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/></svg>,title:"Retailer-First Design",desc:"Every feature we build starts with what makes life simpler for the rural retailer at the counter — not for the enterprise software buyer in the city."},
 ];
-const tech=["Next.js","React","TypeScript","Tailwind CSS","Node.js","PostgreSQL","Supabase","Vercel","Docker"];
 
 export default function About() {
-  useEffect(()=>{
-    const obs=new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add("visible")),{threshold:.08});
+  useEffect(() => {
+    const obs = new IntersectionObserver(es=>es.forEach(e=>e.isIntersecting&&e.target.classList.add("visible")),{threshold:.08});
     document.querySelectorAll(".reveal,.reveal-l,.reveal-r").forEach(el=>obs.observe(el));
     return()=>obs.disconnect();
   },[]);
@@ -26,21 +25,21 @@ export default function About() {
           <div className="reveal-l">
             <div className="pill" style={{marginBottom:22}}>About Us</div>
             <h2 className="hf" style={{fontWeight:900,color:"#fff",fontSize:"clamp(28px,3.5vw,44px)",lineHeight:1.1,letterSpacing:"-.7px",marginBottom:20}}>
-              Building the <span className="gt2">Operating System</span> for Offline Retail
+              Building the <span className="gt2">Operating System</span> for Rural Retail
             </h2>
-            <p style={{color:"var(--muted2)",fontSize:16,lineHeight:1.8,marginBottom:14}}>
-              Namusté Technologies is on a mission to bring digital infrastructure to India&apos;s massive offline agri retail ecosystem — starting at the counter, the first and most important moment of trust.
+            <p style={{color:"rgba(255,255,255,.45)",fontSize:16,lineHeight:1.8,marginBottom:14}}>
+              Namusté Technologies is building the digital infrastructure layer for India&apos;s 12 million rural retail counters — starting at the counter, the first and most important moment of trust between brands and consumers in rural India.
             </p>
-            <p style={{color:"var(--muted2)",fontSize:15,lineHeight:1.8,marginBottom:32}}>
-              We digitize transactions, capture real-time demand data, enable brand influence, and unlock fintech across millions of retailers — all through a single, purpose-built smart device.
+            <p style={{color:"rgba(255,255,255,.38)",fontSize:15,lineHeight:1.8,marginBottom:32}}>
+              We digitize transactions, capture real-time demand data, enable brand campaign delivery and unlock fintech — all through a single purpose-built device that sits at the rural retail counter.
             </p>
             <div style={{display:"flex",alignItems:"flex-start",gap:14,background:"rgba(139,92,246,.06)",borderRadius:13,border:"1px solid rgba(139,92,246,.15)",padding:"16px 18px",backdropFilter:"blur(8px)"}}>
-              <div style={{width:38,height:38,borderRadius:9,background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.25)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#a78bfa"}}>
+              <div style={{width:38,height:38,borderRadius:9,background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#a78bfa"}}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               </div>
               <div>
                 <div className="hf" style={{fontWeight:600,color:"#fff",fontSize:13,marginBottom:4}}>Registered Office</div>
-                <div style={{color:"var(--muted2)",fontSize:13,lineHeight:1.6}}>245 B/1, Raipur Road, Kolkata 700047<br/>West Bengal, India</div>
+                <div style={{color:"rgba(255,255,255,.45)",fontSize:13,lineHeight:1.6}}>245 B/1, Raipur Road, Kolkata 700047<br/>West Bengal, India</div>
               </div>
             </div>
           </div>
@@ -54,11 +53,20 @@ export default function About() {
                 <div style={{width:44,height:44,borderRadius:11,flexShrink:0,background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.22)",display:"flex",alignItems:"center",justifyContent:"center",color:"#a78bfa"}}>{p.icon}</div>
                 <div>
                   <h3 className="hf" style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:5}}>{p.title}</h3>
-                  <p style={{color:"var(--muted2)",fontSize:13,lineHeight:1.7}}>{p.desc}</p>
+                  <p style={{color:"rgba(255,255,255,.45)",fontSize:13,lineHeight:1.7}}>{p.desc}</p>
                 </div>
               </div>
             ))}
 
+            {/* What sectors we serve */}
+            <div style={{background:"rgba(139,92,246,.08)",borderRadius:14,padding:"22px",border:"1px solid rgba(139,92,246,.18)"}}>
+              <div className="hf" style={{color:"#a78bfa",fontSize:10,fontWeight:600,letterSpacing:".12em",textTransform:"uppercase",marginBottom:14}}>Sectors We Serve</div>
+              <div style={{display:"flex",flexWrap:"wrap",gap:8}}>
+                {["Agri Retail","FMCG","Hardware & Tools","Medicines & Health","Stationery","Animal Feed","Construction Materials","Daily Essentials"].map(t=>(
+                  <span key={t} style={{background:"rgba(139,92,246,.1)",border:"1px solid rgba(139,92,246,.2)",color:"#c4b5fd",fontSize:12,fontWeight:500,padding:"4px 12px",borderRadius:6}}>{t}</span>
+                ))}
+              </div>
+            </div>
           </div>
         </div>
       </div>

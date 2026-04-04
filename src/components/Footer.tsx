@@ -17,7 +17,7 @@ export default function Footer() {
         <div style={{maxWidth:1280,margin:"0 auto",padding:"72px 44px",position:"relative",zIndex:2,display:"flex",flexWrap:"wrap",alignItems:"center",justifyContent:"space-between",gap:28}}>
           <div>
             <h2 className="hf" style={{fontWeight:900,color:"#fff",fontSize:"clamp(22px,3vw,38px)",lineHeight:1.2,letterSpacing:"-.6px",marginBottom:8}}>
-              Digitize your agri retail <span className="gt">today.</span>
+              Digitize your rural retail <span className="gt">today.</span>
             </h2>
             <p style={{color:"rgba(255,255,255,.38)",fontSize:15}}>Apply for early access — limited spots available.</p>
           </div>
@@ -42,7 +42,7 @@ export default function Footer() {
                 <span className="hf" style={{fontWeight:800,fontSize:17,color:"#fff"}}>Namusté<span style={{color:"#8b5cf6"}}>.</span></span>
               </div>
               <p style={{color:"rgba(255,255,255,.28)",fontSize:13,lineHeight:1.75,marginBottom:18}}>
-                The operating system for offline agri retail. Starting at the counter — the first moment of trust.
+                The operating system for rural retail counters. Starting at the counter — the first moment of trust.
               </p>
               <div style={{display:"flex",flexDirection:"column",gap:8}}>
                 <div style={{display:"flex",alignItems:"flex-start",gap:8}}>
