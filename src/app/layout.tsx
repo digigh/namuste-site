@@ -15,7 +15,8 @@ export const metadata: Metadata = {
     description: "Namuste Technologies digitizes rural retail transactions, captures real-time demand data, enables brand campaigns, and unlocks fintech across millions of retailers.",
     images: [
       {
-        url: "/logo-icon.png",
+        url: "https://namuste.com/logo-icon.png",
+        secureUrl: "https://namuste.com/logo-icon.png",
         width: 512,
         height: 512,
         alt: "Namuste Technologies Logo",
@@ -27,7 +28,10 @@ export const metadata: Metadata = {
     card: "summary",
     title: "Namuste Technologies — Counter OS for Rural Retail",
     description: "Namuste Technologies digitizes rural retail transactions, captures real-time demand data, enables brand campaigns, and unlocks fintech across millions of retailers.",
-    images: ["/logo-icon.png"],
+    images: ["https://namuste.com/logo-icon.png"],
+  },
+  other: {
+    "image_src": "https://namuste.com/logo-icon.png",
   },
 };
 
