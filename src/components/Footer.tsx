@@ -49,7 +49,7 @@ export default function Footer() {
             {/* Brand */}
             <div>
               <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
-                <Logo height={32} />
+                <Logo height={72} />
               </div>
               <p style={{ color: "var(--ink2)", fontSize: 13, lineHeight: 1.75, marginBottom: 18 }}>
                 The operating system for retail counters. Starting at the counter — the first moment of trust.

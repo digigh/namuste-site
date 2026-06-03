@@ -70,7 +70,7 @@ export default function Hero() {
       overflow: "hidden",
       display: "flex",
       alignItems: "center",
-      paddingTop: "100px",
+      paddingTop: "150px",
       paddingBottom: "60px"
     }}>
       {/* Decorative radial glows */}
@@ -228,10 +228,11 @@ export default function Hero() {
       </div>
       <style>{`
         @media(max-width:900px){
+          #product { padding-top: 120px !important; }
           .hero-grid { grid-template-columns: 1fr!important; gap: 80px!important; text-align: center!important; }
           .hero-actions { justify-content: center!important; }
-          [style*="gridTemplateColumns: \\"repeat(3, 1fr)\\""] { justify-content: center!important; }
-          [style*="transform: \\"perspective(1200px) rotateY(-10deg) rotateX(4deg)\\""] { transform: none!important; }
+          [style*="gridTemplateColumns: \"repeat(3, 1fr)\""] { justify-content: center!important; }
+          [style*="transform: \"perspective(1200px) rotateY(-10deg) rotateX(4deg)\""] { transform: none!important; }
           .af2, .af3 { position: static!important; display: inline-flex!important; margin: 10px!important; }
           .reveal-r { flex-direction: column!important; align-items: center!important; }
         }

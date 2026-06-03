@@ -172,13 +172,14 @@ export const LogoIcon = ({ size = 32 }: { size?: number }) => (
   />
 );
 
-export const Logo = ({ height = 32 }: { height?: number }) => {
+export const Logo = ({ height, className = "" }: { height?: number | string; className?: string }) => {
+  const heightStyle = typeof height === "number" ? `${height}px` : (height || "var(--logo-height-normal)");
   return (
     <img
       src="/logo.png"
       alt="Namuste Logo"
-      height={height}
-      style={{ height: `${height}px`, width: "auto", display: "block", transition: "height 0.3s ease" }}
+      className={`brand-logo ${className}`}
+      style={{ height: heightStyle, width: "auto", display: "block", transition: "height 0.3s ease" }}
     />
   );
 };

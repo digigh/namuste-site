@@ -27,7 +27,7 @@ export default function Navbar() {
     <header style={{
       position: "fixed", top: 0, left: 0, right: 0, zIndex: 200,
       transition: "all .35s ease",
-      padding: scrolled ? "14px 0" : "22px 0",
+      padding: scrolled ? "10px 0" : "14px 0",
       background: scrolled ? "rgba(10, 17, 10, 0.95)" : "transparent",
       backdropFilter: scrolled ? "blur(16px)" : "none",
       borderBottom: scrolled ? "1px solid var(--border)" : "none",
@@ -35,7 +35,7 @@ export default function Navbar() {
       <div className="nav-container" style={{ maxWidth: 1280, margin: "0 auto", padding: "0 44px", display: "flex", alignItems: "center", justifyContent: "space-between", transition: "padding .35s ease" }}>
         {/* Logo */}
         <Link href="/" style={{ display: "flex", alignItems: "center", textDecoration: "none", color: "var(--ink)", flexShrink: 0 }}>
-          <Logo height={scrolled ? 30 : 38} />
+          <Logo height={scrolled ? "var(--logo-height-scrolled)" : "var(--logo-height-normal)"} />
         </Link>
 
         {/* Desktop nav */}
