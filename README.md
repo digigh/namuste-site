@@ -1,8 +1,8 @@
-# Namusté Technologies — Official Website
+# Namuste Technologies — Official Website
 
 > The Operating System for Offline Agri Retail
 
-This is the official company + product website for **Namusté Technologies**, built with a modern production-grade tech stack. It showcases the company's mission, the smart retail device, features, how it works, and a contact/demo booking form.
+This is the official company + product website for **Namuste Technologies**, built with a modern production-grade tech stack. It showcases the company's mission, the smart retail device, features, how it works, and a contact/demo booking form.
 
 ---
 
@@ -201,7 +201,7 @@ const handleSubmit = async (e: React.FormEvent) => {
 
 ## 🏢 Company Info
 
-**Namusté Technologies**
+**Namuste Technologies**
 245 B/1, Raipur Road, Kolkata 700047
 West Bengal, India
 
@@ -209,4 +209,4 @@ West Bengal, India
 
 ## 📝 License
 
-All rights reserved © 2025 Namusté Technologies Pvt. Ltd.
+All rights reserved © 2025 Namuste Technologies Pvt. Ltd.

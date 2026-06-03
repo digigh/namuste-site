@@ -73,7 +73,7 @@ export default function Contact() {
 
   const inp = (field: keyof FormState, extra?: React.CSSProperties): React.CSSProperties => ({
     width:"100%", padding:"11px 14px", borderRadius:9,
-    border: `1px solid ${touched[field] && errors[field] ? "rgba(248,113,113,.5)" : "rgba(139,92,246,.2)"}`,
+    border: `1px solid ${touched[field] && errors[field] ? "rgba(248,113,113,.5)" : "var(--border)"}`,
     background:"rgba(255,255,255,.03)",
     fontSize:14, color:"#fff",
     fontFamily:"'DM Sans',system-ui,sans-serif",
@@ -82,11 +82,11 @@ export default function Contact() {
   });
 
   const fi = (field: keyof FormState) => (e: React.FocusEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>) => {
-    e.target.style.borderColor = touched[field] && errors[field] ? "rgba(248,113,113,.7)" : "#8b5cf6";
+    e.target.style.borderColor = touched[field] && errors[field] ? "rgba(248,113,113,.7)" : "var(--accent-green)";
   };
   const fo = (field: keyof FormState) => (e: React.FocusEvent<HTMLInputElement|HTMLTextAreaElement|HTMLSelectElement>) => {
     blur(field);
-    e.target.style.borderColor = touched[field] && errors[field] ? "rgba(248,113,113,.5)" : "rgba(139,92,246,.2)";
+    e.target.style.borderColor = touched[field] && errors[field] ? "rgba(248,113,113,.5)" : "var(--border)";
   };
 
   const ErrMsg = ({field}: {field: keyof FormState}) => touched[field] && errors[field]
@@ -96,7 +96,7 @@ export default function Contact() {
   return (
     <section id="contact" style={{padding:"80px 0",background:"var(--bg)",position:"relative",overflow:"hidden"}}>
       <div className="line-grid" style={{position:"absolute",inset:0,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:600,height:600,borderRadius:"50%",background:"radial-gradient(circle,rgba(139,92,246,.07) 0%,transparent 70%)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:"50%",left:"50%",transform:"translate(-50%,-50%)",width:600,height:600,borderRadius:"50%",background:"radial-gradient(circle,rgba(82,204,79,.04) 0%,transparent 70%)",pointerEvents:"none"}}/>
 
       <div style={{maxWidth:1280,margin:"0 auto",padding:"0 24px",position:"relative",zIndex:2}}>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:64,alignItems:"start"}} className="cg">
@@ -108,18 +108,18 @@ export default function Contact() {
               Ready to <span className="gt">Digitize</span> Your Retail?
             </h2>
             <p style={{color:"rgba(255,255,255,.38)",fontSize:15,lineHeight:1.8,marginBottom:36}}>
-              Whether you&apos;re a rural retailer, brand or distributor — let&apos;s talk about how Namusté can transform your counter.
+              Whether you&apos;re a rural retailer, brand or distributor — let&apos;s talk about how Namuste can transform your counter.
             </p>
 
             <div style={{display:"flex",flexDirection:"column",gap:16,marginBottom:32}}>
               {[
-                { icon:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>, label:"Email", val:"connect@namuste.com", c:"#8b5cf6" },
-                { icon:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>, label:"Office", val:"245 B/1, Raipur Road, Kolkata 700047, West Bengal", c:"#10b981" },
+                { icon:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>, label:"Email", val:"connect@namuste.com", c:"var(--gold)" },
+                { icon:<svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>, label:"Office", val:"245 B/1, Raipur Road, Kolkata 700047, West Bengal", c:"var(--accent-green)" },
               ].map(c => (
                 <div key={c.label} style={{display:"flex",alignItems:"flex-start",gap:13}}>
-                  <div style={{width:38,height:38,borderRadius:9,flexShrink:0,background:"rgba(139,92,246,.1)",border:"1px solid rgba(139,92,246,.2)",display:"flex",alignItems:"center",justifyContent:"center",color:c.c}}>{c.icon}</div>
+                  <div style={{width:38,height:38,borderRadius:9,flexShrink:0,background:"rgba(82,204,79,.05)",border:"1px solid var(--border2)",display:"flex",alignItems:"center",justifyContent:"center",color:c.c}}>{c.icon}</div>
                   <div>
-                    <div style={{color:"rgba(196,181,253,.5)",fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:".08em",marginBottom:3}}>{c.label}</div>
+                    <div style={{color:"var(--ink2)",fontSize:11,fontWeight:600,textTransform:"uppercase",letterSpacing:".08em",marginBottom:3}}>{c.label}</div>
                     <div className="hf" style={{color:"rgba(255,255,255,.8)",fontSize:14,fontWeight:500}}>{c.val}</div>
                   </div>
                 </div>
@@ -137,7 +137,7 @@ export default function Contact() {
           </div>
 
           {/* Right: Form */}
-          <div style={{background:"rgba(139,92,246,.06)",borderRadius:18,border:"1px solid rgba(139,92,246,.18)",padding:"32px",backdropFilter:"blur(12px)"}}>
+          <div style={{background:"var(--bg3)",borderRadius:18,border:"1px solid var(--border)",padding:"32px",backdropFilter:"blur(12px)"}}>
 
             {/* ── SUCCESS ── */}
             {status === "success" && (
@@ -149,8 +149,8 @@ export default function Contact() {
                 <p style={{color:"rgba(255,255,255,.55)",fontSize:15,lineHeight:1.7,marginBottom:8}}>
                   Your message has been received successfully.
                 </p>
-                <p style={{color:"rgba(196,181,253,.6)",fontSize:14,lineHeight:1.7}}>
-                  We&apos;ll get back to you at <strong style={{color:"#a78bfa"}}>{form.email}</strong> soon.
+                <p style={{color:"var(--ink2)",fontSize:14,lineHeight:1.7}}>
+                  We&apos;ll get back to you at <strong style={{color:"var(--accent-green-mid)"}}>{form.email}</strong> soon.
                 </p>
               </div>
             )}
@@ -159,14 +159,14 @@ export default function Contact() {
             {status !== "success" && (
               <>
                 <h3 className="hf" style={{fontWeight:700,color:"#fff",fontSize:20,marginBottom:6}}>Apply for Early Access</h3>
-                <p style={{color:"rgba(196,181,253,.5)",fontSize:13,marginBottom:24}}>We&apos;re onboarding our first cohort of partners now.</p>
+                <p style={{color:"var(--ink2)",fontSize:13,marginBottom:24}}>We&apos;re onboarding our first cohort of partners now.</p>
 
                 <form onSubmit={handleSubmit} noValidate style={{display:"flex",flexDirection:"column",gap:13}}>
 
                   {/* Name + Email */}
                   <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}} className="form-row">
                     <div>
-                      <label style={{color:"rgba(196,181,253,.5)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Name *</label>
+                      <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Name *</label>
                       <input type="text" value={form.name}
                         onChange={e => setForm({...form,name:e.target.value})}
                         onFocus={fi("name")} onBlur={fo("name")}
@@ -175,7 +175,7 @@ export default function Contact() {
                       <ErrMsg field="name"/>
                     </div>
                     <div>
-                      <label style={{color:"rgba(196,181,253,.5)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Email *</label>
+                      <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Email *</label>
                       <input type="email" value={form.email}
                         onChange={e => setForm({...form,email:e.target.value})}
                         onFocus={fi("email")} onBlur={fo("email")}
@@ -187,7 +187,7 @@ export default function Contact() {
 
                   {/* Mobile */}
                   <div>
-                    <label style={{color:"rgba(196,181,253,.5)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Mobile Number *</label>
+                    <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Mobile Number *</label>
                     <input type="tel" value={form.mobile}
                       onChange={e => setForm({...form,mobile:e.target.value.replace(/[^0-9]/g,"")})}
                       onFocus={fi("mobile")} onBlur={fo("mobile")}
@@ -199,7 +199,7 @@ export default function Contact() {
 
                   {/* Company */}
                   <div>
-                    <label style={{color:"rgba(196,181,253,.5)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Company / Shop</label>
+                    <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Company / Shop</label>
                     <input type="text" value={form.company}
                       onChange={e => setForm({...form,company:e.target.value})}
                       onFocus={fi("company")} onBlur={fo("company")}
@@ -209,7 +209,7 @@ export default function Contact() {
 
                   {/* Role */}
                   <div>
-                    <label style={{color:"rgba(196,181,253,.5)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>I am a *</label>
+                    <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>I am a *</label>
                     <select value={form.role}
                       onChange={e => setForm({...form,role:e.target.value})}
                       onFocus={fi("role")} onBlur={fo("role")}
@@ -225,9 +225,9 @@ export default function Contact() {
 
                   {/* Message */}
                   <div>
-                    <label style={{color:"rgba(196,181,253,.5)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>
+                    <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>
                       Message
-                      <span style={{color:"rgba(196,181,253,.3)",fontWeight:400,textTransform:"none",letterSpacing:0,marginLeft:6}}>(min 10 characters)</span>
+                      <span style={{color:"var(--muted)",fontWeight:400,textTransform:"none",letterSpacing:0,marginLeft:6}}>(min 10 characters)</span>
                     </label>
                     <textarea rows={3} value={form.message}
                       onChange={e => setForm({...form,message:e.target.value})}
@@ -237,20 +237,20 @@ export default function Contact() {
                     />
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
                       <ErrMsg field="message"/>
-                      <span style={{color:"rgba(196,181,253,.3)",fontSize:11,marginLeft:"auto"}}>{form.message.length} chars</span>
+                      <span style={{color:"var(--muted)",fontSize:11,marginLeft:"auto"}}>{form.message.length} chars</span>
                     </div>
                   </div>
 
                   {/* Submit */}
                   <button type="submit" disabled={status==="loading"} style={{
-                    background: status==="loading" ? "rgba(139,92,246,.4)" : "linear-gradient(135deg,#7c3aed,#6d28d9)",
-                    color:"#fff", border:"none",
+                    background: status==="loading" ? "rgba(82,204,79,.4)" : "linear-gradient(135deg,var(--accent-green-mid),var(--accent-green-deep))",
+                    color:"var(--bg)", border:"none",
                     cursor: status==="loading" ? "not-allowed" : "pointer",
                     fontFamily:"'Poppins',system-ui,sans-serif", fontWeight:700, fontSize:14,
                     padding:"13px", borderRadius:9,
                     display:"flex", alignItems:"center", justifyContent:"center", gap:8,
                     transition:"opacity .2s",
-                    boxShadow:"0 4px 20px rgba(124,58,237,.3)",
+                    boxShadow:"0 4px 20px var(--green-glow)",
                     marginTop:4,
                   }}
                     onMouseEnter={e=>{if(status!=="loading")e.currentTarget.style.opacity=".85"}}

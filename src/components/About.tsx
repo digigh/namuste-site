@@ -17,7 +17,7 @@ export default function About() {
   return (
     <section id="about" style={{padding:"104px 0",background:"var(--bg2)",position:"relative",overflow:"hidden"}}>
       <div className="line-grid" style={{position:"absolute",inset:0,pointerEvents:"none"}}/>
-      <div style={{position:"absolute",top:"30%",left:"-80px",width:350,height:350,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(139,92,246,.07) 0%,transparent 65%)",pointerEvents:"none"}}/>
+      <div style={{position:"absolute",top:"30%",left:"-80px",width:350,height:350,borderRadius:"50%",background:"radial-gradient(ellipse,rgba(82,204,79,.03) 0%,transparent 65%)",pointerEvents:"none"}}/>
 
       <div style={{maxWidth:1280,margin:"0 auto",padding:"0 44px",position:"relative",zIndex:2}}>
         <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:72,alignItems:"start"}} className="ag">
@@ -25,35 +25,35 @@ export default function About() {
           <div className="reveal-l">
             <div className="pill" style={{marginBottom:22}}>About Us</div>
             <h2 className="hf" style={{fontWeight:900,color:"#fff",fontSize:"clamp(28px,3.5vw,44px)",lineHeight:1.1,letterSpacing:"-.7px",marginBottom:20}}>
-              Building the <span className="gt2">Counter OS</span> for Rural Retail
+              Building the <span className="gt-green">Counter OS</span> for Rural Retail
             </h2>
-            <p style={{color:"rgba(255,255,255,.45)",fontSize:16,lineHeight:1.8,marginBottom:14}}>
-              Namusté Technologies is building the digital infrastructure layer for India&apos;s 12 million rural retail counters — starting at the counter, the first and most important moment of trust between brands and consumers in rural India.
+            <p style={{color:"var(--ink2)",fontSize:16,lineHeight:1.8,marginBottom:14}}>
+              Namuste Technologies is building the digital infrastructure layer for India&apos;s 12 million rural retail counters — starting at the counter, the first and most important moment of trust between brands and consumers in rural India.
             </p>
-            <p style={{color:"rgba(255,255,255,.38)",fontSize:15,lineHeight:1.8,marginBottom:32}}>
+            <p style={{color:"var(--ink2)",opacity:0.8,fontSize:15,lineHeight:1.8,marginBottom:32}}>
               We digitize transactions, capture real-time demand data, enable brand campaign delivery and unlock fintech — all through a single purpose-built device that sits at the rural retail counter.
             </p>
-            <div style={{display:"flex",alignItems:"flex-start",gap:14,background:"rgba(139,92,246,.06)",borderRadius:13,border:"1px solid rgba(139,92,246,.15)",padding:"16px 18px",backdropFilter:"blur(8px)"}}>
-              <div style={{width:38,height:38,borderRadius:9,background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.22)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"#a78bfa"}}>
+            <div style={{display:"flex",alignItems:"flex-start",gap:14,background:"rgba(82,204,79,.04)",borderRadius:13,border:"1px solid rgba(82,204,79,.15)",padding:"16px 18px",backdropFilter:"blur(8px)"}}>
+              <div style={{width:38,height:38,borderRadius:9,background:"rgba(82,204,79,.08)",border:"1px solid rgba(82,204,79,.18)",display:"flex",alignItems:"center",justifyContent:"center",flexShrink:0,color:"var(--accent-green)"}}>
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
               </div>
               <div>
                 <div className="hf" style={{fontWeight:600,color:"#fff",fontSize:13,marginBottom:4}}>Registered Office</div>
-                <div style={{color:"rgba(255,255,255,.45)",fontSize:13,lineHeight:1.6}}>245 B/1, Raipur Road, Kolkata 700047<br/>West Bengal, India</div>
+                <div style={{color:"var(--ink2)",fontSize:13,lineHeight:1.6}}>245 B/1, Raipur Road, Kolkata 700047<br/>West Bengal, India</div>
               </div>
             </div>
           </div>
 
           <div className="reveal-r" style={{display:"flex",flexDirection:"column",gap:12}}>
             {pillars.map(p=>(
-              <div key={p.title} style={{display:"flex",gap:16,background:"rgba(255,255,255,.03)",padding:"20px",borderRadius:14,border:"1px solid rgba(139,92,246,.12)",backdropFilter:"blur(8px)",transition:"border-color .25s,transform .25s"}}
-                onMouseEnter={e=>{e.currentTarget.style.borderColor="rgba(139,92,246,.35)";e.currentTarget.style.transform="translateY(-2px)"}}
-                onMouseLeave={e=>{e.currentTarget.style.borderColor="rgba(139,92,246,.12)";e.currentTarget.style.transform="translateY(0)"}}
+              <div key={p.title} style={{display:"flex",gap:16,background:"var(--bg3)",padding:"20px",borderRadius:14,border:"1px solid var(--border)",backdropFilter:"blur(8px)",transition:"border-color .25s,transform .25s"}}
+                onMouseEnter={e=>{e.currentTarget.style.borderColor="var(--accent-green)";e.currentTarget.style.transform="translateY(-2px)"}}
+                onMouseLeave={e=>{e.currentTarget.style.borderColor="var(--border)";e.currentTarget.style.transform="translateY(0)"}}
               >
-                <div style={{width:44,height:44,borderRadius:11,flexShrink:0,background:"rgba(139,92,246,.12)",border:"1px solid rgba(139,92,246,.22)",display:"flex",alignItems:"center",justifyContent:"center",color:"#a78bfa"}}>{p.icon}</div>
+                <div style={{width:44,height:44,borderRadius:11,flexShrink:0,background:"rgba(82,204,79,.08)",border:"1px solid rgba(82,204,79,.18)",display:"flex",alignItems:"center",justifyContent:"center",color:"var(--accent-green)"}}>{p.icon}</div>
                 <div>
                   <h3 className="hf" style={{fontWeight:700,color:"#fff",fontSize:15,marginBottom:5}}>{p.title}</h3>
-                  <p style={{color:"rgba(255,255,255,.45)",fontSize:13,lineHeight:1.7}}>{p.desc}</p>
+                  <p style={{color:"var(--ink2)",fontSize:13,lineHeight:1.7}}>{p.desc}</p>
                 </div>
               </div>
             ))}

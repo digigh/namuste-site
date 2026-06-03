@@ -161,3 +161,24 @@ export const IconZap = ({ size = 20, color = "currentColor" }: { size?: number; 
     <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"/>
   </svg>
 );
+
+export const LogoIcon = ({ size = 32 }: { size?: number }) => (
+  <img
+    src="/logo-icon.png"
+    alt="Namuste Logo Icon"
+    width={size}
+    height={size}
+    style={{ display: "block", objectFit: "contain" }}
+  />
+);
+
+export const Logo = ({ height = 32 }: { height?: number }) => {
+  return (
+    <img
+      src="/logo.png"
+      alt="Namuste Logo"
+      height={height}
+      style={{ height: `${height}px`, width: "auto", display: "block", transition: "height 0.3s ease" }}
+    />
+  );
+};
