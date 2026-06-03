@@ -39,62 +39,6 @@
   --shadow:            0 8px 32px rgba(0,0,0,0.5);
 }
 
-.light {
-  /* Light Theme */
-  --bg:                #f2f7f2;
-  --bg2:               #eaf2ea;
-  --bg3:               #ddeadd;
-  --surface:           #ccdccc;
-  --surface2:          #b8ccb8;
-  --border:            rgba(0,0,0,0.10);
-  --border2:           rgba(0,0,0,0.18);
-  --ink:               #0d1f0d;
-  --ink2:              #3a5a3a;
-  --muted:             #6a8a6a;
-  --accent-green:      #1a7a18;
-  --accent-green-mid:  #158014;
-  --accent-green-deep: #0e600d;
-  --green-glow:        rgba(26,122,24,0.14);
-  --gold:              #a06000;
-  --gold-base:         #886000;
-  --gold-glow:         rgba(136,96,0,0.12);
-  --diamond-blue:      #1a6aaa;
-  --silver:            #5a6a7a;
-  --bronze:            #8a5020;
-  --card-bg:           rgba(215,235,215,0.95);
-  --input-bg:          #dde8dd;
-  --shadow:            0 4px 20px rgba(0,0,0,0.1);
-}
-
-@media (prefers-color-scheme: light) {
-  :root {
-    /* Light Theme */
-    --bg:                #f2f7f2;
-    --bg2:               #eaf2ea;
-    --bg3:               #ddeadd;
-    --surface:           #ccdccc;
-    --surface2:          #b8ccb8;
-    --border:            rgba(0,0,0,0.10);
-    --border2:           rgba(0,0,0,0.18);
-    --ink:               #0d1f0d;
-    --ink2:              #3a5a3a;
-    --muted:             #6a8a6a;
-    --accent-green:      #1a7a18;
-    --accent-green-mid:  #158014;
-    --accent-green-deep: #0e600d;
-    --green-glow:        rgba(26,122,24,0.14);
-    --gold:              #a06000;
-    --gold-base:         #886000;
-    --gold-glow:         rgba(136,96,0,0.12);
-    --diamond-blue:      #1a6aaa;
-    --silver:            #5a6a7a;
-    --bronze:            #8a5020;
-    --card-bg:           rgba(215,235,215,0.95);
-    --input-bg:          #dde8dd;
-    --shadow:            0 4px 20px rgba(0,0,0,0.1);
-  }
-}
-
 *,*::before,*::after { box-sizing: border-box; margin: 0; padding: 0; }
 html { scroll-behavior: smooth; -webkit-font-smoothing: antialiased; }
 body {
@@ -331,5 +275,17 @@ img, svg { max-width: 100%; }
   .feat-layout > div:last-child [style*="justifyContent:\"space-between\""] {
     flex-direction: column !important;
     gap: 8px !important;
+  }
+}
+
+/* Responsive Brand Logo override */
+@media (max-width: 768px) {
+  .brand-logo {
+    height: 48px !important;
+  }
+}
+@media (max-width: 480px) {
+  .brand-logo {
+    height: 38px !important;
   }
 }
