@@ -13,7 +13,7 @@ const benefits = [
 const opportunity = [
   {val:"12M+",  label:"Rural retail counters across India", color:"var(--gold)"},
   {val:"₹40L Cr+",label:"Annual rural retail market size",  color:"var(--accent-green)"},
-  {val:"~0%",   label:"Of transactions digitized today",   color:"var(--bronze)"},
+  {val:"0%",   label:"Of transactions digitized today",   color:"var(--bronze)"},
 ];
 
 export default function Testimonials() {
