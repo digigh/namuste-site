@@ -3,14 +3,14 @@ import { useState } from "react";
 
 const WEBHOOK = "https://aiautomation.digicides.com/webhook-test/namuste";
 
-type FormState = { name:string; email:string; mobile:string; company:string; role:string; message:string };
+type FormState = { name:string; email:string; mobile:string; company:string; role:string; industry:string; message:string };
 type Status = "idle"|"loading"|"success"|"error";
 
 function validateEmail(v: string) { return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
 function validateMobile(v: string) { return /^[6-9]\d{9}$/.test(v.replace(/\s/g,"")); }
 
 export default function Contact() {
-  const empty: FormState = { name:"", email:"", mobile:"", company:"", role:"retailer", message:"" };
+  const empty: FormState = { name:"", email:"", mobile:"", company:"", role:"retailer", industry:"agriculture", message:"" };
   const [form, setForm] = useState<FormState>(empty);
   const [status, setStatus] = useState<Status>("idle");
   const [errors, setErrors] = useState<Partial<FormState>>({});
@@ -36,7 +36,7 @@ export default function Contact() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     // Touch all fields to show errors
-    setTouched({ name:true, email:true, mobile:true, company:true, role:true, message:true });
+    setTouched({ name:true, email:true, mobile:true, company:true, role:true, industry:true, message:true });
     const errs = validate(form);
     setErrors(errs);
     if (Object.keys(errs).length > 0) return;
@@ -49,6 +49,7 @@ export default function Contact() {
       mobile:       form.mobile,
       company:      form.company,
       role:         form.role,
+      industry:     form.industry,
       message:      form.message,
       submitted_at: new Date().toISOString(),
       source:       "namuste.in contact form",
@@ -89,7 +90,7 @@ export default function Contact() {
     e.target.style.borderColor = touched[field] && errors[field] ? "rgba(248,113,113,.5)" : "var(--border)";
   };
 
-  const ErrMsg = ({field}: {field: keyof FormState}) => touched[field] && errors[field]
+  const renderErrMsg = (field: keyof FormState) => touched[field] && errors[field]
     ? <div style={{color:"#f87171",fontSize:11,marginTop:4,paddingLeft:2}}>{errors[field]}</div>
     : null;
 
@@ -172,7 +173,7 @@ export default function Contact() {
                         onFocus={fi("name")} onBlur={fo("name")}
                         placeholder="Your name" style={inp("name")}
                       />
-                      <ErrMsg field="name"/>
+                      {renderErrMsg("name")}
                     </div>
                     <div>
                       <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Email *</label>
@@ -181,7 +182,7 @@ export default function Contact() {
                         onFocus={fi("email")} onBlur={fo("email")}
                         placeholder="you@company.com" style={inp("email")}
                       />
-                      <ErrMsg field="email"/>
+                      {renderErrMsg("email")}
                     </div>
                   </div>
 
@@ -194,7 +195,7 @@ export default function Contact() {
                       placeholder="10-digit mobile number" maxLength={10}
                       style={inp("mobile")}
                     />
-                    <ErrMsg field="mobile"/>
+                    {renderErrMsg("mobile")}
                   </div>
 
                   {/* Company */}
@@ -207,20 +208,36 @@ export default function Contact() {
                     />
                   </div>
 
-                  {/* Role */}
-                  <div>
-                    <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>I am a *</label>
-                    <select value={form.role}
-                      onChange={e => setForm({...form,role:e.target.value})}
-                      onFocus={fi("role")} onBlur={fo("role")}
-                      style={{...inp("role"),cursor:"pointer"}}
-                    >
-                      <option value="retailer">Agri Retailer</option>
-                      <option value="brand">Agri Brand / Company</option>
-                      <option value="distributor">Distributor</option>
-                      <option value="investor">Investor</option>
-                      <option value="other">Other</option>
-                    </select>
+                  {/* Role + Industry */}
+                  <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:12}} className="form-row">
+                    <div>
+                      <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>I am a *</label>
+                      <select value={form.role}
+                        onChange={e => setForm({...form,role:e.target.value})}
+                        onFocus={fi("role")} onBlur={fo("role")}
+                        style={{...inp("role"),cursor:"pointer"}}
+                      >
+                        <option value="retailer">Retailer</option>
+                        <option value="brand">Brand / Company</option>
+                        <option value="distributor">Distributor</option>
+                        <option value="investor">Investor</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label style={{color:"var(--ink2)",fontSize:11,fontWeight:600,display:"block",marginBottom:6,textTransform:"uppercase",letterSpacing:".06em"}}>Industry *</label>
+                      <select value={form.industry}
+                        onChange={e => setForm({...form,industry:e.target.value})}
+                        onFocus={fi("industry")} onBlur={fo("industry")}
+                        style={{...inp("industry"),cursor:"pointer"}}
+                      >
+                        <option value="agriculture">Agriculture</option>
+                        <option value="pharmacy">Pharmacy / Chemist</option>
+                        <option value="grocery">Kirana / FMCG / Grocery</option>
+                        <option value="hardware">Hardware / Electronics</option>
+                        <option value="other">Other</option>
+                      </select>
+                    </div>
                   </div>
 
                   {/* Message */}
@@ -236,7 +253,7 @@ export default function Contact() {
                       style={{...inp("message"),resize:"none"}}
                     />
                     <div style={{display:"flex",justifyContent:"space-between",alignItems:"center",marginTop:4}}>
-                      <ErrMsg field="message"/>
+                      {renderErrMsg("message")}
                       <span style={{color:"var(--muted)",fontSize:11,marginLeft:"auto"}}>{form.message.length} chars</span>
                     </div>
                   </div>

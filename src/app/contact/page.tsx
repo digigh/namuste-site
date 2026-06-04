@@ -235,12 +235,12 @@ export default function ContactWizardPage() {
                       <p style={{ color: "var(--ink2)", fontSize: "13px", marginBottom: "20px" }}>Select your business category to customize your dynamic form.</p>
                       
                       <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-                        {[
+                        {([
                           { id: "retailer", title: "Agri / Kirana Retailer", desc: "For independent dealer counters, pharmacy chemists, and grocery merchants." },
                           { id: "distributor", title: "Wholesale Distributor", desc: "For distributors and dealers shipping inventory orders to retailers." },
                           { id: "brand", title: "Brand / Enterprise Partner", desc: "For companies managing distributed dealer networks and incentives." }
-                        ].map((r) => (
-                          <button key={r.id} onClick={() => selectRole(r.id as any)} style={{
+                        ] as const).map((r) => (
+                          <button key={r.id} onClick={() => selectRole(r.id)} style={{
                             width: "100%", textAlign: "left", padding: "16px 20px", borderRadius: "12px", border: "1px solid var(--border)", background: "var(--surface)", cursor: "pointer", transition: "all .2s"
                           }}
                             onMouseEnter={e => { e.currentTarget.style.borderColor = "var(--accent-green-mid)"; e.currentTarget.style.transform = "translateY(-1px)"; }}
@@ -337,7 +337,7 @@ export default function ContactWizardPage() {
                         </div>
                         <div>
                           <label style={{ display: "block", fontSize: "11px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ink2)", marginBottom: "6px" }}>Notes / Message</label>
-                          <textarea rows={2} value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="Tell us about your operations..." style={{...inputStyle("message"), resize: "none"} as any} />
+                          <textarea rows={2} value={form.message} onChange={e => setForm({...form, message: e.target.value})} placeholder="Tell us about your operations..." style={{...inputStyle("message"), resize: "none" as const}} />
                           {errors.message && <div style={{ color: "#f87171", fontSize: "11px", marginTop: "4px" }}>{errors.message}</div>}
                         </div>
                       </div>
