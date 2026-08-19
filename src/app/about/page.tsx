@@ -1,156 +1,126 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { IconMapPin, IconMail, IconTarget, IconLayers, IconUsers } from "@/components/Icons";
+import { Users, Target, ShieldCheck, ArrowRight, Building, Mail, MapPin, Sparkles } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "About Us — Namuste Technologies",
-  description: "Learn about Namuste Technologies, building the Counter OS digital infrastructure connecting brands, distributors, and local merchants in rural India.",
+  title: "About Us & Founding Story — Namuste Technologies",
+  description:
+    "Learn about Namuste Technologies, founded by Saswati and Dipanjan. Building the industry-agnostic AI voice and chat assistant platform for business conversations.",
 };
 
-const pillars = [
-  {
-    title: "Starting at the Counter",
-    icon: <IconTarget size={22} />,
-    desc: "The rural retail counter is where B2C transactions occur for 650 million consumers. By starting directly at the point of sale, we secure the first and most critical moment of supply chain trust."
-  },
-  {
-    title: "Full-Stack Architecture",
-    icon: <IconLayers size={22} />,
-    desc: "From local hardware counters running Counter OS to corporate wholesale networks and cloud BI systems, we own the full software-hardware stack. Every layer is connected with native offline-sync capabilities."
-  },
-  {
-    title: "Retailer-First Philosophy",
-    icon: <IconUsers size={22} />,
-    desc: "We focus on solving day-to-day frictions for Kirana shop owners, pharmacists, and local seed dealers. If the product makes life simpler at the counter, network growth follows naturally."
-  }
-];
-
 export default function AboutPage() {
-  const jsonLd = {
-    "@context": "https://schema.org",
-    "@type": "LocalBusiness",
-    "name": "Namuste Technologies Pvt. Ltd.",
-    "image": "https://namuste.in/images/logo-green.png",
-    "@id": "https://namuste.in/#corporate-info",
-    "url": "https://namuste.in",
-    "telephone": "",
-    "address": {
-      "@type": "PostalAddress",
-      "streetAddress": "245 B/1, Raipur Road",
-      "addressLocality": "Kolkata",
-      "postalCode": "700047",
-      "addressRegion": "West Bengal",
-      "addressCountry": "IN"
-    },
-    "geo": {
-      "@type": "GeoCoordinates",
-      "latitude": 22.4842,
-      "longitude": 88.3719
-    },
-    "openingHoursSpecification": {
-      "@type": "OpeningHoursSpecification",
-      "dayOfWeek": [
-        "Monday",
-        "Tuesday",
-        "Wednesday",
-        "Thursday",
-        "Friday"
-      ],
-      "opens": "09:30",
-      "closes": "18:30"
-    }
-  };
-
   return (
     <>
       <Navbar />
-      <main style={{ background: "var(--bg)", color: "var(--ink)", minHeight: "100vh", paddingTop: "110px", overflowX: "hidden" }}>
-        
-        {/* Inject JSON-LD Schema */}
-        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }} />
-
-        {/* Corporate Header */}
-        <section style={{ maxWidth: "1280px", margin: "0 auto", padding: "40px 24px 80px", position: "relative" }}>
-          <div className="dot-grid" style={{ position: "absolute", inset: 0, opacity: 0.25, pointerEvents: "none" }} />
-          <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center", position: "relative", zIndex: 10 }}>
-            <span className="pill" style={{ marginBottom: "20px" }}>Our Mission</span>
-            <h1 className="hf" style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 900, lineHeight: 1.1, letterSpacing: "-1.5px", marginBottom: "24px", color: "var(--ink)" }}>
-              Digitizing India&apos;s <span className="gt">Rural Retail Counters.</span>
+      <main style={{ background: "var(--bg)", minHeight: "100vh", overflowX: "hidden" }}>
+        {/* HERO */}
+        <section
+          style={{
+            minHeight: "80vh",
+            paddingTop: "140px",
+            paddingBottom: "80px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+          className="bg-radial-hero"
+        >
+          <div style={{ maxWidth: "1360px", margin: "0 auto", padding: "0 36px", width: "100%" }}>
+            <div className="pill" style={{ marginBottom: "16px" }}>Our Mission & Story</div>
+            <h1 className="serif" style={{ fontSize: "clamp(30px, 3.4vw, 46px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.018em", color: "var(--text-ivory)", marginBottom: "20px", maxWidth: "720px" }}>
+              Turning fragmented conversations into <span className="serif-italic">organised business outcomes.</span>
             </h1>
-            <p style={{ color: "var(--ink2)", fontSize: "clamp(15px, 2vw, 18px)", lineHeight: 1.7, maxWidth: "680px", margin: "0 auto" }}>
-              We build the digital infrastructure layer connecting brands, wholesalers, and local merchants at the counter, for the first time.
+            <p style={{ color: "var(--text-muted)", fontSize: "clamp(15px, 1.3vw, 17px)", lineHeight: 1.65, maxWidth: "580px", marginBottom: "32px" }}>
+              Every day, businesses invest heavily in generating demand and customer relationships—only to lose trust when calls go unanswered, WhatsApp messages sit unread, and follow-ups are forgotten.
             </p>
           </div>
+
+          <div style={{ textAlign: "center", marginTop: "60px", borderTop: "1px solid var(--border)", paddingTop: "40px" }}>
+            <span className="serif" style={{ fontSize: "clamp(20px, 2.5vw, 32px)", color: "var(--text-ivory)" }}>
+              Founded on the belief that <span className="serif-italic">every customer query deserves an intelligent next step.</span>
+            </span>
+          </div>
         </section>
 
-        {/* Company History and Registered Office */}
-        <section style={{ background: "var(--bg2)", borderTop: "1px solid var(--border)", padding: "80px 24px" }}>
-          <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "64px", alignItems: "center" }} className="solutions-g">
+        {/* FOUNDING STORY & DIGICIDES CONTEXT */}
+        <section style={{ padding: "100px 36px", background: "var(--bg2)", borderTop: "1px solid var(--border)" }}>
+          <div style={{ maxWidth: "1120px", margin: "0 auto" }}>
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1.1fr 0.9fr",
+                gap: "64px",
+                alignItems: "center",
+              }}
+              className="about-grid"
+            >
               <div>
-                <h2 className="hf" style={{ fontSize: "clamp(26px, 3.5vw, 38px)", fontWeight: 900, letterSpacing: "-0.8px", color: "var(--ink)", marginBottom: "20px" }}>
-                  Building the <span className="gt-green">Operating System</span> for Rural Trade
+                <div className="pill" style={{ marginBottom: "16px" }}>The Insight</div>
+                <h2 className="serif" style={{ fontSize: "clamp(28px, 3.8vw, 44px)", color: "var(--text-ivory)", lineHeight: 1.2, marginBottom: "20px" }}>
+                  Where the problem was <span className="serif-italic">revealed.</span>
                 </h2>
-                <p style={{ color: "var(--ink2)", fontSize: "15px", lineHeight: 1.8, marginBottom: "16px" }}>
-                  Namuste Technologies is resolving the long-standing opacity in general trade distribution. Over 12 million Kirana shops, rural chemists, and agricultural seed dealers conduct trillions in cash transactions every year — with zero digital record.
+                <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.8, marginBottom: "16px" }}>
+                  Namuste Technologies was founded by <strong>Saswati</strong> and <strong>Dipanjan</strong> following years of operational experience building large-scale commercial distribution and communication networks at Digicides.
                 </p>
-                <p style={{ color: "var(--ink2)", fontSize: "14px", lineHeight: 1.8, marginBottom: "32px" }}>
-                  Our platform connects B2B wholesaling, OTP verification checks, and digital rewards, shifting store owners from guess-work bookkeeping to data-driven commercial intelligence.
+                <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.8, marginBottom: "16px" }}>
+                  While coordinating thousands of retailers, clinic desks, and field partners, one fundamental breakdown was undeniable: <strong style={{ color: "var(--text-ivory)" }}>businesses were drowning in unstructured incoming enquiries</strong> that human front-desks simply could not answer in real time.
                 </p>
+                <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.8 }}>
+                  We built Namuste as an industry-agnostic AI platform that sits quietly beside your team, turning high-volume voice calls, WhatsApp messages, and web enquiries into verified, structured next actions.
+                </p>
+              </div>
 
-                {/* Office Info card */}
-                <div style={{ display: "flex", gap: "16px", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "14px", padding: "20px" }}>
-                  <div style={{ width: "40px", height: "40px", borderRadius: "10px", background: "rgba(82,204,79,0.08)", border: "1px solid var(--border2)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-green)", flexShrink: 0 }}>
-                    <IconMapPin size={18} />
-                  </div>
-                  <div>
-                    <h4 className="hf" style={{ fontWeight: 700, fontSize: "14px", color: "var(--ink)", marginBottom: "4px" }}>Registered Corporate Office</h4>
-                    <p style={{ color: "var(--ink2)", fontSize: "13px", lineHeight: 1.6 }}>
-                      245 B/1, Raipur Road, Kolkata 700047<br />
-                      West Bengal, India
-                    </p>
-                  </div>
+              <div
+                className="glass-card"
+                style={{
+                  padding: "40px",
+                  borderRadius: "20px",
+                  background: "rgba(16, 20, 16, 0.8)",
+                  border: "1px solid rgba(118, 192, 67, 0.25)",
+                }}
+              >
+                <div style={{ fontSize: "13px", fontWeight: 700, color: "var(--green)", textTransform: "uppercase", letterSpacing: "0.1em", marginBottom: "16px" }}>
+                  Core Operating Principles
+                </div>
+                <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
+                  {[
+                    { title: "Problem First, Technology Second", desc: "We design for the actual failure points of human front desks and busy practices." },
+                    { title: "Zero Hallucination Tolerance", desc: "AI must never guess or make promises outside verified business guidelines." },
+                    { title: "Calm, Restrained Engineering", desc: "No noisy gimmicks. Just quiet, dependable automation that respects human attention." },
+                  ].map((p, i) => (
+                    <div key={i} style={{ borderBottom: i < 2 ? "1px solid var(--border)" : "none", paddingBottom: i < 2 ? "16px" : 0 }}>
+                      <h4 className="serif" style={{ fontSize: "17px", color: "var(--text-ivory)", marginBottom: "4px" }}>{p.title}</h4>
+                      <p style={{ fontSize: "13px", color: "var(--text-muted)", lineHeight: 1.6 }}>{p.desc}</p>
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              {/* Pillars list */}
-              <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-                {pillars.map((p) => (
-                  <div key={p.title} className="card" style={{ padding: "24px" }}>
-                    <div style={{ display: "flex", gap: "14px", alignItems: "center", marginBottom: "12px", color: "var(--accent-green)" }}>
-                      <div style={{ width: "36px", height: "36px", borderRadius: "8px", background: "var(--surface)", border: "1px solid var(--border)", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                        {p.icon}
-                      </div>
-                      <h3 className="hf" style={{ fontSize: "15px", fontWeight: 700, color: "var(--ink)" }}>{p.title}</h3>
-                    </div>
-                    <p style={{ color: "var(--ink2)", fontSize: "13px", lineHeight: 1.65 }}>{p.desc}</p>
-                  </div>
-                ))}
-              </div>
             </div>
           </div>
         </section>
 
-        {/* Founding Thesis Quote section */}
-        <section style={{ padding: "80px 24px" }}>
-          <div style={{ maxWidth: "1000px", margin: "0 auto", textAlign: "center", background: "var(--surface)", border: "1px solid var(--border)", borderRadius: "20px", padding: "60px 40px", position: "relative" }}>
-            <div className="dot-grid" style={{ position: "absolute", inset: 0, opacity: 0.2, pointerEvents: "none" }} />
-            <h3 className="hf" style={{ fontSize: "clamp(20px, 3vw, 28px)", fontWeight: 800, color: "var(--ink)", fontStyle: "italic", lineHeight: 1.45, marginBottom: "28px" }}>
-              &ldquo;The first company to digitize the rural retail counter owns the most valuable commercial data asset in India.&rdquo;
+        {/* REGISTERED CORPORATE OFFICE */}
+        <section style={{ padding: "80px 36px", background: "var(--bg)", borderTop: "1px solid var(--border)" }}>
+          <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center" }}>
+            <div className="pill" style={{ marginBottom: "16px" }}>Corporate Headquarters</div>
+            <h3 className="serif" style={{ fontSize: "28px", color: "var(--text-ivory)", marginBottom: "16px" }}>
+              Namuste Technologies Pvt. Ltd.
             </h3>
-            <div style={{ display: "inline-block" }}>
-              <h4 className="hf" style={{ fontWeight: 700, fontSize: "14px", color: "var(--accent-green)" }}>Namuste Technologies</h4>
-              <p style={{ color: "var(--ink2)", fontSize: "12px", marginTop: "4px" }}>Our Founding Thesis</p>
-            </div>
+            <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.7, marginBottom: "28px" }}>
+              245 B/1, Raipur Road, Kolkata 700047, West Bengal, India <br />
+              Email: <strong style={{ color: "var(--text-ivory)" }}>connect@namuste.com</strong>
+            </p>
+            <Link href="/contact" className="btn-primary">
+              Book a Consultation with Founders <ArrowRight size={15} />
+            </Link>
           </div>
         </section>
-
       </main>
       <Footer />
-      <style>{`
-        @media(max-width:900px){.solutions-g{grid-template-columns:1fr!important;gap:40px!important}}
-      `}</style>
+      <style>{`@media (max-width: 860px) { .about-grid { grid-template-columns: 1fr !important; } }`}</style>
     </>
   );
 }
