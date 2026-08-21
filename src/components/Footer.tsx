@@ -1,105 +1,192 @@
-"use client";
 import Link from "next/link";
-import { Logo } from "@/components/Icons";
-
-const footerLinks = [
-  {
-    group: "Platform",
-    links: [
-      { label: "Platform Overview", path: "/platform" },
-      { label: "How It Works", path: "/how-it-works" },
-      { label: "Solutions & Verticals", path: "/solutions" },
-    ]
-  },
-  {
-    group: "Company",
-    links: [
-      { label: "About Us", path: "/about" },
-      { label: "Book a Demo", path: "/contact" },
-    ]
-  }
-];
+import { ArrowRight, ShieldCheck, Mail, MapPin } from "lucide-react";
 
 export default function Footer() {
   return (
-    <footer>
-      {/* CTA Banner */}
-      <div style={{ background: "var(--bg2)", position: "relative", overflow: "hidden", borderTop: "1px solid var(--border)" }}>
-        <div className="dot-grid" style={{ position: "absolute", inset: 0, opacity: 0.3 }} />
-        <div style={{ position: "absolute", top: "50%", left: "50%", transform: "translate(-50%,-50%)", width: 600, height: 400, borderRadius: "50%", background: "radial-gradient(ellipse,rgba(82,204,79,0.06) 0%,transparent 70%)", pointerEvents: "none" }} />
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "72px 44px", position: "relative", zIndex: 2, display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: 28 }}>
+    <footer style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", position: "relative" }}>
+      {/* Editorial Conversion Callout Banner */}
+      <div
+        style={{
+          borderBottom: "1px solid var(--border)",
+          background: "radial-gradient(ellipse at 50% 0%, rgba(118, 192, 67, 0.05) 0%, transparent 70%)",
+          padding: "80px 36px",
+        }}
+      >
+        <div
+          style={{
+            maxWidth: "1120px",
+            margin: "0 auto",
+            display: "flex",
+            flexWrap: "wrap",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "32px",
+          }}
+        >
           <div>
-            <h2 className="hf" style={{ fontWeight: 900, color: "var(--ink)", fontSize: "clamp(22px,3vw,38px)", lineHeight: 1.2, letterSpacing: "-.6px", marginBottom: 8 }}>
-              Digitize your retail network <span className="gt">today.</span>
+            <div className="pill" style={{ marginBottom: "14px" }}>
+              <span className="pill-dot" /> Intelligent Outcomes
+            </div>
+            <h2
+              className="serif"
+              style={{
+                fontSize: "clamp(26px, 3.5vw, 42px)",
+                color: "var(--text-ivory)",
+                lineHeight: 1.2,
+                maxWidth: "640px",
+              }}
+            >
+              Every conversation deserves an intelligent response and a <span className="serif-italic">clear next step.</span>
             </h2>
-            <p style={{ color: "var(--ink2)", fontSize: "15px" }}>Apply for early partner access — limited cohorts running.</p>
           </div>
-          <div style={{ display: "flex", gap: 12, flexWrap: "wrap" }}>
-            <Link href="/contact" className="btn-green" style={{ fontSize: 14 }}>Apply for Early Access</Link>
-            <Link href="/contact" className="btn-ghost" style={{ fontSize: 14 }}>Contact Us</Link>
+          <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
+            <Link href="/contact" className="btn-primary">
+              Book a Consultation <ArrowRight size={15} />
+            </Link>
+            <Link href="/industries/doctors-and-clinics" className="btn-secondary">
+              Explore Clinic Demo
+            </Link>
           </div>
         </div>
       </div>
 
-      {/* Main footer */}
-      <div style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", padding: "52px 0 0" }}>
-        <div style={{ maxWidth: 1280, margin: "0 auto", padding: "0 44px 40px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "2fr 1fr 1fr", gap: 36 }} className="fg">
+      {/* Main Sitemap Grid */}
+      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "64px 36px 40px" }}>
+        <div
+          style={{
+            display: "grid",
+            gridTemplateColumns: "2fr 1fr 1fr 1fr 1.2fr",
+            gap: "40px",
+            marginBottom: "56px",
+          }}
+          className="footer-grid"
+        >
+          {/* Official Brand Logo */}
+          <div>
+            <Link
+              href="/"
+              style={{
+                display: "inline-block",
+                textDecoration: "none",
+                marginBottom: "18px",
+              }}
+            >
+              <img
+                src="/logo.png"
+                alt="Namuste"
+                style={{
+                  height: "48px",
+                  width: "auto",
+                  display: "block",
+                  objectFit: "contain",
+                }}
+              />
+            </Link>
+            <p style={{ color: "var(--text-muted)", fontSize: "13.5px", lineHeight: 1.7, maxWidth: "280px", marginBottom: "20px" }}>
+              The horizontal AI voice and chat assistant platform turning fragmented customer enquiries into structured business outcomes.
+            </p>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", padding: "6px 12px", borderRadius: "8px" }}>
+              <ShieldCheck size={14} style={{ color: "var(--green)" }} />
+              <span style={{ fontSize: "11.5px", color: "var(--text-body)" }}>Responsible AI & Human In Loop</span>
+            </div>
+          </div>
 
-            {/* Brand */}
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 9, marginBottom: 14 }}>
-                <Logo height={72} />
+          {/* Product & Channels */}
+          <div>
+            <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
+              Platform
+            </h4>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <li><Link href="/product" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Platform Overview</Link></li>
+              <li><Link href="/product/voice-ai" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Voice AI Engine</Link></li>
+              <li><Link href="/product/whatsapp-ai" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>WhatsApp AI</Link></li>
+              <li><Link href="/product/web-ai" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Web Concierge</Link></li>
+              <li><Link href="/how-it-works" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>How It Works</Link></li>
+            </ul>
+          </div>
+
+          {/* Priority Industries */}
+          <div>
+            <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
+              Industries
+            </h4>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <li>
+                <Link href="/industries/doctors-and-clinics" style={{ color: "var(--green)", textDecoration: "none", fontSize: "13px", fontWeight: 600 }}>
+                  Doctors & Clinics
+                </Link>
+              </li>
+              <li><Link href="/industries/professional-services" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Professional Services</Link></li>
+              <li><Link href="/industries/distribution" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Distribution & Field</Link></li>
+              <li><Link href="/industries/agriculture" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Agriculture & Rural</Link></li>
+              <li><Link href="/industries/education" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Education & Admissions</Link></li>
+              <li><Link href="/industries/research" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Research & Surveys</Link></li>
+            </ul>
+          </div>
+
+          {/* Enterprise & Use Cases */}
+          <div>
+            <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
+              Solutions
+            </h4>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+              <li><Link href="/enterprise" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Enterprise Groups</Link></li>
+              <li><Link href="/use-cases" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Universal Use Cases</Link></li>
+              <li><Link href="/pricing" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Transparent Pricing</Link></li>
+              <li><Link href="/responsible-ai" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Responsible AI Policy</Link></li>
+            </ul>
+          </div>
+
+          {/* Registered Office */}
+          <div>
+            <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
+              Company
+            </h4>
+            <div style={{ display: "flex", flexDirection: "column", gap: "12px", color: "var(--text-muted)", fontSize: "13px" }}>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <Mail size={15} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
+                <span>connect@namuste.com</span>
               </div>
-              <p style={{ color: "var(--ink2)", fontSize: 13, lineHeight: 1.75, marginBottom: 18 }}>
-                The operating system for retail counters. Starting at the counter — the first moment of trust.
-              </p>
-              <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" strokeWidth="1.8" style={{ marginTop: 1, flexShrink: 0 }}><rect width="20" height="16" x="2" y="4" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
-                  <span style={{ color: "var(--ink2)", fontSize: 12 }}>connect@namuste.com</span>
-                </div>
-                <div style={{ display: "flex", alignItems: "flex-start", gap: 8 }}>
-                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="var(--accent-green)" strokeWidth="1.8" style={{ marginTop: 1, flexShrink: 0 }}><path d="M20 10c0 6-8 12-8 12s-8-6-8-12a8 8 0 0 1 16 0Z"/><circle cx="12" cy="10" r="3"/></svg>
-                  <span style={{ color: "var(--ink2)", fontSize: 12, lineHeight: 1.5 }}>245 B/1, Raipur Road, Kolkata 700047<br />West Bengal, India</span>
-                </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <MapPin size={15} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
+                <span>245 B/1, Raipur Road, Kolkata 700047, West Bengal, India</span>
               </div>
             </div>
-
-            {/* Nav columns */}
-            {footerLinks.map(group => (
-              <div key={group.group}>
-                <h4 className="hf" style={{ fontWeight: 600, color: "var(--ink)", fontSize: 13, marginBottom: 16 }}>{group.group}</h4>
-                <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: 10 }}>
-                  {group.links.map(link => (
-                    <li key={link.label}>
-                      <Link href={link.path} style={{ color: "var(--ink2)", fontSize: 13, textDecoration: "none", transition: "color .18s" }}
-                        onMouseEnter={e => (e.currentTarget.style.color = "var(--accent-green)")}
-                        onMouseLeave={e => (e.currentTarget.style.color = "var(--ink2)")}
-                      >{link.label}</Link>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
           </div>
         </div>
 
-        {/* Bottom bar */}
-        <div style={{ borderTop: "1px solid var(--border)", maxWidth: 1280, margin: "0 auto", padding: "14px 44px", display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span style={{ color: "var(--muted)", fontSize: 12 }}>
-            Namuste Technologies Pvt. Ltd. · Kolkata, India
-          </span>
-          <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
-            <div style={{ width: 5, height: 5, borderRadius: "50%", background: "var(--accent-green)", opacity: .5 }} />
-            <span style={{ color: "var(--accent-green)", fontSize: 11, opacity: 0.6 }}>Building the future of rural retail</span>
+        {/* Bottom Rights Bar */}
+        <div
+          style={{
+            borderTop: "1px solid var(--border)",
+            paddingTop: "24px",
+            display: "flex",
+            justifyContent: "space-between",
+            alignItems: "center",
+            flexWrap: "wrap",
+            gap: "16px",
+            fontSize: "12px",
+            color: "var(--text-dim)",
+          }}
+        >
+          <div>
+            © {new Date().getFullYear()} Namuste Technologies Pvt. Ltd. All rights reserved.
+          </div>
+          <div style={{ display: "flex", gap: "20px" }}>
+            <Link href="/responsible-ai" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Privacy & Responsible AI</Link>
+            <Link href="/about" style={{ color: "var(--text-dim)", textDecoration: "none" }}>About Founders</Link>
+            <Link href="/contact" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Book a Demo</Link>
           </div>
         </div>
       </div>
 
       <style>{`
-        @media(max-width:860px){.fg{grid-template-columns:1fr 1fr!important}}
-        @media(max-width:480px){.fg{grid-template-columns:1fr!important}}
+        @media (max-width: 1024px) {
+          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+        }
+        @media (max-width: 640px) {
+          .footer-grid { grid-template-columns: 1fr !important; }
+        }
       `}</style>
     </footer>
   );

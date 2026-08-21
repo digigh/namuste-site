@@ -1,53 +1,57 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import { IconTarget, IconLayers, IconUsers, IconSmartphone, IconBarChart, IconCheck, IconShield } from "@/components/Icons";
+import { ArrowRight, Check, Sparkles, Layers, BookOpen, Sliders, Network, Play, Rocket, LineChart } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "How Counter OS Works — Namuste Technologies",
-  description: "Explore the end-to-end B2B and B2C supply chain flow of Counter OS. From smart B2B wholesale ordering to OTP-verified delivery and AI analytics.",
+  title: "How Namuste Works — 7-Step Deployment Blueprint",
+  description:
+    "From workflow selection and knowledge ingestion to channel connection, live testing, and continuous learning — explore the end-to-end Namuste implementation roadmap.",
 };
 
 const steps = [
   {
     num: "01",
-    title: "Onboarding & Shop Setup",
-    icon: <IconUsers size={24} />,
-    color: "var(--accent-green)",
-    desc: "Users download and choose their role (Retailer or Distributor), selecting their trade category (Agri, Food & Grocery, Pharma, Hardware, Electronics). The platform immediately seeds a starter inventory catalog using smart category data.",
-    highlights: ["Select Retailer/Distributor role", "Define business trade category", "AI-Generated smart inventory seeding"],
+    title: "Choose a Purpose-Built Workflow",
+    icon: <Layers size={22} />,
+    desc: "Select from pre-configured playbooks for Doctors & Clinics, Legal/Accounting Intake, Distribution Helplines, Admissions, or custom enterprise flows.",
   },
   {
     num: "02",
-    title: "B2B Wholesale Ordering",
-    icon: <IconLayers size={24} />,
-    color: "var(--accent-green-mid)",
-    desc: "Retailers browse their linked distributor's catalog from the counter, compile their list, and submit a wholesale purchase order. Wholesalers receive instant notifications to review, edit, and approve the order.",
-    highlights: ["Browse wholesale catalogs in real time", "Distributor receives push notifications", "Secure 4-digit Delivery OTP generated on approval"],
+    title: "Ingest Verified Business Knowledge",
+    icon: <BookOpen size={22} />,
+    desc: "Upload price lists, practitioner timetables, clinic FAQs, service scopes, and operational handbooks. Namuste indexes approved facts with zero hallucination.",
   },
   {
     num: "03",
-    title: "OTP-Verified Fulfillment & Rewards",
-    icon: <IconShield size={24} />,
-    color: "var(--accent-green-deep)",
-    desc: "When delivery arrives at the retail counter, the retailer verifies the physical package and shares the 4-digit OTP. The distributor enters the OTP on their device, confirming delivery and triggering instant backend resolutions.",
-    highlights: ["Distributor receives wallet payout instantly", "Retailer earns 5% to 10% cashback rewards", "Retailer inventory quantities auto-increment"],
+    title: "Configure Actions & Escalation Rules",
+    icon: <Sliders size={22} />,
+    desc: "Define calendar booking links, CRM webhook endpoints, qualification criteria, and human transfer conditions for high-priority conversations.",
   },
   {
     num: "04",
-    title: "Point of Sale (POS) & Consumer Cart",
-    icon: <IconSmartphone size={24} />,
-    color: "var(--gold)",
-    desc: "Retailers process quick consumer checkouts using a high-speed, touch-first POS cart. Sales are logged in the offline ledger, automatically reducing stock levels and updating live profit values in the store wallet.",
-    highlights: ["High-speed cart for walk-in retail bills", "Optional consumer OTP for loyalty points", "Real-time margin and wallet balance updates"],
+    title: "Connect Native Channels",
+    icon: <Network size={22} />,
+    desc: "Activate telephony PBX forwarding for Voice AI, connect official WhatsApp Business Cloud API numbers, and embed the 10KB web concierge script.",
   },
   {
     num: "05",
-    title: "AI Business Intelligence Buddy",
-    icon: <IconBarChart size={24} />,
-    color: "var(--diamond-blue)",
-    desc: "The on-device AI system monitors operations. It reads printed paper invoices using computer vision, tracks stockout risk indicators, warns about low-margin products, and highlights optimal pricing adjustments.",
-    highlights: ["OCR scanning extracts printed invoices", "Automated low-stock alerts", "Margin optimization action plans"],
+    title: "Test with Live Multilingual Audio",
+    icon: <Play size={22} />,
+    desc: "Run simulated patient, customer, or dealer calls in our sandbox environment to calibrate cadence, accents, and boundary checks before going live.",
+  },
+  {
+    num: "06",
+    title: "Launch with Human-in-the-Loop",
+    icon: <Rocket size={22} />,
+    desc: "Deploy live. Your human team receives real-time screen notifications, contextual handover transcripts, and instant outcome confirmations.",
+  },
+  {
+    num: "07",
+    title: "Continuous Outcome Learning",
+    icon: <LineChart size={22} />,
+    desc: "Namuste analyzes unanswered nuances and conversational drop-offs, surfacing actionable knowledge base refinements for your administrators.",
   },
 ];
 
@@ -55,91 +59,95 @@ export default function HowItWorksPage() {
   return (
     <>
       <Navbar />
-      <main style={{ background: "var(--bg)", color: "var(--ink)", minHeight: "100vh", paddingTop: "110px", overflowX: "hidden" }}>
-        
-        {/* Banner */}
-        <section style={{ maxWidth: "1280px", margin: "0 auto", padding: "40px 24px 80px", position: "relative" }}>
-          <div className="dot-grid" style={{ position: "absolute", inset: 0, opacity: 0.25, pointerEvents: "none" }} />
-          <div style={{ maxWidth: "800px", margin: "0 auto", textAlign: "center", position: "relative", zIndex: 10 }}>
-            <span className="pill" style={{ marginBottom: "20px" }}>Core Workflow</span>
-            <h1 className="hf" style={{ fontSize: "clamp(32px, 5vw, 56px)", fontWeight: 900, lineHeight: 1.1, letterSpacing: "-1.5px", marginBottom: "24px", color: "var(--ink)" }}>
-              The Supply Chain <span className="gt-green">Timeline.</span>
+      <main style={{ background: "var(--bg)", minHeight: "100vh", overflowX: "hidden" }}>
+        {/* HERO */}
+        <section
+          style={{
+            minHeight: "85vh",
+            paddingTop: "140px",
+            paddingBottom: "80px",
+            position: "relative",
+            display: "flex",
+            flexDirection: "column",
+            justifyContent: "space-between",
+          }}
+          className="bg-radial-hero"
+        >
+          <div style={{ maxWidth: "1360px", margin: "0 auto", padding: "0 36px", width: "100%" }}>
+            <div className="pill" style={{ marginBottom: "16px" }}>Deployment Architecture</div>
+            <h1 className="serif" style={{ fontSize: "clamp(30px, 3.4vw, 46px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.018em", color: "var(--text-ivory)", marginBottom: "20px", maxWidth: "680px" }}>
+              The 7-step roadmap from knowledge to <span className="serif-italic">autonomous outcomes.</span>
             </h1>
-            <p style={{ color: "var(--ink2)", fontSize: "clamp(15px, 2vw, 18px)", lineHeight: 1.7, maxWidth: "680px", margin: "0 auto" }}>
-              From initial store setup and wholesale B2B ordering to OTP delivery verification and AI-driven stock recommendations.
+            <p style={{ color: "var(--text-muted)", fontSize: "clamp(15px, 1.3vw, 17px)", lineHeight: 1.65, maxWidth: "560px", marginBottom: "32px" }}>
+              Deploy in under 48 hours. No complex coding or machine learning expertise required.
             </p>
+            <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
+              <Link href="/contact" className="btn-primary">
+                Start Your Deployment <ArrowRight size={15} />
+              </Link>
+              <Link href="/industries/doctors-and-clinics" className="btn-secondary">
+                View Clinic Demo <ArrowRight size={15} />
+              </Link>
+            </div>
+          </div>
+
+          <div style={{ textAlign: "center", marginTop: "80px", borderTop: "1px solid var(--border)", paddingTop: "40px" }}>
+            <span className="serif" style={{ fontSize: "clamp(20px, 2.5vw, 32px)", color: "var(--text-ivory)" }}>
+              Simple setup. <span className="serif-italic">Enterprise grade execution.</span>
+            </span>
           </div>
         </section>
 
-        {/* Timeline Steps */}
-        <section style={{ background: "var(--bg2)", borderTop: "1px solid var(--border)", padding: "80px 24px" }}>
-          <div style={{ maxWidth: "900px", margin: "0 auto", position: "relative" }}>
-            
-            {/* Center line for desktop */}
-            <div style={{ position: "absolute", top: 0, bottom: 0, left: "40px", width: "1px", background: "var(--border)", opacity: 0.5 }} className="timeline-line" />
-
-            <div style={{ display: "flex", flexDirection: "column", gap: "48px" }}>
-              {steps.map((s) => (
-                <div key={s.num} style={{ display: "flex", gap: "32px", position: "relative", zIndex: 10 }} className="timeline-item">
-                  
-                  {/* Step Number Circle */}
-                  <div style={{ 
-                    width: "80px", 
-                    height: "80px", 
-                    borderRadius: "50%", 
-                    background: "var(--bg)", 
-                    border: `2px solid ${s.color}`, 
-                    display: "flex", 
-                    alignItems: "center", 
-                    justifyContent: "center", 
-                    color: s.color, 
-                    fontWeight: 900, 
-                    fontSize: "20px", 
-                    flexShrink: 0,
-                    boxShadow: "var(--shadow)"
-                  }} className="hf">
-                    {s.num}
+        {/* TIMELINE LIST */}
+        <section style={{ padding: "100px 36px", background: "var(--bg2)", borderTop: "1px solid var(--border)" }}>
+          <div style={{ maxWidth: "900px", margin: "0 auto" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "24px" }}>
+              {steps.map((step) => (
+                <div
+                  key={step.num}
+                  className="glass-card"
+                  style={{
+                    padding: "32px 36px",
+                    borderRadius: "18px",
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: "28px",
+                    background: "rgba(16, 16, 16, 0.8)",
+                  }}
+                >
+                  <div
+                    style={{
+                      width: "56px",
+                      height: "56px",
+                      borderRadius: "16px",
+                      background: "rgba(118, 192, 67, 0.12)",
+                      border: "1px solid rgba(118, 192, 67, 0.25)",
+                      color: "var(--green)",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      fontWeight: 800,
+                      fontSize: "18px",
+                      flexShrink: 0,
+                    }}
+                  >
+                    {step.num}
                   </div>
-
-                  {/* Step Details Card */}
-                  <div className="card" style={{ padding: "32px", flex: 1 }}>
-                    <div style={{ display: "flex", gap: "12px", alignItems: "center", marginBottom: "16px", color: s.color }}>
-                      {s.icon}
-                      <h3 className="hf" style={{ fontSize: "20px", fontWeight: 800, color: "var(--ink)" }}>{s.title}</h3>
-                    </div>
-                    <p style={{ color: "var(--ink2)", fontSize: "14px", lineHeight: 1.7, marginBottom: "20px" }}>{s.desc}</p>
-                    
-                    <div style={{ borderTop: "1px solid var(--border)", paddingTop: "16px" }}>
-                      <h4 className="hf" style={{ fontSize: "12px", fontWeight: "bold", textTransform: "uppercase", letterSpacing: "0.05em", color: "var(--ink)", marginBottom: "12px" }}>Key Functions:</h4>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }} className="points-grid">
-                        {s.highlights.map((h) => (
-                          <div key={h} style={{ display: "flex", gap: "8px", alignItems: "center" }}>
-                            <div style={{ width: "14px", height: "14px", borderRadius: "50%", background: "rgba(82,204,79,0.08)", display: "flex", alignItems: "center", justifyContent: "center", color: "var(--accent-green)" }}>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" style={{ margin: "auto" }}><path d="M20 6 9 17l-5-5"/></svg>
-                            </div>
-                            <span style={{ fontSize: "12px", color: "var(--ink2)" }}>{h}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
+                  <div>
+                    <h3 className="serif" style={{ fontSize: "22px", color: "var(--text-ivory)", marginBottom: "8px" }}>
+                      {step.title}
+                    </h3>
+                    <p style={{ color: "var(--text-muted)", fontSize: "14.5px", lineHeight: 1.7 }}>
+                      {step.desc}
+                    </p>
                   </div>
-
                 </div>
               ))}
             </div>
-
           </div>
         </section>
-
       </main>
       <Footer />
-      <style>{`
-        @media(max-width:768px){
-          .timeline-line { display: none!important; }
-          .timeline-item { flex-direction: column!important; gap: 16px!important; align-items: center!important; text-align: center!important; }
-          .points-grid { grid-template-columns: 1fr!important; text-align: left!important; }
-        }
-      `}</style>
     </>
   );
 }

@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 
-const WEBHOOK = "https://aiautomation.digicides.com/webhook-test/namuste";
+const WEBHOOK = "https://aiautomation.digicides.com/webhook/namuste-form";
 
 type FormState = { name:string; email:string; mobile:string; company:string; role:string; industry:string; message:string };
 type Status = "idle"|"loading"|"success"|"error";
