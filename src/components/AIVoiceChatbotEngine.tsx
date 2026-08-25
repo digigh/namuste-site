@@ -23,6 +23,7 @@ import {
   Truck,
   Code2,
   Check,
+  Radio,
   User,
   Calendar,
   Clock,
@@ -89,7 +90,6 @@ export default function AIVoiceChatbotEngine() {
   const [webhookSent, setWebhookSent] = useState<boolean>(false);
 
   // References for live async callbacks
-  const isCallActiveRef = useRef<boolean>(false);
   const recognitionRef = useRef<any>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -122,7 +122,7 @@ export default function AIVoiceChatbotEngine() {
   const stopCurrentAudio = useCallback(() => {
     if (currentAudioRef.current) {
       currentAudioRef.current.pause();
-      currentAudioRef.current.src = "";
+      currentAudioRef.current.currentTime = 0;
       currentAudioRef.current = null;
     }
     if (typeof window !== "undefined" && window.speechSynthesis) {
@@ -138,19 +138,14 @@ export default function AIVoiceChatbotEngine() {
     }
     if (recognitionRef.current) {
       try {
-        recognitionRef.current.abort();
+        recognitionRef.current.stop();
       } catch (_) {}
-      recognitionRef.current = null;
     }
     setIsUserSpeaking(false);
   }, []);
 
   // Web Speech Fallback
   const fallbackBrowserSpeech = useCallback((text: string, langCode = "en-IN", onEndedCallback?: () => void) => {
-    if (!isCallActiveRef.current && channel === "voice") {
-      setIsAiSpeaking(false);
-      return;
-    }
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
       if (onEndedCallback) onEndedCallback();
       return;
@@ -163,18 +158,12 @@ export default function AIVoiceChatbotEngine() {
     utterance.pitch = 1.0;
 
     utterance.onstart = () => {
-      if (!isCallActiveRef.current && channel === "voice") {
-        window.speechSynthesis.cancel();
-        return;
-      }
       setIsAiSpeaking(true);
       setSpeechStatusText("AI speaking...");
     };
     utterance.onend = () => {
       setIsAiSpeaking(false);
-      if (isCallActiveRef.current) {
-        setSpeechStatusText("Listening to you...");
-      }
+      setSpeechStatusText("Listening to you...");
       if (onEndedCallback) onEndedCallback();
     };
     utterance.onerror = () => {
@@ -182,16 +171,12 @@ export default function AIVoiceChatbotEngine() {
       if (onEndedCallback) onEndedCallback();
     };
     window.speechSynthesis.speak(utterance);
-  }, [channel]);
+  }, []);
 
   // Audible Speech Engine (Sarvam bulbul:v3 with fallback)
   const speakTextAudible = useCallback(async (text: string, langCode = "en-IN", onEndedCallback?: () => void) => {
     if (!isSpeakerOn) {
       if (onEndedCallback) onEndedCallback();
-      return;
-    }
-
-    if (!isCallActiveRef.current && channel === "voice") {
       return;
     }
 
@@ -215,19 +200,11 @@ export default function AIVoiceChatbotEngine() {
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.audioBase64) {
-          // If call was ended while fetching TTS, discard audio immediately
-          if (!isCallActiveRef.current && channel === "voice") {
-            setIsAiSpeaking(false);
-            return;
-          }
-
           const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
           currentAudioRef.current = audio;
           audio.onended = () => {
             setIsAiSpeaking(false);
-            if (isCallActiveRef.current) {
-              setSpeechStatusText("Listening to you...");
-            }
+            setSpeechStatusText("Listening to you...");
             if (onEndedCallback) onEndedCallback();
           };
           audio.onerror = () => {
@@ -242,7 +219,7 @@ export default function AIVoiceChatbotEngine() {
     }
 
     fallbackBrowserSpeech(text, langCode, onEndedCallback);
-  }, [channel, fallbackBrowserSpeech, isSpeakerOn, selectedSpeaker, stopCurrentAudio, stopLiveListening]);
+  }, [fallbackBrowserSpeech, isSpeakerOn, selectedSpeaker, stopCurrentAudio, stopLiveListening]);
 
   // Dispatch Webhook
   const triggerWebhookDispatch = useCallback(async (payloadExtracted: any, history: IndustryMessage[]) => {
@@ -290,7 +267,6 @@ export default function AIVoiceChatbotEngine() {
   // Main turn processor (Calls OpenAI GPT-4o-mini + State Machine)
   const processConversationTurn = useCallback(async (rawText: string) => {
     if (!rawText || rawText.trim() === "" || isProcessing) return;
-    if (!isCallActiveRef.current && channel === "voice") return;
 
     const userText = rawText.trim();
     setIsProcessing(true);
@@ -326,12 +302,6 @@ export default function AIVoiceChatbotEngine() {
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.reply) {
-          // Discard if call ended during fetch
-          if (!isCallActiveRef.current && channel === "voice") {
-            setIsProcessing(false);
-            return;
-          }
-
           const aiMsg: IndustryMessage = {
             speaker: "ai",
             text: data.reply,
@@ -344,33 +314,22 @@ export default function AIVoiceChatbotEngine() {
           conversationHistoryRef.current = finalHistory;
 
           if (data.extracted) {
-            const merged = {
-              name: data.extracted.name || currentExt.name || "",
-              mobile: data.extracted.mobile || currentExt.mobile || "",
-              dob: data.extracted.dob || currentExt.dob || "",
-              department: data.extracted.department || currentExt.department || "",
-              doctor: data.extracted.doctor || currentExt.doctor || "",
-              slot: data.extracted.slot || currentExt.slot || "",
-              intent: data.extracted.intent || currentExt.intent || "",
-              summary: data.extracted.summary || currentExt.summary || "",
-            };
-            setExtractedData(merged);
-            extractedDataRef.current = merged;
+            setExtractedData(data.extracted);
+            extractedDataRef.current = data.extracted;
+          }
+          if (data.languageCode) {
+            setCurrentLanguageCode(data.languageCode);
+          }
 
-            if (data.isComplete || data.step === "confirmation_complete" || merged.slot) {
-              triggerWebhookDispatch(merged, finalHistory);
-            }
-          } else {
-            if (data.isComplete || data.step === "confirmation_complete") {
-              triggerWebhookDispatch(currentExt, finalHistory);
-            }
+          if (data.isComplete || data.step === "confirmation_complete" || data.extracted?.slot) {
+            triggerWebhookDispatch(data.extracted || currentExt, finalHistory);
           }
 
           setIsProcessing(false);
 
-          if (channel === "voice" && isCallActiveRef.current) {
+          if (channel === "voice" || isCallActive) {
             speakTextAudible(data.reply, data.languageCode, () => {
-              if (isCallActiveRef.current && !isMuted) {
+              if (isCallActive && !isMuted) {
                 startLiveListening();
               }
             });
@@ -383,17 +342,15 @@ export default function AIVoiceChatbotEngine() {
     }
 
     setIsProcessing(false);
-  }, [channel, isMuted, isProcessing, selectedIndustryId, speakTextAudible, stopCurrentAudio, stopLiveListening, triggerWebhookDispatch]);
+  }, [channel, isCallActive, isMuted, isProcessing, selectedIndustryId, speakTextAudible, stopCurrentAudio, stopLiveListening, triggerWebhookDispatch]);
 
-  // Continuous speech recognition with automatic voice activity detection (Barge-In)
+  // Continuous speech recognition
   const startLiveListening = useCallback(() => {
     if (typeof window === "undefined") return;
-    if (!isCallActiveRef.current && channel === "voice") return;
-
     const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      setSpeechStatusText("Speech recognition not supported in this browser. Use chat or quick test.");
+      setSpeechStatusText("Browser speech recognition not supported. Use chat or quick test.");
       return;
     }
 
@@ -409,17 +366,11 @@ export default function AIVoiceChatbotEngine() {
       recognition.lang = currentLanguageCode || "en-IN";
 
       recognition.onstart = () => {
-        if (!isCallActiveRef.current && channel === "voice") {
-          try { recognition.abort(); } catch (_) {}
-          return;
-        }
         setIsUserSpeaking(true);
         setSpeechStatusText("Listening to you... (Speak naturally)");
       };
 
       recognition.onresult = (event: any) => {
-        if (!isCallActiveRef.current && channel === "voice") return;
-
         let interimText = "";
         let finalText = "";
         for (let i = event.resultIndex; i < event.results.length; ++i) {
@@ -433,30 +384,15 @@ export default function AIVoiceChatbotEngine() {
         const activeTranscript = finalText || interimText;
         setLiveUserTranscript(activeTranscript);
 
-        // Automatic Acoustic Interruption (Barge-in): instantly stop AI voice if user starts speaking
-        if (activeTranscript.trim().length > 0) {
-          if (currentAudioRef.current) {
-            currentAudioRef.current.pause();
-            currentAudioRef.current.src = "";
-            currentAudioRef.current = null;
-            setIsAiSpeaking(false);
-          }
-          if (typeof window !== "undefined" && window.speechSynthesis) {
-            window.speechSynthesis.cancel();
-            setIsAiSpeaking(false);
-          }
-        }
-
         if (silenceTimeoutRef.current) {
           clearTimeout(silenceTimeoutRef.current);
         }
 
         if (activeTranscript.trim().length > 0) {
           silenceTimeoutRef.current = setTimeout(() => {
-            if (!isCallActiveRef.current && channel === "voice") return;
             try { recognition.stop(); } catch (_) {}
             processConversationTurn(activeTranscript);
-          }, 1200);
+          }, 1400);
         }
       };
 
@@ -476,24 +412,20 @@ export default function AIVoiceChatbotEngine() {
       console.warn("Could not start STT:", err);
       setIsUserSpeaking(false);
     }
-  }, [channel, currentLanguageCode, processConversationTurn]);
+  }, [currentLanguageCode, processConversationTurn]);
 
   const handleStartCall = async () => {
-    isCallActiveRef.current = true;
     setIsConnecting(true);
     setSpeechStatusText("Connecting to AI Receptionist...");
     setCallDuration(0);
     setLiveUserTranscript("");
     setIsMuted(false);
 
-    await new Promise((r) => setTimeout(r, 400));
-
-    if (!isCallActiveRef.current) return;
+    await new Promise((r) => setTimeout(r, 600));
 
     setIsCallActive(true);
     setIsConnecting(false);
 
-    if (timerRef.current) clearInterval(timerRef.current);
     timerRef.current = setInterval(() => {
       setCallDuration((prev) => prev + 1);
     }, 1000);
@@ -510,31 +442,19 @@ export default function AIVoiceChatbotEngine() {
     conversationHistoryRef.current = initialHistory;
 
     speakTextAudible(activeIndustry.initialGreetingEnglish, "en-IN", () => {
-      if (isCallActiveRef.current) {
-        startLiveListening();
-      }
+      startLiveListening();
     });
   };
 
-  // Instant Hard Disconnect: terminates all audio, STT, and timers immediately
   const handleEndCall = () => {
-    isCallActiveRef.current = false;
-    setIsCallActive(false);
-    setIsConnecting(false);
-    setIsAiSpeaking(false);
-    setIsUserSpeaking(false);
-    setIsProcessing(false);
-    setLiveUserTranscript("");
-
     stopCurrentAudio();
     stopLiveListening();
-
     if (timerRef.current) {
       clearInterval(timerRef.current);
       timerRef.current = null;
     }
-
-    setSpeechStatusText("Call disconnected.");
+    setIsCallActive(false);
+    setSpeechStatusText("Call ended. Click to call again.");
   };
 
   const handleReset = () => {
@@ -1273,6 +1193,29 @@ export default function AIVoiceChatbotEngine() {
                   <>
                     <button
                       onClick={() => {
+                        stopCurrentAudio();
+                        startLiveListening();
+                      }}
+                      style={{
+                        display: "inline-flex",
+                        alignItems: "center",
+                        gap: "6px",
+                        padding: "11px 20px",
+                        borderRadius: "999px",
+                        background: isUserSpeaking ? "#38BDF8" : "rgba(155, 234, 22, 0.15)",
+                        color: isUserSpeaking ? "#000000" : "#9BEA16",
+                        border: `1px solid ${isUserSpeaking ? "#38BDF8" : "rgba(155, 234, 22, 0.4)"}`,
+                        fontSize: "12.5px",
+                        fontWeight: 700,
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Radio size={14} />
+                      <span>{isAiSpeaking ? "Interrupt & Speak" : isUserSpeaking ? "🔴 Listening..." : "🎙️ Speak"}</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
                         if (!isMuted) {
                           stopLiveListening();
                           setIsMuted(true);
@@ -1281,23 +1224,17 @@ export default function AIVoiceChatbotEngine() {
                           startLiveListening();
                         }
                       }}
-                      title={isMuted ? "Unmute Microphone" : "Mute Microphone"}
+                      title={isMuted ? "Unmute" : "Mute"}
                       style={{
-                        padding: "12px 18px",
-                        borderRadius: "999px",
+                        padding: "11px",
+                        borderRadius: "50%",
                         background: isMuted ? "#F87171" : "rgba(255, 255, 255, 0.08)",
                         color: isMuted ? "#000000" : "#F5F5F0",
                         border: "none",
-                        fontSize: "12.5px",
-                        fontWeight: 600,
                         cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "6px",
                       }}
                     >
-                      {isMuted ? <MicOff size={15} /> : <Mic size={15} />}
-                      <span>{isMuted ? "Unmute" : "Mute"}</span>
+                      {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
                     </button>
 
                     <button
@@ -1305,44 +1242,37 @@ export default function AIVoiceChatbotEngine() {
                         setIsSpeakerOn(!isSpeakerOn);
                         if (isSpeakerOn) stopCurrentAudio();
                       }}
-                      title={isSpeakerOn ? "Turn Speaker Off" : "Turn Speaker On"}
+                      title={isSpeakerOn ? "Mute Speaker" : "Unmute Speaker"}
                       style={{
-                        padding: "12px 18px",
-                        borderRadius: "999px",
+                        padding: "11px",
+                        borderRadius: "50%",
                         background: !isSpeakerOn ? "#FBBF24" : "rgba(255, 255, 255, 0.08)",
                         color: !isSpeakerOn ? "#000000" : "#F5F5F0",
                         border: "none",
-                        fontSize: "12.5px",
-                        fontWeight: 600,
+                        cursor: "pointer",
+                      }}
+                    >
+                      {isSpeakerOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                    </button>
+
+                    <button
+                      onClick={handleEndCall}
+                      title="End Call"
+                      style={{
+                        padding: "11px 22px",
+                        borderRadius: "999px",
+                        background: "#EF4444",
+                        color: "#FFFFFF",
+                        border: "none",
+                        fontSize: "13px",
+                        fontWeight: 700,
                         cursor: "pointer",
                         display: "inline-flex",
                         alignItems: "center",
                         gap: "6px",
                       }}
                     >
-                      {isSpeakerOn ? <Volume2 size={15} /> : <VolumeX size={15} />}
-                      <span>{isSpeakerOn ? "Speaker On" : "Speaker Off"}</span>
-                    </button>
-
-                    <button
-                      onClick={handleEndCall}
-                      title="End Call Immediately"
-                      style={{
-                        padding: "12px 28px",
-                        borderRadius: "999px",
-                        background: "#EF4444",
-                        color: "#FFFFFF",
-                        border: "none",
-                        fontSize: "13.5px",
-                        fontWeight: 700,
-                        cursor: "pointer",
-                        display: "inline-flex",
-                        alignItems: "center",
-                        gap: "7px",
-                        boxShadow: "0 0 20px rgba(239, 68, 68, 0.4)",
-                      }}
-                    >
-                      <PhoneOff size={16} />
+                      <PhoneOff size={15} />
                       <span>End Call</span>
                     </button>
                   </>

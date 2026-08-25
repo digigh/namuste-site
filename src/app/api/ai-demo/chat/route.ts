@@ -13,14 +13,16 @@ function detectLanguage(text: string): string {
   return "en-IN";
 }
 
-// ─── Named Entity Extraction ─────────────────────────────────────────────────
+// ─── Robust Named Entity Extraction (Regex Heuristic) ─────────────────────────
 function extractEntities(text: string, current: Record<string, string> = {}, industryId = "doctors-clinics"): Record<string, string> {
   const result: Record<string, string> = { ...current };
   const lower = text.toLowerCase();
 
-  // Phone number (10-digit Indian mobile)
-  const phoneMatch = text.match(/\b([6-9]\d{9})\b/);
-  if (phoneMatch) result.mobile = phoneMatch[1];
+  // Phone number (handles 10 digits with spaces, dashes, +91, etc.)
+  const phoneMatch = text.match(/(?:\+91[\-\s]?)?([6-9]\d{4}[\s\-]?\d{5}|[6-9]\d{9})/);
+  if (phoneMatch?.[1]) {
+    result.mobile = phoneMatch[1].replace(/[\s\-]/g, "");
+  }
 
   // Name extraction (English + Hindi patterns)
   const nameMatch = text.match(
@@ -28,7 +30,16 @@ function extractEntities(text: string, current: Record<string, string> = {}, ind
   );
   if (nameMatch?.[1]) {
     const n = nameMatch[1].trim();
-    if (!["hello", "hi", "hey", "namaste", "and", "hai", "looking", "need"].includes(n.toLowerCase())) {
+    if (!["hello", "hi", "hey", "namaste", "and", "hai", "looking", "need", "please", "confirm"].includes(n.toLowerCase())) {
+      result.name = n.split(" ").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    }
+  }
+
+  // Direct Name if text starts with name pattern like "Ankush Sharma, 98765..."
+  const leadNameMatch = text.match(/^([a-zA-Z]+(?:\s+[a-zA-Z]+)?)(?:,|\s+)(?:\+91|\d{10})/i);
+  if (leadNameMatch?.[1] && !result.name) {
+    const n = leadNameMatch[1].trim();
+    if (!["hello", "hi", "hey", "namaste", "i am", "my name"].includes(n.toLowerCase())) {
       result.name = n.split(" ").map((w: string) => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
     }
   }
@@ -80,22 +91,16 @@ function extractEntities(text: string, current: Record<string, string> = {}, ind
     else if (/grade\s*11|11th/i.test(lower)) result.department = "Grade 11 Foundation";
     else if (/grade\s*12|12th/i.test(lower)) result.department = "Grade 12 Target Batch";
   } else if (industryId === "distributors") {
-    if (/sku|fittings|electrical|boxes|units|boxes/i.test(lower)) result.department = "Wholesale Stock Reserve (SKU-8420)";
+    if (/sku|fittings|electrical|boxes|units/i.test(lower)) result.department = "Wholesale Stock Reserve (SKU-8420)";
     else if (/bulk|dealer|distribut/i.test(lower)) result.department = "Bulk Wholesale Supply";
   }
 
-  // Slot requested
-  const slotMatch = text.match(/\b(\d{1,2}(?::\d{2})?\s*(?:am|pm|baje))\b/i);
-  if (slotMatch) result.slotRequested = slotMatch[1];
-
-  // Specific confirmed slot timings
-  if (/(?:11:?45|11\.45)/i.test(text)) result.confirmedSlot = "Tomorrow 11:45 AM";
-  if (/(?:4:?30|4\.30)/i.test(text)) result.confirmedSlot = "Tomorrow 4:30 PM";
-  if (/(?:2:?30|2\.30)/i.test(text)) result.confirmedSlot = "Tomorrow 2:30 PM";
-  if (/(?:3:?00|3\.00|3\s*pm)/i.test(text) && /sat|saturday/i.test(text)) result.confirmedSlot = "Saturday 3:00 PM";
-  if (/(?:11:?30|11\.30)/i.test(text) && /sun|sunday/i.test(text)) result.confirmedSlot = "Sunday 11:30 AM";
-  if (/(?:11:?00|11\.00|11\s*am)/i.test(text) && /fri|friday/i.test(text)) result.confirmedSlot = "Friday 11:00 AM";
-  if (/(?:10:?00|10\.00|10\s*am)/i.test(text) && /sat|saturday/i.test(text)) result.confirmedSlot = "Saturday 10:00 AM";
+  // Time & Slot matching (Catches any time: 10:00 AM, 10:00 baje, Tomorrow 10 AM, Sunday 11:30 AM, etc.)
+  const timeMatch = text.match(/\b(?:(kal|aaj|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday|mon|tue|wed|thu|fri|sat|sun)\s+)?(?:(subah|dopahar|shaam|morning|afternoon|evening)\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm|baje))\b/i);
+  if (timeMatch) {
+    result.slotRequested = timeMatch[0].trim();
+    result.confirmedSlot = timeMatch[0].trim();
+  }
 
   return result;
 }
@@ -126,7 +131,7 @@ async function callOpenAI(
         ],
         response_format: { type: "json_object" },
         temperature: 0.2,
-        max_tokens: 400,
+        max_tokens: 450,
       }),
     });
   } finally {
@@ -158,18 +163,19 @@ export async function POST(req: Request) {
     const industry: IndustryFlow = INDUSTRY_FLOWS[industryId] || INDUSTRY_FLOWS["doctors-clinics"];
     const openaiKey = process.env.OPENAI_API_KEY?.trim() || "";
 
-    // Always run heuristic extractor first
+    // Always run heuristic extractor
     const extracted = extractEntities(userMessage, currentExtracted, industryId);
     const detectedLang = detectLanguage(userMessage);
 
-    const name = extracted.name || "";
-    const mobile = extracted.mobile || "";
-    const dob = extracted.dob || "";
+    const name = extracted.name || currentExtracted.name || "";
+    const mobile = extracted.mobile || currentExtracted.mobile || "";
+    const dob = extracted.dob || currentExtracted.dob || "";
     const dept = extracted.department || currentExtracted.department || "";
+    const slot = extracted.confirmedSlot || extracted.slotRequested || currentExtracted.slot || "";
     const isHindi = detectedLang === "hi-IN";
     const lower = userMessage.toLowerCase();
 
-    // ── Try OpenAI first with Domain-Specific Prompt ─────────────────────────
+    // ── Try OpenAI first with Structured Entity Extraction ───────────────────
     if (openaiKey) {
       try {
         const systemPrompt = `You are Namuste, the professional AI Voice & Chat Receptionist for "${industry.brandName}".
@@ -184,14 +190,17 @@ ${industry.systemPrompt}
 - Contact Mobile: "${mobile || "NOT PROVIDED"}"
 ${industry.requiresDob ? `- Date of Birth / Age: "${dob || "NOT PROVIDED"}"` : "- DOB: Not required for this vertical"}
 - Service / Department Interest: "${dept || "Pending"}"
-- Slot Requested: "${extracted.slotRequested || "None"}"
+- Slot Requested: "${slot || "None"}"
 
-## CONVERSATION FLOW RULES (Advance forward, never loop or repeat questions)
-1. If Customer Name OR Mobile is missing: Greet warmly and ask for their name and mobile number.
+## CONVERSATION FLOW RULES
+1. If Customer Name OR Mobile is missing: Greet warmly and ask for their name and 10-digit mobile number.
 ${industry.requiresDob ? "2. If Name and Mobile are provided but DOB/Age is missing: Ask only for date of birth or age." : ""}
 3. When contact details are collected: Present available services, consultation options, or timings for ${industry.name}.
 4. If customer asks about services, fees, pricing, or locations: Provide concise, professional answers and offer to schedule/confirm their session.
-5. If customer agrees or selects a time slot: Confirm the booking/session, assign a reference token, and set isComplete: true.
+5. If customer selects or agrees to a time slot (e.g. "kal subah 10:00 baje", "Tomorrow 11:45 AM", "Sunday 11:30 AM"): Confirm the booking, set isComplete: true, and put the confirmed slot in extracted.slot!
+
+## ENTITY EXTRACTION MANDATE
+You MUST extract and update all customer entities (name, mobile, dob, department/config, slot) in the "extracted" JSON object. If previously known, preserve them. If user mentions a phone number anywhere (even with spaces or words), extract it into "mobile".
 
 ## LANGUAGE RULES
 - Detect user language. If user speaks in Hindi or Hinglish → reply in natural, spoken Hindi/Hinglish.
@@ -203,6 +212,14 @@ ${industry.requiresDob ? "2. If Name and Mobile are provided but DOB/Age is miss
   "reply": "Spoken sentence to the user",
   "languageCode": "en-IN or hi-IN or ta-IN or bn-IN",
   "step": "intake_name_mobile | intake_dob | service_menu | inquiry_resolution | confirmation_complete",
+  "extracted": {
+    "name": "Customer Name",
+    "mobile": "10-digit phone number without spaces",
+    "dob": "DOB or age if applicable",
+    "department": "Selected Service / Specialty / Flat Config",
+    "slot": "Confirmed or requested appointment time (e.g. Tomorrow 10:00 AM)",
+    "intent": "Intent summary"
+  },
   "isComplete": false,
   "isOffTopic": false
 }`;
@@ -226,15 +243,21 @@ ${industry.requiresDob ? "2. If Name and Mobile are provided but DOB/Age is miss
         const parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
 
         const mergedExtracted = {
-          name: extracted.name || currentExtracted.name || "",
-          mobile: extracted.mobile || currentExtracted.mobile || "",
-          dob: extracted.dob || currentExtracted.dob || "",
-          department: extracted.department || currentExtracted.department || industry.name,
-          doctor: currentExtracted.doctor || (industry.id === "doctors-clinics" ? "Dr. Sharma" : "Assigned Lead"),
-          slot: extracted.confirmedSlot || currentExtracted.slot || "",
-          intent: currentExtracted.intent || `${industry.name} Consultation / Inquiry`,
+          name: parsed.extracted?.name || extracted.name || currentExtracted.name || "",
+          mobile: parsed.extracted?.mobile || extracted.mobile || currentExtracted.mobile || "",
+          dob: parsed.extracted?.dob || extracted.dob || currentExtracted.dob || "",
+          department: parsed.extracted?.department || extracted.department || currentExtracted.department || industry.name,
+          doctor: parsed.extracted?.doctor || currentExtracted.doctor || (industry.id === "doctors-clinics" ? "Dr. Sharma" : "Assigned Representative"),
+          slot: parsed.extracted?.slot || extracted.confirmedSlot || extracted.slotRequested || currentExtracted.slot || "",
+          intent: parsed.extracted?.intent || currentExtracted.intent || `${industry.name} Consultation / Inquiry`,
           summary: (parsed.reply || "").slice(0, 80),
         };
+
+        // If the reply explicitly confirmed a slot (e.g. "confirm ho gaya"), ensure slot is set
+        if (!mergedExtracted.slot && (parsed.reply?.includes("confirm") || parsed.isComplete)) {
+          const matchedSlot = parsed.reply.match(/\b(?:(kal|aaj|tomorrow|today|monday|tuesday|wednesday|thursday|friday|saturday|sunday)\s+)?(?:(subah|dopahar|shaam|morning|afternoon|evening)\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm|baje))\b/i);
+          if (matchedSlot) mergedExtracted.slot = matchedSlot[0];
+        }
 
         return NextResponse.json({
           success: true,
@@ -251,7 +274,7 @@ ${industry.requiresDob ? "2. If Name and Mobile are provided but DOB/Age is miss
       }
     }
 
-    // ── Dynamic State Machine Fallback (Tailored for each of the 8 industries) ───
+    // ── Dynamic State Machine Fallback ─────────────────────────────────────────
     let reply = "";
     let step = "intake_name_mobile";
     let isComplete = false;
@@ -276,7 +299,7 @@ ${industry.requiresDob ? "2. If Name and Mobile are provided but DOB/Age is miss
         : `Thank you, ${name}! Could you please share your date of birth or age for our records?`;
       step = "intake_dob";
     } else if (extracted.confirmedSlot || lower.includes("confirm") || lower.includes("reserve") || lower.includes("book")) {
-      const confirmedTime = extracted.confirmedSlot || "Tomorrow 11:45 AM";
+      const confirmedTime = extracted.confirmedSlot || "Tomorrow 10:00 AM";
       extracted.slot = confirmedTime;
       extracted.intent = `${industry.name} Consultation`;
       reply = isHindi
@@ -284,40 +307,19 @@ ${industry.requiresDob ? "2. If Name and Mobile are provided but DOB/Age is miss
         : `Excellent, ${name}! Your consultation with ${industry.brandName} is confirmed for ${confirmedTime}. Details have been sent to your WhatsApp. Thank you!`;
       step = "confirmation_complete";
       isComplete = true;
-    } else if (lower.includes("service") || lower.includes("fee") || lower.includes("timing") || lower.includes("price") || lower.includes("cost")) {
-      // Industry-specific service answers
-      if (industryId === "lawyers") {
+    } else if (lower.includes("service") || lower.includes("fee") || lower.includes("timing") || lower.includes("price") || lower.includes("cost") || lower.includes("flat") || lower.includes("bhk")) {
+      if (industryId === "real-estate") {
         reply = isHindi
-          ? `Hum Property Law, Corporate, Civil aur Family Law matters handle karte hain. Senior Advocate consultation Thursday 4:00 PM par available hai. Kya aap slot book karna chahenge?`
+          ? `Hamare paas luxury 2BHK aur 3BHK residences available hain ₹1.5 Cr budget mein. VIP Model flat tour kal subah 10:00 AM par available hai. Kya confirm karein?`
+          : `We offer luxury 2BHK and 3BHK residences starting at ₹1.5 Cr. A private model apartment VIP tour is available tomorrow at 10:00 AM. Shall I confirm your visit?`;
+      } else if (industryId === "lawyers") {
+        reply = isHindi
+          ? `Hum Property Law, Corporate, Civil aur Family Law matters handle karte hain. Senior Advocate consultation Thursday 4:00 PM par available hai. Kya slot book karein?`
           : `We handle Property Law, Corporate Contracts, Civil Disputes, and Family Law. Video consultation with Senior Counsel is available this Thursday at 4:00 PM. Would you like to reserve it?`;
-      } else if (industryId === "chartered-accountants") {
-        reply = isHindi
-          ? `Hum GST filings, ITR returns, aur Private Limited corporate audits manage karte hain. Senior Tax Partner ka review slot kal 2:30 PM par available hai. Kya schedule karein?`
-          : `We handle GST filings, ITR returns, and Pvt Ltd company audits. A 20-minute review call with our Senior Tax Partner is available tomorrow at 2:30 PM. Shall I schedule it?`;
-      } else if (industryId === "consultants") {
-        reply = isHindi
-          ? `Hum B2B SaaS GTM Strategy, Scaling aur Business Advisory offer karte hain. Principal Consultant ka discovery session Friday 11:00 AM par available hai. Schedule karein?`
-          : `We provide B2B SaaS GTM Strategy, Business Scaling, and Market Expansion advisory. Discovery slot with our Principal Consultant is open this Friday at 11:00 AM. Shall I book that?`;
-      } else if (industryId === "architects") {
-        reply = isHindi
-          ? `Hum residential interiors, 3BHK renovations aur architectural designs provide karte hain. Lead architect ka site inspection Saturday 3:00 PM par available hai. Schedule karein?`
-          : `We specialize in luxury residential architecture and 3BHK interior renovations. An on-site inspection is available this Saturday at 3:00 PM. Shall I schedule the visit?`;
-      } else if (industryId === "real-estate") {
-        reply = isHindi
-          ? `Hamare paas luxury 2BHK aur 3BHK residences available hain ₹1.5 Cr budget mein. VIP Model flat tour Sunday 11:30 AM par scheduled hai. Kya VIP pass generate karein?`
-          : `We offer luxury 2BHK and 3BHK residences starting at ₹1.5 Cr. A private model apartment VIP tour is available this Sunday at 11:30 AM. Shall I issue your VIP pass?`;
-      } else if (industryId === "education") {
-        reply = isHindi
-          ? `Hum JEE, NEET aur Foundation target batches offer karte hain. Senior Physics faculty ka Free Live Demo Masterclass Saturday 10:00 AM par hai. Kya register karein?`
-          : `We offer JEE, NEET, and Grade 11-12 target courses. A Free Live Demo Masterclass is scheduled for Saturday at 10:00 AM. Shall I reserve a seat for the student?`;
-      } else if (industryId === "distributors") {
-        reply = isHindi
-          ? `Hamare paas wholesale electrical fittings SKU #8420 stock mein available hain with next-day morning dispatch. Kya order reserve karke invoice generate karein?`
-          : `We have wholesale stock of SKU #8420 available with next-day morning delivery. Shall I reserve your bulk units and dispatch the pro-forma invoice?`;
       } else {
         reply = isHindi
-          ? `Hum Cardiology, ENT, Orthopedics aur General Medicine offer karte hain. OPD Mon-Sat 9AM-8PM. Kya appointment book karna chahenge?`
-          : `We offer Cardiology, ENT, Orthopedics, and General Medicine. OPD runs Mon–Sat 9AM to 8PM. Would you like to schedule an appointment?`;
+          ? `Hum ${industry.name} services offer karte hain. Kya aap consultation appointment book karna chahenge?`
+          : `We provide complete ${industry.name} services. Would you like to schedule a consultation?`;
       }
       step = "inquiry_resolution";
     } else {
@@ -339,7 +341,7 @@ ${industry.requiresDob ? "2. If Name and Mobile are provided but DOB/Age is miss
         dob: extracted.dob || currentExtracted.dob || "",
         department: extracted.department || currentExtracted.department || industry.name,
         doctor: extracted.doctor || currentExtracted.doctor || "",
-        slot: extracted.confirmedSlot || extracted.slot || currentExtracted.slot || "",
+        slot: extracted.confirmedSlot || extracted.slotRequested || currentExtracted.slot || "",
         intent: extracted.intent || currentExtracted.intent || `${industry.name} Intake`,
         summary: reply.slice(0, 80),
       },
