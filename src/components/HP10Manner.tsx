@@ -2,8 +2,8 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { motion } from "framer-motion";
-import { User, Headphones, Check, ArrowRight, Globe, ShieldCheck } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Headphones, Check, ArrowRight, Globe, ShieldCheck, Sparkles, Volume2, MessageSquare } from "lucide-react";
 
 export default function HP10Manner() {
   const [selectedManner, setSelectedManner] = useState<"warm" | "formal" | "direct">("warm");
@@ -11,18 +11,24 @@ export default function HP10Manner() {
   const manners = {
     warm: {
       label: "Warm",
+      subtitle: "Empathetic & Personal",
       transcript: "Of course, Riya. I can hold it until 6 PM tomorrow and send you a reminder before it expires.",
-      tags: ["English + Bengali", "Use customer's name", "Never overpromise"],
+      tags: ["English + Bengali", "Uses Customer's Name", "Empathetic Assurance"],
+      toneColor: "#9BEA16",
     },
     formal: {
       label: "Formal",
+      subtitle: "Professional & Protocol-led",
       transcript: "Certainly, Ms. Riya. I have placed a reservation hold until 18:00 hours tomorrow. A formal confirmation has been issued.",
-      tags: ["English + Hindi", "Formal honorifics", "Strict policy cited"],
+      tags: ["English + Hindi", "Formal Honorifics", "Strict Policy Cited"],
+      toneColor: "#60A5FA",
     },
     direct: {
       label: "Direct",
+      subtitle: "Fast & Action-first",
       transcript: "Hold confirmed until tomorrow, 6:00 PM. Barcode and directions sent to your phone.",
-      tags: ["Concise English", "Action-first", "Zero filler words"],
+      tags: ["Concise English", "Action-first", "Zero Filler Words"],
+      toneColor: "#F59E0B",
     },
   };
 
@@ -31,11 +37,11 @@ export default function HP10Manner() {
   return (
     <section
       id="hp-10"
+      className="hp10-section-pad"
       style={{
-        minHeight: "95vh",
+        minHeight: "90vh",
         background: "#000000",
         borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-        padding: "130px 40px 110px",
         position: "relative",
       }}
     >
@@ -44,14 +50,18 @@ export default function HP10Manner() {
         <div
           style={{
             fontFamily: "var(--font-sans)",
-            fontSize: "12px",
-            fontWeight: 600,
-            letterSpacing: "0.22em",
+            fontSize: "11.5px",
+            fontWeight: 700,
+            letterSpacing: "0.2em",
             color: "#8E8E93",
             textTransform: "uppercase",
             marginBottom: "20px",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
           }}
         >
+          <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#9BEA16" }} />
           Your Business. Your Manner.
         </div>
 
@@ -59,228 +69,257 @@ export default function HP10Manner() {
         <div
           style={{
             display: "grid",
-            gridTemplateColumns: "0.85fr 1.15fr",
-            gap: "56px",
+            gridTemplateColumns: "1fr 1fr",
+            gap: "60px",
             alignItems: "center",
           }}
           className="hp10-grid"
         >
-          {/* Left Column */}
+          {/* Left Column: Formatted Poetic Headline & Story */}
           <div>
             <h2
               className="serif"
               style={{
-                fontSize: "clamp(38px, 4.5vw, 66px)",
+                fontSize: "clamp(34px, 4.2vw, 58px)",
                 fontWeight: 300,
-                lineHeight: 1.12,
+                lineHeight: 1.16,
                 letterSpacing: "-0.02em",
                 color: "#F5F5F0",
-                marginBottom: "20px",
+                marginBottom: "22px",
               }}
             >
-              People remember how<br />
-              a business makes them<br />
-              feel. <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>
+              People remember how a<br />
+              business makes them feel.<br />
+              <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>
                 Namuste learns how yours should sound.
               </span>
             </h2>
 
             <p
               style={{
-                fontSize: "clamp(15.5px, 1.3vw, 18px)",
+                fontSize: "clamp(15px, 1.25vw, 17.5px)",
                 color: "#A1A1AA",
-                lineHeight: 1.65,
-                maxWidth: "480px",
-                marginBottom: "36px",
+                lineHeight: 1.7,
+                maxWidth: "500px",
+                marginBottom: "32px",
                 fontFamily: "var(--font-sans)",
               }}
             >
-              Choose the warmth, formality, vocabulary and boundaries. Namuste carries them into every conversation — consistently.
+              Choose the warmth, formality, vocabulary and boundaries. Namuste carries them into every conversation — with unwavering consistency.
             </p>
 
-            {/* Primary CTA from Screenshot 3 */}
-            <div style={{ marginBottom: "28px" }}>
+            {/* Primary CTA */}
+            <div style={{ marginBottom: "24px" }}>
               <Link
                 href="/contact"
                 style={{
                   display: "inline-flex",
                   alignItems: "center",
                   gap: "10px",
-                  padding: "12px 24px",
-                  borderRadius: "999px",
-                  background: "transparent",
-                  border: "1px solid rgba(155, 234, 22, 0.5)",
-                  color: "#9BEA16",
+                  padding: "13px 28px",
+                  borderRadius: "8px",
+                  background: "#9BEA16",
+                  color: "#000000",
                   fontSize: "14px",
-                  fontWeight: 600,
+                  fontWeight: 700,
                   textDecoration: "none",
+                  boxShadow: "0 0 25px rgba(155, 234, 22, 0.3)",
                   transition: "all 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.background = "#8FD813";
-                  e.currentTarget.style.color = "#000000";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.background = "transparent";
-                  e.currentTarget.style.color = "#9BEA16";
                 }}
               >
                 <span>Shape your receptionist</span>
-                <ArrowRight size={14} />
+                <ArrowRight size={15} />
               </Link>
             </div>
 
             <p className="serif-italic" style={{ fontSize: "14.5px", color: "#8E8E93", fontStyle: "italic", margin: 0 }}>
-              A recognisable manner. In every conversation.
+              A recognisable brand voice. In every customer interaction.
             </p>
           </div>
 
-          {/* Right Column: Interactive Manner Calibration Simulator (Exact from Screenshot 3) */}
+          {/* Right Column: Hyper-Luxurious Brand Tone & Acoustic Persona Console */}
           <div
             style={{
               display: "flex",
               flexDirection: "column",
-              gap: "20px",
+              gap: "16px",
               maxWidth: "540px",
               margin: "0 auto",
               width: "100%",
+              background: "rgba(12, 14, 12, 0.8)",
+              border: "1px solid rgba(255, 255, 255, 0.1)",
+              borderRadius: "22px",
+              padding: "26px",
+              boxShadow: "0 20px 50px rgba(0, 0, 0, 0.85), 0 0 40px rgba(155, 234, 22, 0.04)",
+              backdropFilter: "blur(20px)",
+              position: "relative",
             }}
           >
-            {/* 1. Customer Input Card (Screenshot 3) */}
+            {/* 1. Customer Input Card */}
             <div
               style={{
-                padding: "16px 22px",
-                borderRadius: "16px",
-                background: "rgba(15, 15, 15, 0.85)",
+                padding: "14px 18px",
+                borderRadius: "14px",
+                background: "rgba(18, 18, 22, 0.85)",
                 border: "1px solid rgba(255, 255, 255, 0.1)",
-                backdropFilter: "blur(16px)",
               }}
             >
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "#F87171", textTransform: "uppercase", marginBottom: "8px" }}>
-                <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#F87171" }} />
-                Customer
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
+                <span style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.08em", color: "#F87171", textTransform: "uppercase" }}>
+                  <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#F87171" }} />
+                  Customer Query
+                </span>
+                <span style={{ fontSize: "10px", fontFamily: "monospace", color: "#8E8E93" }}>10:24 AM</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "14px", color: "#F5F5F0" }}>
-                <User size={16} style={{ color: "#9BEA16" }} />
-                <span>Can you hold this for me until tomorrow?</span>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13.5px", color: "#F5F5F0" }}>
+                <User size={15} style={{ color: "#9BEA16", flexShrink: 0 }} />
+                <span>&ldquo;Can you hold this for me until tomorrow?&rdquo;</span>
               </div>
             </div>
 
-            {/* 2. Choose Your Manner Segmented Bar (Screenshot 3) */}
+            {/* 2. Choose Your Manner Segmented Selector */}
             <div>
-              <div style={{ fontSize: "11px", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.08em", color: "#8E8E93", marginBottom: "8px" }}>
-                Choose Your Manner
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
+                <div style={{ fontSize: "10.5px", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.08em", color: "#8E8E93" }}>
+                  Choose Your Manner
+                </div>
+                <div style={{ fontSize: "11px", color: current.toneColor, fontWeight: 600 }}>
+                  {current.subtitle}
+                </div>
               </div>
+
+              {/* Segmented Buttons */}
               <div
                 style={{
                   display: "flex",
-                  borderRadius: "14px",
-                  background: "rgba(10, 10, 10, 0.85)",
-                  border: "1px solid rgba(255, 255, 255, 0.1)",
+                  borderRadius: "12px",
+                  background: "rgba(8, 8, 10, 0.9)",
+                  border: "1px solid rgba(255, 255, 255, 0.08)",
                   padding: "4px",
+                  gap: "4px",
                 }}
               >
                 {(["warm", "formal", "direct"] as const).map((m) => {
                   const active = selectedManner === m;
+                  const item = manners[m];
                   return (
                     <button
                       key={m}
                       onClick={() => setSelectedManner(m)}
                       style={{
                         flex: 1,
-                        padding: "10px 16px",
-                        borderRadius: "10px",
-                        fontSize: "13px",
-                        fontWeight: 600,
+                        padding: "9px 12px",
+                        borderRadius: "8px",
+                        fontSize: "12.5px",
+                        fontWeight: 700,
                         cursor: "pointer",
                         display: "flex",
                         alignItems: "center",
                         justifyContent: "center",
                         gap: "6px",
                         transition: "all 0.2s ease",
-                        background: active ? "rgba(155, 234, 22, 0.15)" : "transparent",
-                        color: active ? "#9BEA16" : "#A1A1AA",
+                        background: active ? "rgba(155, 234, 22, 0.16)" : "transparent",
+                        color: active ? "#9BEA16" : "#8E8E93",
                         border: active ? "1px solid #9BEA16" : "1px solid transparent",
+                        boxShadow: active ? "0 0 15px rgba(155, 234, 22, 0.2)" : "none",
                       }}
                     >
                       {active && <Check size={13} strokeWidth={3} />}
-                      <span>{manners[m].label}</span>
+                      <span>{item.label}</span>
                     </button>
                   );
                 })}
               </div>
 
-              {/* Tags below selector (Screenshot 3) */}
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "12px", marginTop: "12px", fontSize: "12px", color: "#A1A1AA" }}>
-                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  <Globe size={13} style={{ color: "#9BEA16" }} /> {current.tags[0]}
+              {/* Dynamic Behavioral Tags */}
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", marginTop: "10px", fontSize: "11.5px", color: "#D4D0C7" }}>
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: "6px" }}>
+                  <Globe size={12} style={{ color: "#9BEA16" }} /> {current.tags[0]}
                 </span>
-                <span style={{ opacity: 0.3 }}>|</span>
-                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  <User size={13} style={{ color: "#9BEA16" }} /> {current.tags[1]}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: "6px" }}>
+                  <User size={12} style={{ color: "#9BEA16" }} /> {current.tags[1]}
                 </span>
-                <span style={{ opacity: 0.3 }}>|</span>
-                <span style={{ display: "flex", alignItems: "center", gap: "4px" }}>
-                  <ShieldCheck size={13} style={{ color: "#9BEA16" }} /> {current.tags[2]}
+                <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: "6px" }}>
+                  <ShieldCheck size={12} style={{ color: "#9BEA16" }} /> {current.tags[2]}
                 </span>
               </div>
             </div>
 
-            {/* Dotted green path */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <div style={{ width: "1px", height: "16px", background: "#9BEA16", opacity: 0.6 }} />
+            {/* Connecting Vertical Laser Flow */}
+            <div style={{ display: "flex", justifyContent: "center", margin: "-4px 0" }}>
+              <div style={{ width: "2px", height: "14px", background: "linear-gradient(180deg, #9BEA16, transparent)", opacity: 0.8 }} />
             </div>
 
-            {/* 3. Output Response Card (Screenshot 3) */}
-            <div
-              style={{
-                padding: "20px 24px",
-                borderRadius: "16px",
-                background: "rgba(10, 16, 10, 0.9)",
-                border: "1px solid rgba(155, 234, 22, 0.35)",
-                boxShadow: "0 0 30px rgba(155, 234, 22, 0.1)",
-                backdropFilter: "blur(16px)",
-              }}
-            >
-              <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "#9BEA16", textTransform: "uppercase" }}>
-                  Namuste • {current.label.toUpperCase()}
+            {/* 3. Output Response Card with Animated Speech Waves */}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedManner}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.2 }}
+                style={{
+                  padding: "18px 22px",
+                  borderRadius: "16px",
+                  background: "rgba(14, 20, 14, 0.95)",
+                  border: "1px solid rgba(155, 234, 22, 0.35)",
+                  boxShadow: "0 0 30px rgba(155, 234, 22, 0.12)",
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "10px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "10.5px", fontWeight: 700, letterSpacing: "0.08em", color: "#9BEA16", textTransform: "uppercase" }}>
+                    <span>Namuste • {current.label.toUpperCase()}</span>
+                  </div>
+
+                  {/* Micro Audio Equalizer Waveform */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "2px", height: "14px" }}>
+                    {[8, 14, 6, 16, 10].map((h, i) => (
+                      <motion.span
+                        key={i}
+                        animate={{ height: [h * 0.4, h, h * 0.3] }}
+                        transition={{ repeat: Infinity, duration: 0.6 + i * 0.1, ease: "easeInOut" }}
+                        style={{ width: "2px", borderRadius: "1px", background: "#9BEA16", display: "inline-block" }}
+                      />
+                    ))}
+                  </div>
+
+                  <img
+                    src="/logo.png"
+                    alt="Namuste"
+                    style={{
+                      height: "13px",
+                      width: "auto",
+                      objectFit: "contain",
+                    }}
+                  />
                 </div>
-                <img
-                  src="/logo.png"
-                  alt="Namuste"
-                  style={{
-                    height: "14px",
-                    width: "auto",
-                    objectFit: "contain",
-                  }}
-                />
-              </div>
-              <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
-                <Headphones size={18} style={{ color: "#9BEA16", flexShrink: 0, marginTop: "2px" }} />
-                <p style={{ fontSize: "14px", color: "#F5F5F0", margin: 0, lineHeight: 1.6 }}>
-                  &ldquo;{current.transcript}&rdquo;
-                </p>
-              </div>
-            </div>
 
-            {/* 4. Consistent Across (Screenshot 3) */}
+                <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
+                  <Headphones size={16} style={{ color: "#9BEA16", flexShrink: 0, marginTop: "3px" }} />
+                  <p style={{ fontSize: "13.5px", color: "#F5F5F0", margin: 0, lineHeight: 1.6 }}>
+                    &ldquo;{current.transcript}&rdquo;
+                  </p>
+                </div>
+              </motion.div>
+            </AnimatePresence>
+
+            {/* 4. Multi-Channel Consistency Banner */}
             <div
               style={{
-                padding: "12px 18px",
-                borderRadius: "12px",
-                background: "rgba(15, 15, 15, 0.7)",
+                padding: "10px 16px",
+                borderRadius: "10px",
+                background: "rgba(15, 15, 18, 0.7)",
                 border: "1px solid rgba(255, 255, 255, 0.08)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
-                fontSize: "12px",
+                fontSize: "11.5px",
               }}
             >
               <span style={{ textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.06em", color: "#8E8E93" }}>
                 Consistent Across
               </span>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#D4D0C7" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#D4D0C7", fontWeight: 500 }}>
                 <Check size={13} style={{ color: "#9BEA16" }} />
                 <span>Voice • WhatsApp • Web</span>
               </div>
@@ -290,8 +329,16 @@ export default function HP10Manner() {
       </div>
 
       <style>{`
+        .hp10-section-pad {
+          padding: 120px 40px 100px;
+        }
         @media (max-width: 900px) {
           .hp10-grid { grid-template-columns: 1fr !important; gap: 40px !important; }
+        }
+        @media (max-width: 768px) {
+          .hp10-section-pad {
+            padding: 60px 20px 40px !important;
+          }
         }
       `}</style>
     </section>

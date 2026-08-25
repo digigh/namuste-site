@@ -122,11 +122,11 @@ export default function BringConversationDemo() {
 
   return (
     <div style={{ width: "100%", display: "flex", flexDirection: "column", gap: "32px" }}>
-      {/* 1. HP-13: Bring One Real Conversation Intake */}
+      {/* Configuration Form Card */}
       <div
-        className="glass-card"
+        className="glass-card bring-demo-card"
         style={{
-          padding: "36px",
+          width: "100%",
           borderRadius: "22px",
           background: "rgba(11, 14, 11, 0.95)",
           border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -430,6 +430,17 @@ export default function BringConversationDemo() {
           </div>
         </div>
       )}
+
+      <style>{`
+        .bring-demo-card {
+          padding: 36px;
+        }
+        @media (max-width: 768px) {
+          .bring-demo-card {
+            padding: 20px 16px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

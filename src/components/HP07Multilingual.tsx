@@ -8,12 +8,12 @@ import AIVoiceChatbotEngine from "./AIVoiceChatbotEngine";
 export default function HP07Multilingual() {
   return (
     <section
-      id="hp-07"
+      id="voice-engine-demo"
+      className="multilingual-section-pad"
       style={{
         minHeight: "95vh",
         background: "#000000",
         borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-        padding: "110px 40px 100px",
         position: "relative",
       }}
     >
@@ -117,6 +117,18 @@ export default function HP07Multilingual() {
           </p>
         </div>
       </div>
+
+      <style>{`
+        .multilingual-section-pad {
+          padding: 110px 40px 100px;
+        }
+        @media (max-width: 768px) {
+          .multilingual-section-pad {
+            padding: 56px 16px 40px !important;
+            scroll-margin-top: 60px;
+          }
+        }
+      `}</style>
     </section>
   );
 }

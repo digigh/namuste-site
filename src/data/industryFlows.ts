@@ -505,4 +505,116 @@ You handle wholesale inventory stock checks, SKU availability, bulk order tracki
       delivery: "Tomorrow 11:00 AM",
     },
   },
+
+  agriculture: {
+    id: "agriculture",
+    name: "Agriculture & Rural",
+    iconName: "Sprout",
+    brandName: "Kisan Seva Krishi Kendra",
+    tagline: "Vernacular Farmer Helplines, Seed Enquiries & Dealer Orders",
+    badgeColor: "#84CC16",
+    requiresDob: false,
+    systemActionType: "AGRI_ADVISORY_SENT",
+    systemActionTitle: "Farmer Advisory & Dealer Dispatch Logged",
+    initialGreetingEnglish: "Namaste, welcome to Kisan Seva Helpline. I can assist you with crop advisory, fertilizer recommendations, and nearest dealer orders in Hindi, Bengali or English. May I know your name and district?",
+    presetExtracted: {
+      name: "Rameshwar Yadav",
+      mobile: "+91 94310 98765",
+      intent: "Paddy Crop Fertilizer Schedule (Hooghly)",
+      summary: "Urea + Zinc Schedule • Nearest Dealer: Maa Tara Krishi Bhandar",
+      actionBadge: "Agronomy Schedule & Dealer SMS Dispatched",
+    },
+    presetTurns: [
+      {
+        speaker: "ai",
+        text: "Namaste, welcome to Kisan Seva Helpline. I can assist you with crop advisory, fertilizer recommendations, and nearest dealer orders in Hindi, Bengali or English. May I know your name and district?",
+        langLabel: "English",
+      },
+      {
+        speaker: "user",
+        text: "Mera naam Rameshwar Yadav hai, district Hooghly. Dhaan ki fasal ke liye kaun sa khad sahi rahega is mausam mein? Phone 9431098765.",
+        langLabel: "Hindi",
+      },
+      {
+        speaker: "ai",
+        text: "Namaste Rameshwar ji. Hooghly ke mausam aur dhaan ki buwai ke anusaar, 20 din baad Zinc aur Urea ka santulit prayog karein. Kya aapke paas paas ke Krishi Kendra ka contact chahiye?",
+        langLabel: "Hindi",
+      },
+      {
+        speaker: "user",
+        text: "Haan, paas ke dealer ka number aur availability bhej do.",
+        langLabel: "Hindi",
+      },
+      {
+        speaker: "ai",
+        text: "Hooghly mandi ke Maa Tara Krishi Bhandar par stock available hai. Poora advisory schedule aur dealer contact aapke number par SMS aur WhatsApp kar diya gaya hai.",
+        langLabel: "Hindi",
+      },
+    ],
+    systemPrompt: `You are Namuste, Vernacular AI Agronomist & Helpline for 'Kisan Seva Krishi Kendra'.
+You handle crop advisory, fertilizer schedules, mandi prices, seed dealer queries in Hindi, Bengali, and English.`,
+    systemActionPayloadTemplate: {
+      farmer_id: "KS-5501",
+      crop: "Paddy (Kharif)",
+      district: "Hooghly",
+      dealer: "Maa Tara Krishi Bhandar",
+      status: "ADVISORY_DISPATCHED",
+    },
+  },
+
+  research: {
+    id: "research",
+    name: "Research & Surveys",
+    iconName: "FlaskConical",
+    brandName: "Global Pulse Insights",
+    tagline: "Multilingual Participant Intake, Study Screening & Field Surveys",
+    badgeColor: "#A855F7",
+    requiresDob: true,
+    systemActionType: "PARTICIPANT_SCREENED",
+    systemActionTitle: "Clinical Cohort Participant Qualified",
+    initialGreetingEnglish: "Hello and welcome to Global Pulse Insights. I am Namuste, your automated study screening assistant. May I have your name and preferred language to begin the survey?",
+    presetExtracted: {
+      name: "Dr. Ananya Ray",
+      mobile: "+91 98300 55443",
+      dob: "24 Nov 1988 (Cohort A)",
+      intent: "Cardiology Longitudinal Cohort Study",
+      summary: "Screening Passed (Score 9.4/10) • Cohort #C-104",
+      actionBadge: "Consent Form & Protocol PDF Dispatched",
+    },
+    presetTurns: [
+      {
+        speaker: "ai",
+        text: "Hello and welcome to Global Pulse Insights. I am Namuste, your automated study screening assistant. May I have your name and preferred language to begin the survey?",
+        langLabel: "English",
+      },
+      {
+        speaker: "user",
+        text: "Dr. Ananya Ray, mobile 9830055443. Preferred language English. Enquiring about the Cardiology longitudinal cohort study.",
+        langLabel: "English",
+      },
+      {
+        speaker: "ai",
+        text: "Thank you Dr. Ananya. For cohort verification, please provide your date of birth and primary institutional affiliation.",
+        langLabel: "English",
+      },
+      {
+        speaker: "user",
+        text: "24 November 1988, Apollo Gleneagles Hospital.",
+        langLabel: "English",
+      },
+      {
+        speaker: "ai",
+        text: "Eligible for Cohort C-104! We have opened participant file #RES-902. The digital consent form and IRB protocol have been sent to your email and WhatsApp.",
+        langLabel: "English",
+      },
+    ],
+    systemPrompt: `You are Namuste, AI Research & Study Screening Coordinator for 'Global Pulse Insights'.
+You handle participant intake, cohort eligibility verification, consent capture, and survey scheduling across languages.`,
+    systemActionPayloadTemplate: {
+      participant_id: "RES-902",
+      study: "Cardiology Cohort C-104",
+      institution: "Apollo Gleneagles",
+      eligibility: "QUALIFIED",
+    },
+  },
 };

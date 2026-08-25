@@ -31,6 +31,8 @@ import {
   Copy,
   ChevronDown,
   ChevronUp,
+  Sprout,
+  FlaskConical,
 } from "lucide-react";
 import { INDUSTRY_FLOWS, IndustryFlow, IndustryMessage } from "@/data/industryFlows";
 
@@ -43,6 +45,8 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   Building2: <Building2 size={16} />,
   GraduationCap: <GraduationCap size={16} />,
   Truck: <Truck size={16} />,
+  Sprout: <Sprout size={16} />,
+  FlaskConical: <FlaskConical size={16} />,
 };
 
 const VOICE_PERSONAS = [
@@ -52,8 +56,19 @@ const VOICE_PERSONAS = [
   { id: "aditya", label: "Aditya", gender: "Male", desc: "Business Executive" },
 ];
 
-export default function AIVoiceChatbotEngine() {
-  const [selectedIndustryId, setSelectedIndustryId] = useState<string>("doctors-clinics");
+interface AIVoiceChatbotEngineProps {
+  initialIndustryId?: string;
+  lockedIndustryId?: string;
+  hideIndustrySelector?: boolean;
+}
+
+export default function AIVoiceChatbotEngine({
+  initialIndustryId,
+  lockedIndustryId,
+  hideIndustrySelector = false,
+}: AIVoiceChatbotEngineProps = {}) {
+  const effectiveIndustry = lockedIndustryId || initialIndustryId || "doctors-clinics";
+  const [selectedIndustryId, setSelectedIndustryId] = useState<string>(effectiveIndustry);
   const [channel, setChannel] = useState<"voice" | "chat">("voice");
 
   // Call & Audio states
@@ -532,6 +547,18 @@ export default function AIVoiceChatbotEngine() {
           { label: "Check Stock & Dispatch", text: "How many units of SKU #8420 are in stock for tomorrow morning dispatch?" },
           { label: "Lock 100 Boxes", text: "Haan, 100 boxes reserve karke pro-forma invoice bhej do." },
         ];
+      case "agriculture":
+        return [
+          { label: "Farmer Intake", text: "Mera naam Rameshwar Yadav hai, Hooghly district. Dhaan ki fasal ke liye khad ka schedule chahiye. Phone 9431098765." },
+          { label: "Ask Nearest Dealer", text: "Hooghly mandi mein kaun se dealer ke paas stock available hai?" },
+          { label: "Dispatch Advisory", text: "Haan, poora advisory schedule WhatsApp aur SMS par bhej dijiye." },
+        ];
+      case "research":
+        return [
+          { label: "Cohort Intake", text: "Dr. Ananya Ray, mobile 9830055443. Enquiring about the Cardiology cohort study." },
+          { label: "Verify DOB & Hospital", text: "DOB 24 November 1988, Apollo Gleneagles Hospital." },
+          { label: "Qualify & Dispatch Protocol", text: "Eligible for Cohort C-104! Please send IRB consent form." },
+        ];
       default:
         return [
           { label: "Hindi Intake", text: "Mera naam Rahul Verma hai aur mobile number 9812345678 hai" },
@@ -547,288 +574,306 @@ export default function AIVoiceChatbotEngine() {
   const samplePrompts = getIndustrySamplePrompts(activeIndustry);
 
   return (
-    <div style={{ width: "100%", margin: "0 auto" }}>
-      {/* 1. TOP INDUSTRY NAVIGATION TABS */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          gap: "8px",
-          overflowX: "auto",
-          paddingBottom: "14px",
-          scrollbarWidth: "none",
-        }}
-      >
-        {Object.values(INDUSTRY_FLOWS).map((ind) => {
-          const isSelected = selectedIndustryId === ind.id;
-          return (
-            <button
-              key={ind.id}
-              onClick={() => {
-                if (ind.id !== selectedIndustryId) {
-                  setSelectedIndustryId(ind.id);
-                  handleReset();
-                }
-              }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "7px",
-                padding: "8px 16px",
-                borderRadius: "999px",
-                fontSize: "12.5px",
-                fontWeight: isSelected ? 700 : 500,
-                cursor: "pointer",
-                whiteSpace: "nowrap",
-                background: isSelected ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.03)",
-                color: isSelected ? "#9BEA16" : "#A1A1AA",
-                border: `1px solid ${isSelected ? "rgba(155, 234, 22, 0.6)" : "rgba(255, 255, 255, 0.07)"}`,
-                boxShadow: isSelected ? "0 0 20px rgba(155, 234, 22, 0.2)" : "none",
-                transition: "all 0.25s cubic-bezier(0.16, 1, 0.3, 1)",
-              }}
-            >
-              <span style={{ color: isSelected ? "#9BEA16" : "#8E8E93" }}>
-                {ICON_MAP[ind.iconName]}
-              </span>
-              <span>{ind.name}</span>
-            </button>
-          );
-        })}
-      </div>
-
-      {/* 2. HEADER CONTROLS BAR (Industry Title, Voice/Chat Switcher, Reset) */}
-      <div
-        style={{
-          display: "flex",
-          flexWrap: "wrap",
-          alignItems: "center",
-          justifyContent: "space-between",
-          gap: "16px",
-          padding: "14px 20px",
-          borderRadius: "14px",
-          background: "rgba(18, 18, 18, 0.7)",
-          border: "1px solid rgba(255, 255, 255, 0.08)",
-          backdropFilter: "blur(20px)",
-          marginBottom: "20px",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <div
-            style={{
-              width: "36px",
-              height: "36px",
-              borderRadius: "10px",
-              background: "rgba(155, 234, 22, 0.12)",
-              border: "1px solid rgba(155, 234, 22, 0.3)",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              color: "#9BEA16",
-            }}
-          >
-            {ICON_MAP[activeIndustry.iconName]}
-          </div>
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-              <span style={{ fontSize: "14.5px", fontWeight: 700, color: "#F5F5F0" }}>
-                {activeIndustry.brandName}
-              </span>
-              <span
+    <div style={{ width: "100%", maxWidth: "100%", margin: "0 auto", padding: "0", boxSizing: "border-box", overflow: "hidden" }}>
+      {/* 1. TOP INDUSTRY NAVIGATION CAROUSEL (Horizontal Swipe Carousel) */}
+      {!hideIndustrySelector && !lockedIndustryId && (
+        <div
+          className="touch-scroll"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "6px",
+            overflowX: "auto",
+            paddingBottom: "8px",
+            marginBottom: "10px",
+            width: "100%",
+            boxSizing: "border-box",
+            scrollSnapType: "x mandatory",
+          }}
+        >
+          {Object.values(INDUSTRY_FLOWS).map((ind) => {
+            const isSelected = selectedIndustryId === ind.id;
+            return (
+              <button
+                key={ind.id}
+                onClick={() => {
+                  if (ind.id !== selectedIndustryId) {
+                    setSelectedIndustryId(ind.id);
+                    handleReset();
+                  }
+                }}
                 style={{
-                  fontSize: "10.5px",
-                  padding: "2px 7px",
-                  borderRadius: "4px",
-                  background: "rgba(255, 255, 255, 0.06)",
-                  color: "#8E8E93",
-                  fontWeight: 600,
+                  display: "inline-flex",
+                  alignItems: "center",
+                  gap: "5px",
+                  padding: "6px 12px",
+                  borderRadius: "999px",
+                  fontSize: "11.5px",
+                  fontWeight: isSelected ? 700 : 500,
+                  background: isSelected ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.03)",
+                  border: `1px solid ${isSelected ? "#9BEA16" : "rgba(255, 255, 255, 0.08)"}`,
+                  color: isSelected ? "#9BEA16" : "#A1A1AA",
+                  whiteSpace: "nowrap",
+                  cursor: "pointer",
+                  transition: "all 0.2s ease",
+                  flexShrink: 0,
+                  scrollSnapAlign: "start",
                 }}
               >
-                {activeIndustry.requiresDob ? "Intake: Name + Mobile + DOB" : "Intake: Name + Mobile"}
-              </span>
-            </div>
-            <p style={{ margin: 0, fontSize: "12px", color: "#8E8E93" }}>
-              {activeIndustry.tagline}
-            </p>
-          </div>
+                <span style={{ display: "flex", alignItems: "center" }}>
+                  {ICON_MAP[ind.iconName] || <Briefcase size={12} />}
+                </span>
+                <span>{ind.name}</span>
+              </button>
+            );
+          })}
         </div>
+      )}
 
-        {/* Channel Switcher + Reset */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-          <div
-            style={{
-              display: "flex",
-              background: "rgba(0, 0, 0, 0.4)",
-              padding: "3px",
-              borderRadius: "10px",
-              border: "1px solid rgba(255, 255, 255, 0.06)",
-            }}
-          >
-            <button
-              onClick={() => {
-                setChannel("voice");
-                stopCurrentAudio();
-                stopLiveListening();
-              }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "7px 14px",
-                borderRadius: "8px",
-                fontSize: "12.5px",
-                fontWeight: 600,
-                cursor: "pointer",
-                background: channel === "voice" ? "#9BEA16" : "transparent",
-                color: channel === "voice" ? "#000000" : "#8E8E93",
-                border: "none",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <Phone size={13} />
-              <span>Voice Call</span>
-            </button>
-
-            <button
-              onClick={() => {
-                setChannel("chat");
-                stopCurrentAudio();
-                stopLiveListening();
-                if (conversationHistoryRef.current.length === 0) {
-                  const initMsg: IndustryMessage = {
-                    speaker: "ai",
-                    text: `Hello and welcome to ${activeIndustry.brandName}! How may I assist you today? May I please have your name and contact number?`,
-                    langLabel: "English",
-                    timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
-                  };
-                  conversationHistoryRef.current = [initMsg];
-                  setConversationHistory([initMsg]);
-                }
-              }}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "6px",
-                padding: "7px 14px",
-                borderRadius: "8px",
-                fontSize: "12.5px",
-                fontWeight: 600,
-                cursor: "pointer",
-                background: channel === "chat" ? "#9BEA16" : "transparent",
-                color: channel === "chat" ? "#000000" : "#8E8E93",
-                border: "none",
-                transition: "all 0.2s ease",
-              }}
-            >
-              <MessageSquare size={13} />
-              <span>Chatbot</span>
-            </button>
-          </div>
-
-          <button
-            onClick={handleReset}
-            title="Reset Flow"
-            style={{
-              padding: "8px 12px",
-              borderRadius: "8px",
-              background: "rgba(255, 255, 255, 0.04)",
-              border: "1px solid rgba(255, 255, 255, 0.08)",
-              color: "#A1A1AA",
-              fontSize: "12px",
-              fontWeight: 600,
-              cursor: "pointer",
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "5px",
-            }}
-          >
-            <RotateCcw size={13} />
-            <span>Reset</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 3. CONVERSATION STAGE PROGRESS TRACKER */}
+      {/* 2. UNIFIED INDUSTRY HEADER CARD & 4-STEP CONVERSATION FLOW */}
       <div
+        className="industry-header-card"
         style={{
-          display: "grid",
-          gridTemplateColumns: "repeat(auto-fit, minmax(180px, 1fr))",
-          gap: "8px",
-          marginBottom: "20px",
+          borderRadius: "20px",
+          background: "linear-gradient(180deg, rgba(26, 26, 30, 0.85) 0%, rgba(14, 14, 16, 0.95) 100%)",
+          border: "1px solid rgba(255, 255, 255, 0.08)",
+          padding: "16px",
+          marginBottom: "16px",
+          boxSizing: "border-box",
+          width: "100%",
         }}
       >
-        {[
-          { step: 1, label: "1. Greeting", done: conversationHistory.length >= 1 },
-          { step: 2, label: `2. Intake (${activeIndustry.requiresDob ? "Name, Phone, DOB" : "Name, Phone"})`, done: !!extractedData.name && !!extractedData.mobile },
-          { step: 3, label: "3. Services & Slots", done: conversationHistory.length >= 3 },
-          { step: 4, label: "4. CRM Sync", done: webhookSent || !!extractedData.slot },
-        ].map((s) => (
-          <div
-            key={s.step}
-            style={{
-              padding: "8px 12px",
-              borderRadius: "8px",
-              background: s.done ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
-              border: `1px solid ${s.done ? "rgba(155, 234, 22, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
-              display: "flex",
-              alignItems: "center",
-              gap: "8px",
-              transition: "all 0.3s ease",
-            }}
-          >
+        <div
+          className="header-top-row"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "12px",
+            marginBottom: "14px",
+          }}
+        >
+          {/* Brand Info with Icon */}
+          <div style={{ display: "flex", alignItems: "center", gap: "10px", minWidth: 0, flex: 1 }}>
             <div
               style={{
-                width: "16px",
-                height: "16px",
-                borderRadius: "50%",
-                background: s.done ? "#9BEA16" : "rgba(255,255,255,0.1)",
-                color: "#000000",
+                width: "38px",
+                height: "38px",
+                borderRadius: "10px",
+                background: "rgba(155, 234, 22, 0.12)",
+                border: "1px solid rgba(155, 234, 22, 0.3)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
-                fontSize: "9.5px",
-                fontWeight: 700,
+                color: "#9BEA16",
                 flexShrink: 0,
               }}
             >
-              {s.done ? <Check size={10} strokeWidth={3} /> : s.step}
+              {ICON_MAP[activeIndustry.iconName] || <Sparkles size={18} />}
             </div>
-            <span
+            <div style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", flexWrap: "wrap" }}>
+                <span style={{ fontSize: "14px", fontWeight: 700, color: "#F5F5F0", whiteSpace: "nowrap" }}>
+                  {activeIndustry.brandName}
+                </span>
+                <span
+                  style={{
+                    fontSize: "9.5px",
+                    padding: "2px 6px",
+                    borderRadius: "4px",
+                    background: "rgba(255, 255, 255, 0.06)",
+                    color: "#8E8E93",
+                    fontFamily: "monospace",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {activeIndustry.requiresDob ? "Name + Phone + DOB" : "Name + Phone"}
+                </span>
+              </div>
+              <p
+                style={{
+                  margin: "2px 0 0",
+                  fontSize: "11.5px",
+                  color: "#8E8E93",
+                  lineHeight: 1.35,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {activeIndustry.tagline}
+              </p>
+            </div>
+          </div>
+
+          {/* Mode Switcher & Reset Button */}
+          <div className="header-action-controls" style={{ display: "flex", alignItems: "center", gap: "8px", flexShrink: 0 }}>
+            <div
               style={{
-                fontSize: "11.5px",
-                color: s.done ? "#F5F5F0" : "#8E8E93",
-                fontWeight: s.done ? 600 : 400,
-                whiteSpace: "nowrap",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
+                display: "flex",
+                background: "rgba(0, 0, 0, 0.4)",
+                padding: "2px",
+                borderRadius: "999px",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
               }}
             >
-              {s.label}
-            </span>
+              <button
+                onClick={() => setChannel("voice")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "5px 12px",
+                  borderRadius: "999px",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  background: channel === "voice" ? "#9BEA16" : "transparent",
+                  color: channel === "voice" ? "#000000" : "#A1A1AA",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <Phone size={11} />
+                <span>Voice</span>
+              </button>
+              <button
+                onClick={() => setChannel("chat")}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                  padding: "5px 12px",
+                  borderRadius: "999px",
+                  fontSize: "11px",
+                  fontWeight: 600,
+                  background: channel === "chat" ? "#9BEA16" : "transparent",
+                  color: channel === "chat" ? "#000000" : "#A1A1AA",
+                  border: "none",
+                  cursor: "pointer",
+                }}
+              >
+                <MessageSquare size={11} />
+                <span>Chat</span>
+              </button>
+            </div>
+
+            <button
+              onClick={handleReset}
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "4px",
+                padding: "5px 10px",
+                borderRadius: "8px",
+                background: "rgba(255, 255, 255, 0.04)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                color: "#8E8E93",
+                fontSize: "11px",
+                cursor: "pointer",
+              }}
+            >
+              <RotateCcw size={11} />
+              <span>Reset</span>
+            </button>
           </div>
-        ))}
+        </div>
+
+        {/* 4-Step Intake Micro-Stepper */}
+        <div
+          className="stepper-grid"
+          style={{
+            display: "grid",
+            gridTemplateColumns: "repeat(4, 1fr)",
+            gap: "6px",
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        >
+          {[
+            { step: 1, label: "1. Greeting", done: conversationHistory.length >= 1 },
+            { step: 2, label: "2. Intake", done: !!extractedData.name && !!extractedData.mobile },
+            { step: 3, label: "3. Slots", done: conversationHistory.length >= 3 },
+            { step: 4, label: "4. Sync", done: webhookSent || !!extractedData.slot },
+          ].map((s) => (
+            <div
+              key={s.step}
+              style={{
+                padding: "5px 6px",
+                borderRadius: "8px",
+                background: s.done ? "rgba(155, 234, 22, 0.12)" : "rgba(255, 255, 255, 0.02)",
+                border: `1px solid ${s.done ? "rgba(155, 234, 22, 0.4)" : "rgba(255, 255, 255, 0.05)"}`,
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
+                gap: "4px",
+                textAlign: "center",
+                boxSizing: "border-box",
+                minWidth: 0,
+              }}
+            >
+              <div
+                style={{
+                  width: "14px",
+                  height: "14px",
+                  borderRadius: "50%",
+                  background: s.done ? "#9BEA16" : "rgba(255,255,255,0.1)",
+                  color: "#000000",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  fontSize: "8px",
+                  fontWeight: 700,
+                  flexShrink: 0,
+                }}
+              >
+                {s.done ? "✓" : s.step}
+              </div>
+              <span
+                style={{
+                  fontSize: "10.5px",
+                  color: s.done ? "#F5F5F0" : "#8E8E93",
+                  fontWeight: s.done ? 600 : 400,
+                  whiteSpace: "nowrap",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {s.label}
+              </span>
+            </div>
+          ))}
+        </div>
       </div>
 
-      {/* 4. MAIN INTERACTIVE EXPERIENCE (2-Column Grid) */}
+      {/* 3. DUAL-TERMINAL SQUARE CONSOLE GRID */}
       <div
+        className="demo-main-grid"
         style={{
           display: "grid",
-          gridTemplateColumns: "minmax(0, 1.45fr) minmax(320px, 0.95fr)",
-          gap: "20px",
+          gap: "16px",
           alignItems: "stretch",
+          justifyContent: "center",
+          maxWidth: "980px",
+          margin: "0 auto",
+          width: "100%",
+          boxSizing: "border-box",
         }}
       >
-        {/* LEFT COLUMN: HERO VOICE / CHAT INTERACTION */}
+        {/* LEFT SQUARE CONSOLE: HERO VOICE / CHAT TERMINAL */}
         <div
+          className="demo-call-card square-console"
           style={{
-            borderRadius: "20px",
-            background: "linear-gradient(180deg, rgba(24, 24, 27, 0.85) 0%, rgba(12, 12, 14, 0.95) 100%)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            padding: "24px",
+            borderRadius: "26px",
+            background: "linear-gradient(180deg, rgba(22, 22, 26, 0.92) 0%, rgba(10, 10, 12, 0.98) 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            padding: "18px 16px",
             display: "flex",
             flexDirection: "column",
             position: "relative",
-            minHeight: "560px",
-            boxShadow: "0 20px 50px rgba(0, 0, 0, 0.4)",
+            boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
+            width: "100%",
+            boxSizing: "border-box",
+            overflow: "hidden",
           }}
         >
           {channel === "voice" ? (
@@ -839,50 +884,56 @@ export default function AIVoiceChatbotEngine() {
                 alignItems: "center",
                 justifyContent: "space-between",
                 height: "100%",
-                minHeight: "500px",
+                gap: "8px",
+                width: "100%",
+                boxSizing: "border-box",
               }}
             >
-              {/* Call Status Header */}
+              {/* Call Status Header & Voice Selector (100% visible & bounded) */}
               <div
                 style={{
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "space-between",
                   width: "100%",
-                  paddingBottom: "16px",
+                  paddingBottom: "8px",
                   borderBottom: "1px solid rgba(255, 255, 255, 0.06)",
+                  flexWrap: "wrap",
+                  gap: "6px",
+                  boxSizing: "border-box",
                 }}
               >
                 <div
                   style={{
                     display: "inline-flex",
                     alignItems: "center",
-                    gap: "7px",
-                    padding: "4px 12px",
+                    gap: "5px",
+                    padding: "3px 8px",
                     borderRadius: "999px",
                     background: isCallActive ? "rgba(34, 197, 94, 0.15)" : isConnecting ? "rgba(245, 158, 11, 0.15)" : "rgba(255, 255, 255, 0.05)",
                     border: `1px solid ${isCallActive ? "rgba(34, 197, 94, 0.4)" : isConnecting ? "rgba(245, 158, 11, 0.4)" : "rgba(255, 255, 255, 0.08)"}`,
-                    fontSize: "12px",
+                    fontSize: "10.5px",
                     fontWeight: 600,
                     color: isCallActive ? "#4ADE80" : isConnecting ? "#FBBF24" : "#8E8E93",
+                    flexShrink: 0,
                   }}
                 >
                   <span
                     style={{
-                      width: "7px",
-                      height: "7px",
+                      width: "5px",
+                      height: "5px",
                       borderRadius: "50%",
                       background: isCallActive ? "#4ADE80" : isConnecting ? "#FBBF24" : "#8E8E93",
                     }}
                   />
                   <span>
-                    {isConnecting ? "Connecting..." : isCallActive ? `Call Connected • ${formatDuration(callDuration)}` : "Live Voice Channel"}
+                    {isConnecting ? "Connecting..." : isCallActive ? `Live • ${formatDuration(callDuration)}` : "Live Voice"}
                   </span>
                 </div>
 
                 {/* Voice Persona Selector */}
-                <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
-                  <span style={{ fontSize: "11px", color: "#8E8E93" }}>Voice:</span>
+                <div style={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
+                  <span style={{ fontSize: "10px", color: "#8E8E93", marginRight: "2px" }}>Voice:</span>
                   {VOICE_PERSONAS.map((vp) => {
                     const isSelected = selectedSpeaker === vp.id;
                     return (
@@ -890,15 +941,16 @@ export default function AIVoiceChatbotEngine() {
                         key={vp.id}
                         onClick={() => setSelectedSpeaker(vp.id)}
                         style={{
-                          padding: "3px 9px",
+                          padding: "2px 6px",
                           borderRadius: "999px",
-                          fontSize: "11px",
+                          fontSize: "9.5px",
                           fontWeight: isSelected ? 700 : 500,
                           background: isSelected ? "rgba(155, 234, 22, 0.18)" : "rgba(255, 255, 255, 0.04)",
                           border: `1px solid ${isSelected ? "#9BEA16" : "rgba(255, 255, 255, 0.08)"}`,
                           color: isSelected ? "#9BEA16" : "#A1A1AA",
                           cursor: "pointer",
                           transition: "all 0.2s ease",
+                          whiteSpace: "nowrap",
                         }}
                       >
                         {vp.label}
@@ -908,136 +960,144 @@ export default function AIVoiceChatbotEngine() {
                 </div>
               </div>
 
-              {/* Glowing Acoustic Orb Visualizer with Magnetic Radar Ripple */}
+              {/* Mathematically Centered Acoustic Orb Visualizer */}
               <div
                 style={{
                   display: "flex",
                   flexDirection: "column",
                   alignItems: "center",
                   justifyContent: "center",
-                  padding: "26px 0 16px",
-                  position: "relative",
+                  padding: "12px 0 8px",
                   width: "100%",
                 }}
               >
-                {/* Concentric Pulsing Radar Rings when ready to call */}
-                {!isCallActive && (
-                  <>
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.45, 1.9],
-                        opacity: [0.6, 0.25, 0],
-                      }}
-                      transition={{
-                        duration: 2.8,
-                        repeat: Infinity,
-                        ease: "easeOut",
-                      }}
-                      style={{
-                        position: "absolute",
-                        width: "130px",
-                        height: "130px",
-                        borderRadius: "50%",
-                        border: "1.5px solid rgba(155, 234, 22, 0.45)",
-                        pointerEvents: "none",
-                        top: "26px",
-                      }}
-                    />
-                    <motion.div
-                      animate={{
-                        scale: [1, 1.35, 1.65],
-                        opacity: [0.8, 0.4, 0],
-                      }}
-                      transition={{
-                        duration: 2.8,
-                        repeat: Infinity,
-                        delay: 1.2,
-                        ease: "easeOut",
-                      }}
-                      style={{
-                        position: "absolute",
-                        width: "130px",
-                        height: "130px",
-                        borderRadius: "50%",
-                        border: "1.5px solid rgba(155, 234, 22, 0.35)",
-                        pointerEvents: "none",
-                        top: "26px",
-                      }}
-                    />
-                  </>
-                )}
-
-                {/* Central Orb */}
-                <motion.div
-                  whileHover={{ scale: 1.05 }}
-                  onClick={!isCallActive ? handleStartCall : undefined}
+                {/* Central Orb with Anchored Centered Radar Rings */}
+                <div
                   style={{
-                    width: "130px",
-                    height: "130px",
-                    borderRadius: "50%",
+                    position: "relative",
+                    width: "115px",
+                    height: "115px",
                     display: "flex",
                     alignItems: "center",
                     justifyContent: "center",
-                    position: "relative",
-                    cursor: !isCallActive ? "pointer" : "default",
-                    background: isAiSpeaking
-                      ? "radial-gradient(circle, rgba(155, 234, 22, 0.35) 0%, rgba(0, 0, 0, 0.85) 75%)"
-                      : isUserSpeaking
-                      ? "radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(0, 0, 0, 0.85) 75%)"
-                      : "radial-gradient(circle, rgba(155, 234, 22, 0.22) 0%, rgba(18, 18, 20, 0.9) 75%)",
-                    border: `1.5px solid ${isAiSpeaking ? "rgba(155, 234, 22, 0.8)" : isUserSpeaking ? "rgba(56, 189, 248, 0.8)" : "rgba(155, 234, 22, 0.45)"}`,
-                    boxShadow: isAiSpeaking
-                      ? "0 0 50px rgba(155, 234, 22, 0.5), 0 0 100px rgba(155, 234, 22, 0.2)"
-                      : isUserSpeaking
-                      ? "0 0 50px rgba(56, 189, 248, 0.5), 0 0 100px rgba(56, 189, 248, 0.2)"
-                      : "0 0 40px rgba(155, 234, 22, 0.35), 0 0 80px rgba(155, 234, 22, 0.15)",
-                    transition: "all 0.35s cubic-bezier(0.16, 1, 0.3, 1)",
-                    zIndex: 2,
+                    margin: "0 auto",
                   }}
                 >
+                  {/* Concentric Pulsing Radar Rings */}
+                  {!isCallActive && (
+                    <>
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.45, 1.85],
+                          opacity: [0.55, 0.2, 0],
+                        }}
+                        transition={{
+                          duration: 2.8,
+                          repeat: Infinity,
+                          ease: "easeOut",
+                        }}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: "50%",
+                          border: "1.5px solid rgba(155, 234, 22, 0.4)",
+                          pointerEvents: "none",
+                        }}
+                      />
+                      <motion.div
+                        animate={{
+                          scale: [1, 1.3, 1.6],
+                          opacity: [0.75, 0.35, 0],
+                        }}
+                        transition={{
+                          duration: 2.8,
+                          repeat: Infinity,
+                          delay: 1.2,
+                          ease: "easeOut",
+                        }}
+                        style={{
+                          position: "absolute",
+                          inset: 0,
+                          borderRadius: "50%",
+                          border: "1.5px solid rgba(155, 234, 22, 0.3)",
+                          pointerEvents: "none",
+                        }}
+                      />
+                    </>
+                  )}
+
+                  {/* Central Interactive Orb */}
                   <motion.div
-                    animate={
-                      !isCallActive
-                        ? {
-                            scale: [1, 1.08, 1],
-                            boxShadow: [
-                              "0 0 20px rgba(155, 234, 22, 0.4)",
-                              "0 0 35px rgba(155, 234, 22, 0.75)",
-                              "0 0 20px rgba(155, 234, 22, 0.4)",
-                            ],
-                          }
-                        : {}
-                    }
-                    transition={{
-                      duration: 2.2,
-                      repeat: Infinity,
-                      ease: "easeInOut",
-                    }}
+                    whileHover={{ scale: 1.05 }}
+                    onClick={!isCallActive ? handleStartCall : undefined}
                     style={{
-                      width: "66px",
-                      height: "66px",
+                      width: "100%",
+                      height: "100%",
                       borderRadius: "50%",
-                      background: isAiSpeaking ? "#9BEA16" : isUserSpeaking ? "#38BDF8" : "#9BEA16",
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      color: "#000000",
-                      transition: "all 0.3s ease",
+                      position: "relative",
+                      cursor: !isCallActive ? "pointer" : "default",
+                      background: isAiSpeaking
+                        ? "radial-gradient(circle, rgba(155, 234, 22, 0.35) 0%, rgba(0, 0, 0, 0.85) 75%)"
+                        : isUserSpeaking
+                        ? "radial-gradient(circle, rgba(56, 189, 248, 0.35) 0%, rgba(0, 0, 0, 0.85) 75%)"
+                        : "radial-gradient(circle, rgba(155, 234, 22, 0.2) 0%, rgba(18, 18, 20, 0.9) 75%)",
+                      border: `1.5px solid ${isAiSpeaking ? "rgba(155, 234, 22, 0.8)" : isUserSpeaking ? "rgba(56, 189, 248, 0.8)" : "rgba(155, 234, 22, 0.45)"}`,
+                      boxShadow: isAiSpeaking
+                        ? "0 0 40px rgba(155, 234, 22, 0.5), 0 0 80px rgba(155, 234, 22, 0.2)"
+                        : isUserSpeaking
+                        ? "0 0 40px rgba(56, 189, 248, 0.5), 0 0 80px rgba(56, 189, 248, 0.2)"
+                        : "0 0 35px rgba(155, 234, 22, 0.35), 0 0 70px rgba(155, 234, 22, 0.15)",
+                      transition: "all 0.35s ease",
+                      zIndex: 2,
                     }}
                   >
-                    <Phone size={26} strokeWidth={2.4} />
+                    <motion.div
+                      animate={
+                        !isCallActive
+                          ? {
+                              scale: [1, 1.06, 1],
+                              boxShadow: [
+                                "0 0 16px rgba(155, 234, 22, 0.4)",
+                                "0 0 30px rgba(155, 234, 22, 0.7)",
+                                "0 0 16px rgba(155, 234, 22, 0.4)",
+                              ],
+                            }
+                          : {}
+                      }
+                      transition={{
+                        duration: 2.2,
+                        repeat: Infinity,
+                        ease: "easeInOut",
+                      }}
+                      style={{
+                        width: "58px",
+                        height: "58px",
+                        borderRadius: "50%",
+                        background: isAiSpeaking ? "#9BEA16" : isUserSpeaking ? "#38BDF8" : "#9BEA16",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        color: "#000000",
+                        transition: "all 0.3s ease",
+                      }}
+                    >
+                      <Phone size={24} strokeWidth={2.4} />
+                    </motion.div>
                   </motion.div>
-                </motion.div>
+                </div>
 
                 {/* Equalizer bars */}
-                <div style={{ display: "flex", alignItems: "center", gap: "4px", height: "28px", marginTop: "16px" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: "3px", height: "18px", marginTop: "10px" }}>
                   {[30, 60, 90, 100, 75, 45, 80, 95, 60, 35].map((h, i) => {
-                    const dynamicH = isAiSpeaking || isUserSpeaking ? Math.max(20, (h * ((callDuration % 4) + 2)) % 100) : 15;
+                    const dynamicH = isAiSpeaking || isUserSpeaking ? Math.max(25, (h * ((callDuration % 4) + 2)) % 100) : 18;
                     return (
                       <div
                         key={i}
                         style={{
-                          width: "3px",
+                          width: "2.5px",
                           height: `${dynamicH}%`,
                           background: isUserSpeaking ? "#38BDF8" : isAiSpeaking ? "#9BEA16" : "rgba(255, 255, 255, 0.15)",
                           borderRadius: "2px",
@@ -1054,69 +1114,80 @@ export default function AIVoiceChatbotEngine() {
                     fontWeight: 600,
                     color: isAiSpeaking ? "#9BEA16" : isUserSpeaking ? "#38BDF8" : isCallActive ? "#4ADE80" : "#9BEA16",
                     marginTop: "6px",
+                    textAlign: "center",
                   }}
                 >
                   {isAiSpeaking ? "AI Speaking (Click to interrupt)" : isUserSpeaking ? "Listening to you..." : isCallActive ? "Connected • Speak naturally" : "Tap Orb or Button to Start Voice Call"}
                 </span>
               </div>
 
-              {/* Real-time Subtitle & Transcription Bubble */}
-              <div
-                style={{
-                  width: "100%",
-                  padding: "16px 20px",
-                  borderRadius: "14px",
-                  background: "rgba(0, 0, 0, 0.4)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
-                  minHeight: "72px",
-                  display: "flex",
-                  flexDirection: "column",
-                  justifyContent: "center",
-                  textAlign: "center",
-                  marginBottom: "16px",
-                }}
-              >
-                {liveUserTranscript ? (
-                  <div>
-                    <span style={{ fontSize: "10.5px", fontWeight: 700, color: "#38BDF8", textTransform: "uppercase", display: "block", marginBottom: "4px" }}>
-                      🔴 You are speaking
-                    </span>
-                    <p style={{ margin: 0, fontSize: "14.5px", color: "#38BDF8", fontWeight: 600, lineHeight: 1.4 }}>
-                      &ldquo;{liveUserTranscript}&rdquo;
-                    </p>
-                  </div>
-                ) : conversationHistory.length > 0 ? (
-                  <div>
-                    <span
-                      style={{
-                        fontSize: "10.5px",
-                        fontWeight: 700,
-                        textTransform: "uppercase",
-                        color: conversationHistory[conversationHistory.length - 1].speaker === "ai" ? "#9BEA16" : "#38BDF8",
-                        display: "block",
-                        marginBottom: "4px",
-                      }}
-                    >
-                      {conversationHistory[conversationHistory.length - 1].speaker === "ai" ? `${activeIndustry.brandName} Receptionist` : "You (Caller)"}
-                    </span>
-                    <p style={{ margin: 0, fontSize: "14px", color: "#F5F5F0", lineHeight: 1.5 }}>
-                      &ldquo;{conversationHistory[conversationHistory.length - 1].text}&rdquo;
-                    </p>
-                  </div>
-                ) : (
-                  <p style={{ margin: 0, fontSize: "13px", color: "#8E8E93" }}>
-                    {speechStatusText}
-                  </p>
-                )}
-              </div>
+              {/* Real-time Subtitle & Transcription Bubble (ONLY SHOWN WHEN CONVERSATION/SPEECH EXISTS - RED MARKED INACTIVE BOX REMOVED) */}
+              {(liveUserTranscript || conversationHistory.length > 0) && (
+                <div
+                  style={{
+                    width: "100%",
+                    padding: "10px 14px",
+                    borderRadius: "12px",
+                    background: "rgba(0, 0, 0, 0.4)",
+                    border: "1px solid rgba(255, 255, 255, 0.08)",
+                    minHeight: "50px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    textAlign: "center",
+                  }}
+                >
+                  {liveUserTranscript ? (
+                    <div>
+                      <span style={{ fontSize: "9.5px", fontWeight: 700, color: "#38BDF8", textTransform: "uppercase", display: "block", marginBottom: "2px" }}>
+                        🔴 You are speaking
+                      </span>
+                      <p style={{ margin: 0, fontSize: "13px", color: "#38BDF8", fontWeight: 600, lineHeight: 1.35 }}>
+                        &ldquo;{liveUserTranscript}&rdquo;
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <span
+                        style={{
+                          fontSize: "9.5px",
+                          fontWeight: 700,
+                          textTransform: "uppercase",
+                          color: conversationHistory[conversationHistory.length - 1].speaker === "ai" ? "#9BEA16" : "#38BDF8",
+                          display: "block",
+                          marginBottom: "2px",
+                        }}
+                      >
+                        {conversationHistory[conversationHistory.length - 1].speaker === "ai" ? `${activeIndustry.brandName} Receptionist` : "You (Caller)"}
+                      </span>
+                      <p style={{ margin: 0, fontSize: "12.5px", color: "#F5F5F0", lineHeight: 1.4 }}>
+                        &ldquo;{conversationHistory[conversationHistory.length - 1].text}&rdquo;
+                      </p>
+                    </div>
+                  )}
+                </div>
+              )}
 
-              {/* Quick Suggestion Chips (1-Click Prompts) */}
-              <div style={{ width: "100%", marginBottom: "16px" }}>
-                <span style={{ fontSize: "10.5px", color: "#8E8E93", display: "block", marginBottom: "6px" }}>
-                  💡 1-Click Test Prompts (Instant Audio):
-                </span>
-                <div style={{ display: "flex", gap: "6px", overflowX: "auto", paddingBottom: "4px", scrollbarWidth: "none" }}>
-                  {samplePrompts.slice(0, 4).map((p, idx) => (
+              {/* 1-Click Test Prompts Carousel (100% within card boundaries, no overflow clipping) */}
+              <div style={{ width: "100%", overflow: "hidden" }}>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
+                  <span style={{ fontSize: "10.5px", color: "#8E8E93", fontWeight: 500 }}>
+                    💡 1-Click Prompts (Instant Audio):
+                  </span>
+                  <span style={{ fontSize: "10px", color: "#71717A" }}>Swipe ➔</span>
+                </div>
+                <div
+                  className="touch-scroll"
+                  style={{
+                    display: "flex",
+                    gap: "6px",
+                    overflowX: "auto",
+                    padding: "2px 2px 6px 2px",
+                    scrollSnapType: "x mandatory",
+                    width: "100%",
+                  }}
+                >
+                  {samplePrompts.slice(0, 5).map((p, idx) => (
                     <button
                       key={idx}
                       onClick={() => {
@@ -1126,7 +1197,7 @@ export default function AIVoiceChatbotEngine() {
                         processConversationTurn(p.text);
                       }}
                       style={{
-                        padding: "5px 11px",
+                        padding: "6px 12px",
                         borderRadius: "999px",
                         fontSize: "11px",
                         background: "rgba(255, 255, 255, 0.04)",
@@ -1134,7 +1205,9 @@ export default function AIVoiceChatbotEngine() {
                         color: "#D4D4D8",
                         cursor: "pointer",
                         whiteSpace: "nowrap",
+                        scrollSnapAlign: "start",
                         transition: "all 0.2s ease",
+                        flexShrink: 0,
                       }}
                       onMouseEnter={(e) => (e.currentTarget.style.borderColor = "rgba(155, 234, 22, 0.5)")}
                       onMouseLeave={(e) => (e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.08)")}
@@ -1146,18 +1219,18 @@ export default function AIVoiceChatbotEngine() {
               </div>
 
               {/* Call Action Controls with Magnetic Glowing CTA */}
-              <div style={{ display: "flex", alignItems: "center", gap: "12px", width: "100%", justifyContent: "center" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", width: "100%", justifyContent: "center", paddingTop: "4px" }}>
                 {!isCallActive ? (
                   <motion.button
                     onClick={handleStartCall}
                     disabled={isConnecting}
-                    whileHover={{ scale: 1.04, boxShadow: "0 0 45px rgba(155, 234, 22, 0.8), 0 0 90px rgba(155, 234, 22, 0.3)" }}
-                    whileTap={{ scale: 0.96 }}
+                    whileHover={{ scale: 1.03, boxShadow: "0 0 35px rgba(155, 234, 22, 0.8)" }}
+                    whileTap={{ scale: 0.97 }}
                     animate={{
                       boxShadow: [
-                        "0 0 20px rgba(155, 234, 22, 0.45), 0 0 40px rgba(155, 234, 22, 0.15)",
-                        "0 0 35px rgba(155, 234, 22, 0.75), 0 0 70px rgba(155, 234, 22, 0.3)",
-                        "0 0 20px rgba(155, 234, 22, 0.45), 0 0 40px rgba(155, 234, 22, 0.15)",
+                        "0 0 16px rgba(155, 234, 22, 0.45)",
+                        "0 0 30px rgba(155, 234, 22, 0.75)",
+                        "0 0 16px rgba(155, 234, 22, 0.45)",
                       ],
                     }}
                     transition={{
@@ -1168,12 +1241,12 @@ export default function AIVoiceChatbotEngine() {
                     style={{
                       display: "inline-flex",
                       alignItems: "center",
-                      gap: "10px",
-                      padding: "14px 34px",
+                      gap: "8px",
+                      padding: "13px 32px",
                       borderRadius: "999px",
                       background: "#9BEA16",
                       color: "#000000",
-                      fontSize: "14.5px",
+                      fontSize: "14px",
                       fontWeight: 700,
                       border: "none",
                       cursor: "pointer",
@@ -1185,7 +1258,7 @@ export default function AIVoiceChatbotEngine() {
                       animate={{ rotate: [0, -10, 10, -10, 0] }}
                       transition={{ duration: 1.8, repeat: Infinity, repeatDelay: 3 }}
                     >
-                      <Phone size={18} strokeWidth={2.4} />
+                      <Phone size={16} strokeWidth={2.4} />
                     </motion.span>
                     <span>Start Voice Call</span>
                   </motion.button>
@@ -1199,19 +1272,19 @@ export default function AIVoiceChatbotEngine() {
                       style={{
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "6px",
-                        padding: "11px 20px",
+                        gap: "5px",
+                        padding: "10px 16px",
                         borderRadius: "999px",
                         background: isUserSpeaking ? "#38BDF8" : "rgba(155, 234, 22, 0.15)",
                         color: isUserSpeaking ? "#000000" : "#9BEA16",
                         border: `1px solid ${isUserSpeaking ? "#38BDF8" : "rgba(155, 234, 22, 0.4)"}`,
-                        fontSize: "12.5px",
+                        fontSize: "12px",
                         fontWeight: 700,
                         cursor: "pointer",
                       }}
                     >
-                      <Radio size={14} />
-                      <span>{isAiSpeaking ? "Interrupt & Speak" : isUserSpeaking ? "🔴 Listening..." : "🎙️ Speak"}</span>
+                      <Radio size={13} />
+                      <span>{isAiSpeaking ? "Interrupt" : isUserSpeaking ? "Listening..." : "🎙️ Speak"}</span>
                     </button>
 
                     <button
@@ -1226,7 +1299,7 @@ export default function AIVoiceChatbotEngine() {
                       }}
                       title={isMuted ? "Unmute" : "Mute"}
                       style={{
-                        padding: "11px",
+                        padding: "10px",
                         borderRadius: "50%",
                         background: isMuted ? "#F87171" : "rgba(255, 255, 255, 0.08)",
                         color: isMuted ? "#000000" : "#F5F5F0",
@@ -1234,7 +1307,7 @@ export default function AIVoiceChatbotEngine() {
                         cursor: "pointer",
                       }}
                     >
-                      {isMuted ? <MicOff size={16} /> : <Mic size={16} />}
+                      {isMuted ? <MicOff size={15} /> : <Mic size={15} />}
                     </button>
 
                     <button
@@ -1244,7 +1317,7 @@ export default function AIVoiceChatbotEngine() {
                       }}
                       title={isSpeakerOn ? "Mute Speaker" : "Unmute Speaker"}
                       style={{
-                        padding: "11px",
+                        padding: "10px",
                         borderRadius: "50%",
                         background: !isSpeakerOn ? "#FBBF24" : "rgba(255, 255, 255, 0.08)",
                         color: !isSpeakerOn ? "#000000" : "#F5F5F0",
@@ -1252,27 +1325,27 @@ export default function AIVoiceChatbotEngine() {
                         cursor: "pointer",
                       }}
                     >
-                      {isSpeakerOn ? <Volume2 size={16} /> : <VolumeX size={16} />}
+                      {isSpeakerOn ? <Volume2 size={15} /> : <VolumeX size={15} />}
                     </button>
 
                     <button
                       onClick={handleEndCall}
                       title="End Call"
                       style={{
-                        padding: "11px 22px",
+                        padding: "10px 18px",
                         borderRadius: "999px",
                         background: "#EF4444",
                         color: "#FFFFFF",
                         border: "none",
-                        fontSize: "13px",
+                        fontSize: "12.5px",
                         fontWeight: 700,
                         cursor: "pointer",
                         display: "inline-flex",
                         alignItems: "center",
-                        gap: "6px",
+                        gap: "5px",
                       }}
                     >
-                      <PhoneOff size={15} />
+                      <PhoneOff size={14} />
                       <span>End Call</span>
                     </button>
                   </>
@@ -1411,15 +1484,16 @@ export default function AIVoiceChatbotEngine() {
 
         {/* RIGHT COLUMN: LIVE CUSTOMER INTAKE & WEBHOOK CRM DISPATCH */}
         <div
+          className="square-console"
           style={{
-            borderRadius: "20px",
-            background: "rgba(18, 18, 20, 0.9)",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
-            padding: "22px",
+            borderRadius: "28px",
+            background: "linear-gradient(180deg, rgba(20, 20, 24, 0.92) 0%, rgba(10, 10, 12, 0.98) 100%)",
+            border: "1px solid rgba(255, 255, 255, 0.1)",
+            padding: "22px 20px",
             display: "flex",
             flexDirection: "column",
             justifyContent: "space-between",
-            boxShadow: "0 20px 50px rgba(0, 0, 0, 0.4)",
+            boxShadow: "0 24px 60px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255, 255, 255, 0.1)",
           }}
         >
           <div>
@@ -1445,138 +1519,107 @@ export default function AIVoiceChatbotEngine() {
                   fontSize: "11px",
                   padding: "2px 8px",
                   borderRadius: "999px",
-                  background: webhookSent ? "rgba(34, 197, 94, 0.15)" : "rgba(255, 255, 255, 0.05)",
-                  color: webhookSent ? "#4ADE80" : "#8E8E93",
+                  background: webhookSent ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.05)",
+                  color: webhookSent ? "#9BEA16" : "#A1A1AA",
+                  border: `1px solid ${webhookSent ? "rgba(155, 234, 22, 0.4)" : "rgba(255, 255, 255, 0.08)"}`,
                   fontWeight: 600,
                 }}
               >
-                {webhookSent ? "✓ Webhook Dispatched" : "Capturing Live..."}
+                {webhookSent ? "Webhook Dispatched" : "Awaiting Call Sync"}
               </span>
             </div>
 
-            {/* Extracted Fields List */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px" }}>
+            {/* Extracted Entity Fields */}
+            <div
+              style={{
+                display: "grid",
+                gridTemplateColumns: "1fr 1fr",
+                gap: "8px",
+                marginBottom: "14px",
+              }}
+            >
               {/* Name */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 14px",
+                  padding: "8px 12px",
                   borderRadius: "10px",
                   background: extractedData.name ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
-                  border: `1px solid ${extractedData.name ? "rgba(155, 234, 22, 0.25)" : "rgba(255, 255, 255, 0.05)"}`,
+                  border: `1px solid ${extractedData.name ? "rgba(155, 234, 22, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <User size={14} color="#8E8E93" />
-                  <span style={{ fontSize: "12px", color: "#8E8E93" }}>Name</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10.5px", color: "#8E8E93" }}>
+                    <User size={11} color={extractedData.name ? "#9BEA16" : "#71717A"} />
+                    <span>Caller Name</span>
+                  </div>
+                  {extractedData.name && <CheckCircle2 size={11} color="#9BEA16" />}
                 </div>
-                <span style={{ fontSize: "13px", fontWeight: 600, color: extractedData.name ? "#9BEA16" : "#52525B" }}>
-                  {extractedData.name || "Awaiting caller..."}
-                </span>
+                <div style={{ fontSize: "12.5px", fontWeight: 600, color: extractedData.name ? "#F5F5F0" : "#52525B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {extractedData.name || "—"}
+                </div>
               </div>
 
-              {/* Mobile */}
+              {/* Phone */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 14px",
+                  padding: "8px 12px",
                   borderRadius: "10px",
                   background: extractedData.mobile ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
-                  border: `1px solid ${extractedData.mobile ? "rgba(155, 234, 22, 0.25)" : "rgba(255, 255, 255, 0.05)"}`,
+                  border: `1px solid ${extractedData.mobile ? "rgba(155, 234, 22, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Phone size={14} color="#8E8E93" />
-                  <span style={{ fontSize: "12px", color: "#8E8E93" }}>Phone</span>
-                </div>
-                <span style={{ fontSize: "13px", fontWeight: 600, color: extractedData.mobile ? "#9BEA16" : "#52525B" }}>
-                  {extractedData.mobile || "Awaiting number..."}
-                </span>
-              </div>
-
-              {/* DOB / Age (if required) */}
-              {activeIndustry.requiresDob && (
-                <div
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    background: extractedData.dob ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
-                    border: `1px solid ${extractedData.dob ? "rgba(155, 234, 22, 0.25)" : "rgba(255, 255, 255, 0.05)"}`,
-                  }}
-                >
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <Calendar size={14} color="#8E8E93" />
-                    <span style={{ fontSize: "12px", color: "#8E8E93" }}>DOB / Age</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10.5px", color: "#8E8E93" }}>
+                    <Phone size={11} color={extractedData.mobile ? "#9BEA16" : "#71717A"} />
+                    <span>Phone</span>
                   </div>
-                  <span style={{ fontSize: "13px", fontWeight: 600, color: extractedData.dob ? "#9BEA16" : "#52525B" }}>
-                    {extractedData.dob || "Awaiting DOB..."}
-                  </span>
+                  {extractedData.mobile && <CheckCircle2 size={11} color="#9BEA16" />}
                 </div>
-              )}
-
-              {/* Department / Service / Scope */}
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 14px",
-                  borderRadius: "10px",
-                  background: extractedData.department ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
-                  border: `1px solid ${extractedData.department ? "rgba(155, 234, 22, 0.25)" : "rgba(255, 255, 255, 0.05)"}`,
-                }}
-              >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <span style={{ color: "#8E8E93" }}>
-                    {ICON_MAP[activeIndustry.iconName] || <Briefcase size={14} />}
-                  </span>
-                  <span style={{ fontSize: "12px", color: "#8E8E93" }}>
-                    {activeIndustry.id === "doctors-clinics"
-                      ? "Specialty / Dept"
-                      : activeIndustry.id === "lawyers"
-                      ? "Practice Area"
-                      : activeIndustry.id === "chartered-accountants"
-                      ? "Tax Service"
-                      : activeIndustry.id === "real-estate"
-                      ? "Unit Config"
-                      : activeIndustry.id === "education"
-                      ? "Course / Batch"
-                      : activeIndustry.id === "distributors"
-                      ? "Wholesale SKU"
-                      : "Service / Scope"}
-                  </span>
+                <div style={{ fontSize: "12.5px", fontWeight: 600, color: extractedData.mobile ? "#F5F5F0" : "#52525B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {extractedData.mobile || "—"}
                 </div>
-                <span style={{ fontSize: "13px", fontWeight: 600, color: extractedData.department ? "#9BEA16" : "#52525B" }}>
-                  {extractedData.department || "Pending selection"}
-                </span>
               </div>
 
-              {/* Confirmed Slot */}
+              {/* DOB / Department */}
               <div
                 style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "space-between",
-                  padding: "10px 14px",
+                  padding: "8px 12px",
+                  borderRadius: "10px",
+                  background: extractedData.dob || extractedData.department ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
+                  border: `1px solid ${extractedData.dob || extractedData.department ? "rgba(155, 234, 22, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
+                }}
+              >
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10.5px", color: "#8E8E93" }}>
+                    {activeIndustry.requiresDob ? <Calendar size={11} color={extractedData.dob ? "#9BEA16" : "#71717A"} /> : <Stethoscope size={11} color={extractedData.department ? "#9BEA16" : "#71717A"} />}
+                    <span>{activeIndustry.requiresDob ? "DOB / Age" : "Specialty"}</span>
+                  </div>
+                  {(extractedData.dob || extractedData.department) && <CheckCircle2 size={11} color="#9BEA16" />}
+                </div>
+                <div style={{ fontSize: "12.5px", fontWeight: 600, color: extractedData.dob || extractedData.department ? "#F5F5F0" : "#52525B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {extractedData.dob || extractedData.department || "—"}
+                </div>
+              </div>
+
+              {/* Slot */}
+              <div
+                style={{
+                  padding: "8px 12px",
                   borderRadius: "10px",
                   background: extractedData.slot ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.02)",
                   border: `1px solid ${extractedData.slot ? "#9BEA16" : "rgba(255, 255, 255, 0.05)"}`,
                 }}
               >
-                <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                  <Clock size={14} color="#8E8E93" />
-                  <span style={{ fontSize: "12px", color: "#8E8E93" }}>Confirmed Slot</span>
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10.5px", color: "#8E8E93" }}>
+                    <Clock size={11} color={extractedData.slot ? "#9BEA16" : "#71717A"} />
+                    <span>Booking Slot</span>
+                  </div>
+                  {extractedData.slot && <CheckCircle2 size={11} color="#9BEA16" />}
                 </div>
-                <span style={{ fontSize: "13px", fontWeight: 700, color: extractedData.slot ? "#9BEA16" : "#52525B" }}>
-                  {extractedData.slot || "Pending resolution"}
-                </span>
+                <div style={{ fontSize: "12.5px", fontWeight: 700, color: extractedData.slot ? "#9BEA16" : "#52525B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {extractedData.slot || "—"}
+                </div>
               </div>
             </div>
           </div>
@@ -1661,6 +1704,72 @@ export default function AIVoiceChatbotEngine() {
           </div>
         </div>
       </div>
+
+      <style>{`
+        .demo-main-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+          max-width: 980px;
+          margin: 0 auto;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        .square-console {
+          min-height: 460px;
+          width: 100%;
+          box-sizing: border-box;
+        }
+        @media (max-width: 960px) {
+          .demo-main-grid {
+            grid-template-columns: 1fr !important;
+            max-width: 100% !important;
+            width: 100% !important;
+            margin: 0 auto !important;
+            gap: 16px !important;
+          }
+          .square-console {
+            min-height: auto !important;
+            padding: 16px 12px !important;
+            border-radius: 24px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            box-sizing: border-box !important;
+          }
+        }
+        @media (max-width: 640px) {
+          .header-top-row {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+          .header-action-controls {
+            justifyContent: space-between !important;
+            width: 100% !important;
+          }
+        }
+        @media (max-width: 500px) {
+          .demo-main-grid {
+            max-width: 100% !important;
+            width: 100% !important;
+          }
+          .square-console {
+            min-height: auto !important;
+            padding: 14px 10px !important;
+            border-radius: 20px !important;
+          }
+          .stepper-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+            gap: 3px !important;
+            width: 100% !important;
+          }
+          .stepper-grid > div {
+            padding: 4px 3px !important;
+            gap: 2px !important;
+          }
+          .stepper-grid span {
+            font-size: 9px !important;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -19,10 +19,9 @@ export default function RoiCalculator() {
 
   return (
     <div
-      className="glass-card"
+      className="glass-card calculator-card"
       style={{
         width: "100%",
-        padding: "40px",
         borderRadius: "22px",
         background: "rgba(11, 14, 11, 0.95)",
         border: "1px solid rgba(255, 255, 255, 0.1)",
@@ -177,8 +176,12 @@ export default function RoiCalculator() {
       </div>
 
       <style>{`
+        .calculator-card {
+          padding: 40px;
+        }
         @media (max-width: 900px) {
-          .calculator-grid { grid-template-columns: 1fr !important; }
+          .calculator-card { padding: 22px 18px !important; }
+          .calculator-grid { grid-template-columns: 1fr !important; gap: 28px !important; }
         }
       `}</style>
     </div>

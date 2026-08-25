@@ -14,7 +14,6 @@ import HP09Handoff from "@/components/HP09Handoff";
 import HP10Manner from "@/components/HP10Manner";
 import MessyConversationPlayer from "@/components/MessyConversationPlayer";
 import RoiCalculator from "@/components/RoiCalculator";
-import BringConversationDemo from "@/components/BringConversationDemo";
 import { ArrowRight } from "lucide-react";
 
 export default function HomePage() {
@@ -75,7 +74,7 @@ export default function HomePage() {
         {/* =========================================================================
             HP-11: ACOUSTIC INTELLIGENCE (MESSY CONVERSATIONS)
             ========================================================================= */}
-        <section id="messy-conversations" style={{ padding: "120px 40px", background: "#000000", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+        <section id="messy-conversations" className="page-section-pad" style={{ background: "#000000", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
           <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
             <div style={{ textAlign: "center", maxWidth: "700px", margin: "0 auto 56px" }}>
               <div className="pill" style={{ marginBottom: "14px" }}>HP-11 • Acoustic Intelligence</div>
@@ -94,25 +93,16 @@ export default function HomePage() {
         {/* =========================================================================
             HP-12: COMMERCIAL PROOF / ROI CALCULATOR
             ========================================================================= */}
-        <section id="roi-calculator" style={{ padding: "120px 40px", background: "rgba(10, 10, 10, 0.95)", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
+        <section id="roi-calculator" className="page-section-pad" style={{ background: "rgba(10, 10, 10, 0.95)", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
           <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
             <RoiCalculator />
           </div>
         </section>
 
         {/* =========================================================================
-            HP-13 & HP-14: BRING ONE REAL CONVERSATION INTERACTIVE ENGINE
-            ========================================================================= */}
-        <section id="interactive-demo" style={{ padding: "120px 40px", background: "#000000", borderTop: "1px solid rgba(255, 255, 255, 0.08)" }}>
-          <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-            <BringConversationDemo />
-          </div>
-        </section>
-
-        {/* =========================================================================
             FINAL CLOSING CONVERSION ACT
             ========================================================================= */}
-        <section style={{ padding: "120px 40px", background: "rgba(10, 18, 10, 0.95)", borderTop: "1px solid rgba(118, 192, 67, 0.25)", textAlign: "center" }}>
+        <section className="page-section-pad" style={{ background: "rgba(10, 18, 10, 0.95)", borderTop: "1px solid rgba(118, 192, 67, 0.25)", textAlign: "center" }}>
           <div style={{ maxWidth: "760px", margin: "0 auto" }}>
             <div className="pill" style={{ marginBottom: "18px" }}>Deploy in 48 Hours</div>
             <h2 className="serif" style={{ fontSize: "clamp(32px, 3.8vw, 52px)", color: "var(--text-ivory)", lineHeight: 1.18, marginBottom: "20px", letterSpacing: "-0.02em" }}>
@@ -133,6 +123,17 @@ export default function HomePage() {
         </section>
       </main>
       <Footer />
+
+      <style>{`
+        .page-section-pad {
+          padding: 120px 40px;
+        }
+        @media (max-width: 768px) {
+          .page-section-pad {
+            padding: 56px 20px !important;
+          }
+        }
+      `}</style>
     </>
   );
 }

@@ -51,7 +51,7 @@ export default function Footer() {
       </div>
 
       {/* Main Sitemap Grid */}
-      <div style={{ maxWidth: "1280px", margin: "0 auto", padding: "64px 36px 40px" }}>
+      <div className="footer-main-container" style={{ maxWidth: "1280px", margin: "0 auto", padding: "64px 36px 40px" }}>
         <div
           style={{
             display: "grid",
@@ -62,7 +62,7 @@ export default function Footer() {
           className="footer-grid"
         >
           {/* Official Brand Logo */}
-          <div>
+          <div className="footer-brand-col">
             <Link
               href="/"
               style={{
@@ -96,7 +96,7 @@ export default function Footer() {
             <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
               Platform
             </h4>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: 0 }}>
               <li><Link href="/product" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Platform Overview</Link></li>
               <li><Link href="/product/voice-ai" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Voice AI Engine</Link></li>
               <li><Link href="/product/whatsapp-ai" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>WhatsApp AI</Link></li>
@@ -110,7 +110,7 @@ export default function Footer() {
             <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
               Industries
             </h4>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: 0 }}>
               <li>
                 <Link href="/industries/doctors-and-clinics" style={{ color: "var(--green)", textDecoration: "none", fontSize: "13px", fontWeight: 600 }}>
                   Doctors & Clinics
@@ -129,7 +129,7 @@ export default function Footer() {
             <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
               Solutions
             </h4>
-            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px" }}>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: 0 }}>
               <li><Link href="/enterprise" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Enterprise Groups</Link></li>
               <li><Link href="/use-cases" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Universal Use Cases</Link></li>
               <li><Link href="/pricing" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Transparent Pricing</Link></li>
@@ -138,7 +138,7 @@ export default function Footer() {
           </div>
 
           {/* Registered Office */}
-          <div>
+          <div className="footer-company-col">
             <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
               Company
             </h4>
@@ -172,7 +172,7 @@ export default function Footer() {
           <div>
             © {new Date().getFullYear()} Namuste Technologies Pvt. Ltd. All rights reserved.
           </div>
-          <div style={{ display: "flex", gap: "20px" }}>
+          <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             <Link href="/responsible-ai" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Privacy & Responsible AI</Link>
             <Link href="/about" style={{ color: "var(--text-dim)", textDecoration: "none" }}>About Founders</Link>
             <Link href="/contact" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Book a Demo</Link>
@@ -182,10 +182,31 @@ export default function Footer() {
 
       <style>{`
         @media (max-width: 1024px) {
-          .footer-grid { grid-template-columns: 1fr 1fr !important; }
+          .footer-grid {
+            grid-template-columns: 1fr 1fr !important;
+            gap: 40px 24px !important;
+          }
+          .footer-brand-col {
+            grid-column: 1 / -1 !important;
+          }
         }
-        @media (max-width: 640px) {
-          .footer-grid { grid-template-columns: 1fr !important; }
+        @media (max-width: 768px) {
+          .footer-main-container {
+            padding: 44px 18px 28px !important;
+          }
+          .footer-grid {
+            grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+            gap: 36px 18px !important;
+            margin-bottom: 36px !important;
+          }
+          .footer-brand-col {
+            grid-column: 1 / -1 !important;
+            margin-bottom: 6px !important;
+          }
+          .footer-company-col {
+            grid-column: 1 / -1 !important;
+            margin-top: 6px !important;
+          }
         }
       `}</style>
     </footer>

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AIVoiceChatbotEngine from "@/components/AIVoiceChatbotEngine";
 import { BarChart3, Users, Globe, CheckCircle2, ArrowRight, Sparkles, Sliders } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -44,9 +45,9 @@ export default function ResearchPage() {
                   Large-volume research becomes expensive and inconsistent when every interview depends entirely on manual calling.
                 </p>
                 <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-                  <Link href="/contact" className="btn-primary">
+                  <a href="#research-demo" className="btn-primary">
                     Experience Survey Agent <ArrowRight size={15} />
-                  </Link>
+                  </a>
                   <Link href="/contact" className="btn-secondary">
                     Discuss a Study <ArrowRight size={15} />
                   </Link>
@@ -77,6 +78,23 @@ export default function ResearchPage() {
             <span className="serif" style={{ fontSize: "clamp(20px, 2.5vw, 32px)", color: "var(--text-ivory)" }}>
               Structured conversations. <span className="serif-italic">Research-ready outcomes.</span>
             </span>
+          </div>
+        </section>
+
+        {/* LIVE RESEARCH & SURVEY DEMO */}
+        <section id="research-demo" style={{ padding: "100px 36px", background: "rgba(10, 12, 10, 0.9)", borderTop: "1px solid var(--border)" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: "640px", margin: "0 auto 48px" }}>
+              <div className="pill" style={{ marginBottom: "14px" }}>Interactive Study & Survey Engine</div>
+              <h2 className="serif" style={{ fontSize: "clamp(28px, 4vw, 44px)", color: "var(--text-ivory)", lineHeight: 1.2, marginBottom: "14px" }}>
+                Test the <span className="serif-italic">Study Screening Assistant</span> live.
+              </h2>
+              <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.65 }}>
+                See how Namuste qualifies clinical trial cohorts, conducts dynamic branch interviews, and generates structured research files.
+              </p>
+            </div>
+
+            <AIVoiceChatbotEngine lockedIndustryId="research" hideIndustrySelector={true} />
           </div>
         </section>
 

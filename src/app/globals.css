@@ -309,11 +309,27 @@ h1, h2, h3, h4, h5, h6 {
   transform: translateY(0);
 }
 
-/* Mobile Responsiveness */
+/* Mobile Responsiveness & App Experience */
+@media (max-width: 1024px) {
+  .desktop-nav {
+    display: none !important;
+  }
+}
+
 @media (max-width: 768px) {
+  :root {
+    --section-pad-y: 56px;
+    --section-pad-x: 20px;
+  }
+
+  body {
+    font-size: 14.5px;
+    -webkit-tap-highlight-color: transparent;
+  }
+
   .hero-grid {
     grid-template-columns: 1fr !important;
-    gap: 40px !important;
+    gap: 32px !important;
   }
   
   .desktop-thread {
@@ -322,5 +338,38 @@ h1, h2, h3, h4, h5, h6 {
   
   .mobile-thread {
     display: block !important;
+  }
+
+  /* Universal touch scroll for horizontal bars */
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+  }
+  .touch-scroll::-webkit-scrollbar {
+    display: none;
+  }
+
+  /* Touch slider thumb enhancements */
+  input[type="range"] {
+    height: 36px;
+    cursor: pointer;
+  }
+  input[type="range"]::-webkit-slider-thumb {
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    background: #9BEA16;
+    box-shadow: 0 0 16px rgba(155, 234, 22, 0.6);
+  }
+}
+
+/* Safe area support for notched phones */
+@supports (padding-top: env(safe-area-inset-top)) {
+  .safe-top {
+    padding-top: env(safe-area-inset-top);
+  }
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom);
   }
 }

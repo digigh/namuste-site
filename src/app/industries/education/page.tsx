@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import AIVoiceChatbotEngine from "@/components/AIVoiceChatbotEngine";
 import { GraduationCap, BookOpen, Calendar, CheckCircle2, ArrowRight, Sparkles, MessageSquare } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -44,9 +45,9 @@ export default function EducationPage() {
                   Prospective students ask questions across channels, but slow responses reduce counselling and application conversion.
                 </p>
                 <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-                  <Link href="/contact" className="btn-primary">
+                  <a href="#admissions-demo" className="btn-primary">
                     Experience Admissions Assistant <ArrowRight size={15} />
-                  </Link>
+                  </a>
                   <Link href="/contact" className="btn-secondary">
                     Book a Demo <ArrowRight size={15} />
                   </Link>
@@ -77,6 +78,23 @@ export default function EducationPage() {
             <span className="serif" style={{ fontSize: "clamp(20px, 2.5vw, 32px)", color: "var(--text-ivory)" }}>
               From first question to <span className="serif-italic">completed next step.</span>
             </span>
+          </div>
+        </section>
+
+        {/* LIVE ADMISSIONS ASSISTANT DEMO */}
+        <section id="admissions-demo" style={{ padding: "100px 36px", background: "rgba(10, 12, 10, 0.9)", borderTop: "1px solid var(--border)" }}>
+          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
+            <div style={{ textAlign: "center", maxWidth: "640px", margin: "0 auto 48px" }}>
+              <div className="pill" style={{ marginBottom: "14px" }}>Interactive Admissions Demo</div>
+              <h2 className="serif" style={{ fontSize: "clamp(28px, 4vw, 44px)", color: "var(--text-ivory)", lineHeight: 1.2, marginBottom: "14px" }}>
+                Test the <span className="serif-italic">Admissions Counselor</span> live.
+              </h2>
+              <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.65 }}>
+                Experience how Namuste handles student intake, syllabus inquiries, and demo masterclass scheduling in real-time.
+              </p>
+            </div>
+
+            <AIVoiceChatbotEngine lockedIndustryId="education" hideIndustrySelector={true} />
           </div>
         </section>
 

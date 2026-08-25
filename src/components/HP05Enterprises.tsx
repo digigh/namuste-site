@@ -111,11 +111,11 @@ export default function HP05Enterprises() {
   return (
     <section
       id="hp-05"
+      className="hp05-section-pad"
       style={{
         minHeight: "95vh",
         background: "#000000",
         borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-        padding: "130px 40px 110px",
         position: "relative",
       }}
     >
@@ -167,6 +167,7 @@ export default function HP05Enterprises() {
 
         {/* 1. Horizontal Enterprise Selector */}
         <div
+          className="touch-scroll hp05-tabs-row"
           style={{
             display: "flex",
             alignItems: "center",
@@ -175,6 +176,9 @@ export default function HP05Enterprises() {
             paddingBottom: "16px",
             marginBottom: "20px",
             overflowX: "auto",
+            WebkitOverflowScrolling: "touch",
+            width: "100%",
+            boxSizing: "border-box",
           }}
         >
           {enterprises.map((tab) => {
@@ -197,6 +201,7 @@ export default function HP05Enterprises() {
                   position: "relative",
                   whiteSpace: "nowrap",
                   transition: "color 0.2s ease",
+                  flexShrink: 0,
                 }}
               >
                 {isSelected && (
@@ -221,8 +226,8 @@ export default function HP05Enterprises() {
           })}
         </div>
 
-        {/* 2. Channel Selector Row - MUST sit directly beneath enterprise selector */}
-        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "40px" }}>
+        {/* 2. Channel Selector Row */}
+        <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "40px", flexWrap: "wrap" }}>
           <span style={{ fontSize: "12px", color: "#8E8E93", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>
             Choose a channel:
           </span>
@@ -261,7 +266,7 @@ export default function HP05Enterprises() {
           </div>
         </div>
 
-        {/* 3. Central Operational Image with Signage & Live Conversation Stack (Screenshot 2 of HP-05) */}
+        {/* 3. Central Operational Image with Signage & Live Conversation Stack */}
         <div
           style={{
             position: "relative",
@@ -276,188 +281,73 @@ export default function HP05Enterprises() {
             alignItems: "center",
             padding: "40px",
             marginBottom: "32px",
+            boxSizing: "border-box",
+            width: "100%",
           }}
           className="hp05-canvas"
         >
           {/* Background Leader Image */}
-          <div
-            style={{
-              position: "absolute",
-              inset: 0,
-              zIndex: 1,
-            }}
-          >
+          <div style={{ position: "absolute", inset: 0, zIndex: 1 }}>
             <img
               src={current.img}
               alt={selectedEnterprise}
-              style={{
-                width: "100%",
-                height: "100%",
-                objectFit: "cover",
-                objectPosition: "center",
-                filter: "brightness(0.65)",
-              }}
+              style={{ width: "100%", height: "100%", objectFit: "cover", filter: "brightness(0.65)" }}
             />
-            <div
-              style={{
-                position: "absolute",
-                inset: 0,
-                background: "linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.85) 100%)",
-              }}
-            />
+            <div style={{ position: "absolute", inset: 0, background: "linear-gradient(to right, rgba(0,0,0,0.85) 0%, rgba(0,0,0,0.4) 50%, rgba(0,0,0,0.85) 100%)" }} />
           </div>
 
-          {/* Left Overlay: Enterprise Departments / Directional Signage (Exact from Screenshot 2) */}
-          <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", gap: "10px" }}>
+          {/* Left Overlay: Departments */}
+          <div className="hp05-depts-container" style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", gap: "10px" }}>
             <div style={{ fontSize: "11px", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.08em", color: "#9BEA16", marginBottom: "8px" }}>
               Enterprise Department Routing
             </div>
-            {current.departments.map((dept, i) => (
-              <div
-                key={i}
-                style={{
-                  display: "inline-flex",
-                  alignItems: "center",
-                  padding: "8px 16px",
-                  borderRadius: "8px",
-                  background: "rgba(10, 10, 10, 0.75)",
-                  backdropFilter: "blur(12px)",
-                  border: "1px solid rgba(255, 255, 255, 0.12)",
-                  color: "#D4D0C7",
-                  fontSize: "12.5px",
-                  fontFamily: "monospace",
-                  fontWeight: 600,
-                  width: "fit-content",
-                }}
-              >
-                {dept}
-              </div>
-            ))}
+            <div className="hp05-depts-list" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
+              {current.departments.map((dept, i) => (
+                <div key={i} style={{ display: "inline-flex", alignItems: "center", padding: "8px 16px", borderRadius: "8px", background: "rgba(10, 10, 10, 0.75)", backdropFilter: "blur(12px)", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#D4D0C7", fontSize: "12.5px", fontFamily: "monospace", fontWeight: 600, width: "fit-content" }}>
+                  {dept}
+                </div>
+              ))}
+            </div>
           </div>
 
-          {/* Right Overlay: Live Conversation Stack (Exact from Screenshot 2) */}
+          {/* Right Overlay: Conversation Stack */}
           <div style={{ position: "relative", zIndex: 10, display: "flex", flexDirection: "column", gap: "14px" }}>
             <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 700, letterSpacing: "0.08em", color: "#F87171", textTransform: "uppercase" }}>
               <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#F87171" }} />
               Live Conversation • {selectedChannel.toUpperCase()}
             </div>
-
-            {/* Bubble 1: Patient / Caller */}
-            <div
-              style={{
-                padding: "16px 20px",
-                borderRadius: "14px",
-                background: "rgba(15, 15, 15, 0.85)",
-                backdropFilter: "blur(16px)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-              }}
-            >
-              <div style={{ fontSize: "11px", color: "#9BEA16", fontWeight: 600, marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}>
-                <User size={12} /> Caller
-              </div>
-              <p style={{ fontSize: "13.5px", color: "#F5F5F0", margin: 0, lineHeight: 1.5 }}>
-                &ldquo;{current.patientText}&rdquo;
-              </p>
+            {/* Bubble 1 */}
+            <div style={{ padding: "16px 20px", borderRadius: "14px", background: "rgba(15, 15, 15, 0.85)", backdropFilter: "blur(16px)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+              <div style={{ fontSize: "11px", color: "#9BEA16", fontWeight: 600, marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}><User size={12} /> Caller</div>
+              <p style={{ fontSize: "13.5px", color: "#F5F5F0", margin: 0, lineHeight: 1.5 }}>&ldquo;{current.patientText}&rdquo;</p>
             </div>
-
-            {/* Connecting green dotted thread */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <div style={{ width: "1px", height: "16px", background: "#9BEA16", opacity: 0.6 }} />
-            </div>
-
-            {/* Bubble 2: Namuste */}
-            <div
-              style={{
-                padding: "16px 20px",
-                borderRadius: "14px",
-                background: "rgba(15, 15, 15, 0.85)",
-                backdropFilter: "blur(16px)",
-                border: "1px solid rgba(155, 234, 22, 0.25)",
-              }}
-            >
+            {/* Thread */}
+            <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: "1px", height: "16px", background: "#9BEA16", opacity: 0.6 }} /></div>
+            {/* Bubble 2 */}
+            <div style={{ padding: "16px 20px", borderRadius: "14px", background: "rgba(15, 15, 15, 0.85)", backdropFilter: "blur(16px)", border: "1px solid rgba(155, 234, 22, 0.25)" }}>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "4px" }}>
-                <div style={{ fontSize: "11px", color: "#9BEA16", fontWeight: 700 }}>
-                  Namuste Digital Receptionist
-                </div>
-                <img
-                  src="/logo.png"
-                  alt="Namuste"
-                  style={{
-                    height: "13px",
-                    width: "auto",
-                    objectFit: "contain",
-                  }}
-                />
+                <div style={{ fontSize: "11px", color: "#9BEA16", fontWeight: 700 }}>Namuste Digital Receptionist</div>
+                <img src="/logo.png" alt="Namuste" style={{ height: "13px", width: "auto", objectFit: "contain" }} />
               </div>
-              <p style={{ fontSize: "13.5px", color: "#F5F5F0", margin: 0, lineHeight: 1.5 }}>
-                &ldquo;{current.namusteText}&rdquo;
-              </p>
+              <p style={{ fontSize: "13.5px", color: "#F5F5F0", margin: 0, lineHeight: 1.5 }}>&ldquo;{current.namusteText}&rdquo;</p>
             </div>
-
-            {/* Connecting green dotted thread */}
-            <div style={{ display: "flex", justifyContent: "center" }}>
-              <div style={{ width: "1px", height: "16px", background: "#9BEA16", opacity: 0.6 }} />
-            </div>
-
-            {/* Bubble 3: OUTCOME */}
-            <div
-              style={{
-                padding: "14px 20px",
-                borderRadius: "14px",
-                background: "rgba(10, 20, 10, 0.9)",
-                backdropFilter: "blur(16px)",
-                border: "1px solid rgba(155, 234, 22, 0.4)",
-                display: "flex",
-                alignItems: "center",
-                gap: "10px",
-              }}
-            >
-              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "1.5px solid #9BEA16", color: "#9BEA16", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                <Check size={12} strokeWidth={3} />
-              </div>
+            {/* Thread */}
+            <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: "1px", height: "16px", background: "#9BEA16", opacity: 0.6 }} /></div>
+            {/* Bubble 3: Outcome */}
+            <div style={{ padding: "14px 20px", borderRadius: "14px", background: "rgba(15, 15, 15, 0.9)", backdropFilter: "blur(16px)", border: "1px solid rgba(155, 234, 22, 0.4)", display: "flex", alignItems: "center", gap: "12px" }}>
+              <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "1.5px solid #9BEA16", display: "flex", alignItems: "center", justifyContent: "center", color: "#9BEA16", flexShrink: 0 }}><Check size={12} strokeWidth={3} /></div>
               <div>
-                <div style={{ fontSize: "10.5px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9BEA16" }}>
-                  OUTCOME
-                </div>
-                <div style={{ fontSize: "13px", color: "#F5F5F0", fontWeight: 500 }}>
-                  {current.outcomeText}
-                </div>
+                <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9BEA16" }}>Outcome</div>
+                <div style={{ fontSize: "13px", color: "#F5F5F0", fontWeight: 600 }}>{current.outcomeText}</div>
               </div>
             </div>
           </div>
         </div>
 
-        {/* 4. Footer Note & Primary CTA (Exact from Screenshot 2) */}
+        {/* 4. Footer Note & Primary CTA */}
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "20px" }}>
-          <p className="serif-italic" style={{ fontSize: "16px", color: "#D4D0C7", margin: 0, fontStyle: "italic" }}>
-            {current.footerNote}
-          </p>
-
-          <Link
-            href={current.link}
-            style={{
-              display: "inline-flex",
-              alignItems: "center",
-              gap: "8px",
-              padding: "12px 24px",
-              borderRadius: "999px",
-              background: "transparent",
-              border: "1px solid rgba(155, 234, 22, 0.5)",
-              color: "#9BEA16",
-              fontSize: "14px",
-              fontWeight: 600,
-              textDecoration: "none",
-              transition: "all 0.2s ease",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.background = "#8FD813";
-              e.currentTarget.style.color = "#000000";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.background = "transparent";
-              e.currentTarget.style.color = "#9BEA16";
-            }}
-          >
+          <p className="serif-italic" style={{ fontSize: "16px", color: "#D4D0C7", margin: 0, fontStyle: "italic" }}>{current.footerNote}</p>
+          <Link href={current.link} style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", borderRadius: "999px", border: "1px solid rgba(155, 234, 22, 0.5)", color: "#9BEA16", fontSize: "14px", fontWeight: 600, textDecoration: "none" }}>
             <span>Give Namuste an enterprise</span>
             <ArrowRight size={14} />
           </Link>
@@ -465,8 +355,20 @@ export default function HP05Enterprises() {
       </div>
 
       <style>{`
+        .hp05-section-pad { padding: 130px 40px 110px; }
         @media (max-width: 900px) {
-          .hp05-canvas { grid-template-columns: 1fr !important; gap: 32px !important; }
+          .hp05-canvas { 
+            grid-template-columns: 1fr !important; 
+            gap: 24px !important;
+            padding: 24px 16px !important;
+            min-height: auto !important;
+          }
+          .hp05-depts-list { flex-direction: row !important; flex-wrap: wrap !important; gap: 6px !important; }
+          .hp05-metrics-strip { grid-template-columns: 1fr !important; gap: 12px !important; }
+        }
+        @media (max-width: 768px) {
+          .hp05-section-pad { padding: 56px 16px 40px !important; }
+          .hp05-canvas { padding: 20px 14px !important; border-radius: 20px !important; }
         }
       `}</style>
     </section>

@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import IntakeAssistantDemo from "@/components/IntakeAssistantDemo";
+import AIVoiceChatbotEngine from "@/components/AIVoiceChatbotEngine";
 import {
   Scale,
   FileText,
@@ -294,7 +294,7 @@ export default function ProfessionalServicesPage() {
               </p>
             </div>
 
-            <IntakeAssistantDemo />
+            <AIVoiceChatbotEngine initialIndustryId="lawyers" hideIndustrySelector={false} />
           </div>
         </section>
 
