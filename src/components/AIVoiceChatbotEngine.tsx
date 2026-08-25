@@ -24,8 +24,6 @@ import {
   Code2,
   Check,
   Radio,
-  Key,
-  Globe,
 } from "lucide-react";
 import { INDUSTRY_FLOWS, IndustryFlow, IndustryMessage } from "@/data/industryFlows";
 
@@ -56,12 +54,7 @@ export default function AIVoiceChatbotEngine() {
   const [liveUserTranscript, setLiveUserTranscript] = useState<string>("");
   const [currentLanguageCode, setCurrentLanguageCode] = useState<string>("en-IN");
 
-  // API Status checks
-  const [apiStatus, setApiStatus] = useState<{
-    sarvam: boolean;
-    gemini: boolean;
-    webhook: boolean;
-  }>({ sarvam: false, gemini: false, webhook: false });
+
 
   // Conversation state
   const [conversationHistory, setConversationHistory] = useState<IndustryMessage[]>([]);
@@ -113,21 +106,7 @@ export default function AIVoiceChatbotEngine() {
     extractedDataRef.current = extractedData;
   }, [extractedData]);
 
-  // Check API keys on mount
-  useEffect(() => {
-    fetch("/api/ai-demo/status")
-      .then((r) => r.json())
-      .then((data) => {
-        if (data.keys) {
-          setApiStatus({
-            sarvam: data.keys.sarvam.configured,
-            gemini: data.keys.gemini.configured,
-            webhook: data.keys.webhook.configured,
-          });
-        }
-      })
-      .catch(() => {});
-  }, []);
+
 
   const stopCurrentAudio = useCallback(() => {
     if (currentAudioRef.current) {
@@ -563,52 +542,7 @@ export default function AIVoiceChatbotEngine() {
 
   return (
     <div style={{ width: "100%", margin: "0 auto" }}>
-      {/* API STATUS BADGE */}
-      <div
-        style={{
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "space-between",
-          flexWrap: "wrap",
-          gap: "10px",
-          padding: "8px 16px",
-          borderRadius: "8px",
-          background: "rgba(255, 255, 255, 0.02)",
-          border: "1px solid rgba(255, 255, 255, 0.06)",
-          marginBottom: "16px",
-          fontSize: "11.5px",
-          color: "#8E8E93",
-        }}
-      >
-        <div style={{ display: "flex", alignItems: "center", gap: "14px", flexWrap: "wrap" }}>
-          <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <Key size={12} color="#9BEA16" />
-            <span>Sarvam 24kHz HD Voice:</span>
-            <strong style={{ color: apiStatus.sarvam ? "#4ADE80" : "#FBBF24" }}>
-              {apiStatus.sarvam ? "Active (Studio Quality)" : "Browser Audio Mode"}
-            </strong>
-          </span>
 
-          <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <span>Gemini State Machine:</span>
-            <strong style={{ color: apiStatus.gemini ? "#4ADE80" : "#FBBF24" }}>
-              {apiStatus.gemini ? "Active (Multi-turn Memory)" : "Ready"}
-            </strong>
-          </span>
-
-          <span style={{ display: "flex", alignItems: "center", gap: "5px" }}>
-            <Globe size={12} color="#38BDF8" />
-            <span>Language Mode:</span>
-            <strong style={{ color: "#38BDF8", textTransform: "uppercase" }}>
-              {currentLanguageCode.split("-")[0]}
-            </strong>
-          </span>
-        </div>
-
-        <span style={{ fontSize: "11px", color: "#A1A1AA" }}>
-          🧠 Full Conversation Memory Synced (No resets / No forgetting)
-        </span>
-      </div>
 
       {/* 1. TOP INDUSTRY NAVIGATION TABS */}
       <div
