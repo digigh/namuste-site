@@ -33,6 +33,7 @@ import {
   ChevronUp,
   Sprout,
   FlaskConical,
+  Globe,
 } from "lucide-react";
 import { INDUSTRY_FLOWS, IndustryFlow, IndustryMessage } from "@/data/industryFlows";
 
@@ -48,6 +49,18 @@ const ICON_MAP: Record<string, React.ReactNode> = {
   Sprout: <Sprout size={16} />,
   FlaskConical: <FlaskConical size={16} />,
 };
+
+function blobToBase64(blob: Blob): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const result = (reader.result as string) || "";
+      resolve(result.split(",")[1] || "");
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(blob);
+  });
+}
 
 const VOICE_PERSONAS = [
   { id: "ritu", label: "Ritu", gender: "Female", desc: "Warm & Natural" },
@@ -82,6 +95,7 @@ export default function AIVoiceChatbotEngine({
   const [speechStatusText, setSpeechStatusText] = useState<string>("Click to start voice call");
   const [liveUserTranscript, setLiveUserTranscript] = useState<string>("");
   const [currentLanguageCode, setCurrentLanguageCode] = useState<string>("en-IN");
+  const [speechLanguageMode, setSpeechLanguageMode] = useState<string>("auto");
   const [selectedSpeaker, setSelectedSpeaker] = useState<string>("ritu");
   const [showJsonPayload, setShowJsonPayload] = useState<boolean>(false);
   const [copiedPayload, setCopiedPayload] = useState<boolean>(false);
@@ -101,11 +115,20 @@ export default function AIVoiceChatbotEngine({
     slot?: string;
     intent?: string;
     summary?: string;
+    appointment_id?: string;
+    appointment_status?: string;
+    confirmed?: boolean;
   }>({});
   const [webhookSent, setWebhookSent] = useState<boolean>(false);
+  // Guards against duplicate webhook dispatch for the same call. A ref (not
+  // just the `webhookSent` state) because it must block a second dispatch
+  // synchronously, before React has re-rendered with the updated state — the
+  // backend can legitimately report isComplete:true again on a later turn
+  // (e.g. GPT re-confirming after the booking), and without this the n8n
+  // webhook — and the WhatsApp message it triggers — fired more than once.
+  const webhookSentRef = useRef<boolean>(false);
 
   // References for live async callbacks
-  const recognitionRef = useRef<any>(null);
   const currentAudioRef = useRef<HTMLAudioElement | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
   const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -113,6 +136,26 @@ export default function AIVoiceChatbotEngine({
   const extractedDataRef = useRef<any>({});
   const selectedSpeakerRef = useRef<string>("ritu");
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
+
+  // MediaRecorder + amplitude-VAD mic capture (replaces browser SpeechRecognition)
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioContextRef = useRef<AudioContext | null>(null);
+  const analyserRef = useRef<AnalyserNode | null>(null);
+  const vadRafRef = useRef<number | null>(null);
+  const recordedChunksRef = useRef<Blob[]>([]);
+  const speechDetectedRef = useRef<boolean>(false);
+  const pendingFinalizeRef = useRef<boolean>(false);
+  // "" = auto-detect language every turn; "hi-IN"/"en-IN" = user manually forced it via the language toggle
+  const manualLanguageHintRef = useRef<string>("");
+  // Mirror isCallActive/isMuted into refs so async STT callbacks (which outlive
+  // a single render) always check current state instead of a stale closure.
+  const isCallActiveRef = useRef<boolean>(false);
+  const isMutedRef = useRef<boolean>(false);
+  // Auto-hangup after a confirmed booking: armed once the AI's confirmation
+  // reply finishes and listening resumes, cleared if the caller starts
+  // speaking again (they get a real grace window, not a hard cutoff).
+  const autoEndCallTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   const activeIndustry: IndustryFlow = INDUSTRY_FLOWS[selectedIndustryId] || INDUSTRY_FLOWS["doctors-clinics"];
 
@@ -127,6 +170,14 @@ export default function AIVoiceChatbotEngine({
   useEffect(() => {
     selectedSpeakerRef.current = selectedSpeaker;
   }, [selectedSpeaker]);
+
+  useEffect(() => {
+    isCallActiveRef.current = isCallActive;
+  }, [isCallActive]);
+
+  useEffect(() => {
+    isMutedRef.current = isMuted;
+  }, [isMuted]);
 
   useEffect(() => {
     if (channel === "chat" && chatBottomRef.current) {
@@ -146,17 +197,72 @@ export default function AIVoiceChatbotEngine({
     setIsAiSpeaking(false);
   }, []);
 
+  // Stops any in-progress capture and DISCARDS it (does not transcribe/send).
+  // Used whenever we need to cut the mic immediately — e.g. before the AI
+  // starts speaking, or when the call ends. The VAD-triggered finalize path
+  // (see startLiveListening) sets pendingFinalizeRef itself before calling
+  // recorder.stop(), so a plain stopLiveListening() here never accidentally
+  // sends a still-buffering recording.
   const stopLiveListening = useCallback(() => {
     if (silenceTimeoutRef.current) {
       clearTimeout(silenceTimeoutRef.current);
       silenceTimeoutRef.current = null;
     }
-    if (recognitionRef.current) {
-      try {
-        recognitionRef.current.stop();
-      } catch (_) {}
+    if (vadRafRef.current) {
+      cancelAnimationFrame(vadRafRef.current);
+      vadRafRef.current = null;
     }
+    pendingFinalizeRef.current = false;
+    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+      try { mediaRecorderRef.current.stop(); } catch (_) {}
+    }
+    mediaRecorderRef.current = null;
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
+      mediaStreamRef.current = null;
+    }
+    if (audioContextRef.current) {
+      try { audioContextRef.current.close(); } catch (_) {}
+      audioContextRef.current = null;
+    }
+    analyserRef.current = null;
+    recordedChunksRef.current = [];
+    speechDetectedRef.current = false;
     setIsUserSpeaking(false);
+  }, []);
+
+  // ─── AI-speech watchdog ──────────────────────────────────────────────────
+  // The mic is meant to auto-resume the instant AI audio finishes (via the
+  // audio/utterance "ended" event). In practice that event occasionally never
+  // fires — a decode hiccup, a browser TTS voice-loading quirk, etc. — which
+  // silently strands the call: no error, just a mic that never comes back on
+  // until the user manually hits the "Speak" button. This watchdog guarantees
+  // the resume callback fires exactly once no matter what the audio/browser
+  // does, closing that gap without needing to diagnose every possible failure
+  // mode individually.
+  const aiSpeechWatchdogRef = useRef<NodeJS.Timeout | null>(null);
+  const aiSpeechResolvedRef = useRef<boolean>(true);
+
+  const armAiSpeechWatchdog = useCallback((onDone: () => void, ms = 12000) => {
+    aiSpeechResolvedRef.current = false;
+    if (aiSpeechWatchdogRef.current) clearTimeout(aiSpeechWatchdogRef.current);
+    aiSpeechWatchdogRef.current = setTimeout(() => {
+      if (!aiSpeechResolvedRef.current) {
+        aiSpeechResolvedRef.current = true;
+        console.warn("AI speech watchdog fired — 'ended' event never arrived, forcing mic resume.");
+        onDone();
+      }
+    }, ms);
+  }, []);
+
+  const resolveAiSpeech = useCallback((onDone: () => void) => {
+    if (aiSpeechResolvedRef.current) return; // already resolved (watchdog or a duplicate event) — don't double-fire
+    aiSpeechResolvedRef.current = true;
+    if (aiSpeechWatchdogRef.current) {
+      clearTimeout(aiSpeechWatchdogRef.current);
+      aiSpeechWatchdogRef.current = null;
+    }
+    onDone();
   }, []);
 
   // Web Speech Fallback
@@ -175,21 +281,31 @@ export default function AIVoiceChatbotEngine({
     utterance.onstart = () => {
       setIsAiSpeaking(true);
       setSpeechStatusText("AI speaking...");
+      armAiSpeechWatchdog(() => {
+        if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
+        setIsAiSpeaking(false);
+        setSpeechStatusText("Listening to you...");
+        if (onEndedCallback) onEndedCallback();
+      });
     };
     utterance.onend = () => {
-      setIsAiSpeaking(false);
-      setSpeechStatusText("Listening to you...");
-      if (onEndedCallback) onEndedCallback();
+      resolveAiSpeech(() => {
+        setIsAiSpeaking(false);
+        setSpeechStatusText("Listening to you...");
+        if (onEndedCallback) onEndedCallback();
+      });
     };
     utterance.onerror = () => {
-      setIsAiSpeaking(false);
-      if (onEndedCallback) onEndedCallback();
+      resolveAiSpeech(() => {
+        setIsAiSpeaking(false);
+        if (onEndedCallback) onEndedCallback();
+      });
     };
     window.speechSynthesis.speak(utterance);
-  }, []);
+  }, [armAiSpeechWatchdog, resolveAiSpeech]);
 
   // Audible Speech Engine (Sarvam bulbul:v3 with fallback)
-  const speakTextAudible = useCallback(async (text: string, langCode = "en-IN", onEndedCallback?: () => void) => {
+  const speakTextAudible = useCallback(async (text: string, langCode = "en-IN", onEndedCallback?: () => void, tone: string = "neutral") => {
     if (!isSpeakerOn) {
       if (onEndedCallback) onEndedCallback();
       return;
@@ -209,6 +325,7 @@ export default function AIVoiceChatbotEngine({
           text,
           languageCode: langCode || "en-IN",
           speaker: selectedSpeakerRef.current || selectedSpeaker || "ritu",
+          tone,
         }),
       });
 
@@ -217,14 +334,25 @@ export default function AIVoiceChatbotEngine({
         if (data.success && data.audioBase64) {
           const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
           currentAudioRef.current = audio;
-          audio.onended = () => {
+          const resumeAfterAudio = () => {
+            stopCurrentAudio();
             setIsAiSpeaking(false);
             setSpeechStatusText("Listening to you...");
             if (onEndedCallback) onEndedCallback();
           };
+          audio.onended = () => resolveAiSpeech(resumeAfterAudio);
           audio.onerror = () => {
-            fallbackBrowserSpeech(text, langCode, onEndedCallback);
+            resolveAiSpeech(() => fallbackBrowserSpeech(text, langCode, onEndedCallback));
           };
+          audio.onloadedmetadata = () => {
+            // Once the real duration is known, stop guessing — the watchdog
+            // only needs to outlive actual playback by a small buffer, not a
+            // blind worst-case timeout.
+            if (isFinite(audio.duration) && audio.duration > 0) {
+              armAiSpeechWatchdog(resumeAfterAudio, audio.duration * 1000 + 800);
+            }
+          };
+          armAiSpeechWatchdog(resumeAfterAudio); // coarse ceiling until duration is known
           await audio.play();
           return;
         }
@@ -234,7 +362,7 @@ export default function AIVoiceChatbotEngine({
     }
 
     fallbackBrowserSpeech(text, langCode, onEndedCallback);
-  }, [fallbackBrowserSpeech, isSpeakerOn, selectedSpeaker, stopCurrentAudio, stopLiveListening]);
+  }, [armAiSpeechWatchdog, fallbackBrowserSpeech, isSpeakerOn, resolveAiSpeech, selectedSpeaker, stopCurrentAudio, stopLiveListening]);
 
   // Dispatch Webhook
   const triggerWebhookDispatch = useCallback(async (payloadExtracted: any, history: IndustryMessage[]) => {
@@ -256,6 +384,7 @@ export default function AIVoiceChatbotEngine({
           confirmedSlot: payloadExtracted.slot || "Requested",
           intent: payloadExtracted.intent || "Appointment Booking",
           summary: payloadExtracted.summary || "Full intake completed via Namuste AI",
+          referenceId: payloadExtracted.appointment_id || "",
         },
         transcript: history.map((m) => `[${m.speaker.toUpperCase()}]: ${m.text}`),
         metadata: {
@@ -279,8 +408,8 @@ export default function AIVoiceChatbotEngine({
     }
   }, [activeIndustry, callDuration]);
 
-  // Main turn processor (Calls OpenAI GPT-4o-mini + State Machine)
-  const processConversationTurn = useCallback(async (rawText: string) => {
+  // ─── processConversationTurn: accepts optional authoritative Sarvam language code ───
+  const processConversationTurn = useCallback(async (rawText: string, sarvamLang = "", sttLanguageProbability: number | null = null) => {
     if (!rawText || rawText.trim() === "" || isProcessing) return;
 
     const userText = rawText.trim();
@@ -302,6 +431,9 @@ export default function AIVoiceChatbotEngine({
     conversationHistoryRef.current = updatedHistoryWithUser;
     setLiveUserTranscript("");
 
+    const isVoiceTurn = channel === "voice" || isCallActive;
+    let failureReason = "";
+
     try {
       const res = await fetch("/api/ai-demo/chat", {
         method: "POST",
@@ -311,8 +443,18 @@ export default function AIVoiceChatbotEngine({
           messages: updatedHistoryWithUser,
           userMessage: userText,
           currentExtracted: currentExt,
+          generateAudio: isVoiceTurn && isSpeakerOn,
+          speaker: selectedSpeakerRef.current || selectedSpeaker || "ritu",
+          sarvamLanguageCode: sarvamLang, // Authoritative language from Sarvam STT
+          sttLanguageProbability, // Sarvam STT's confidence in that language claim — drives language stickiness server-side
         }),
       });
+
+      if (!res.ok) {
+        failureReason = res.status === 429
+          ? "Too many requests — please wait a moment and try again."
+          : `Server error (${res.status}). Please try again.`;
+      }
 
       if (res.ok) {
         const data = await res.json();
@@ -320,7 +462,17 @@ export default function AIVoiceChatbotEngine({
           const aiMsg: IndustryMessage = {
             speaker: "ai",
             text: data.reply,
-            langLabel: data.languageCode?.includes("hi") ? "Hindi" : "English",
+            langLabel: (
+              data.languageCode?.startsWith("hi") ? "Hindi" :
+              data.languageCode?.startsWith("ta") ? "Tamil" :
+              data.languageCode?.startsWith("te") ? "Telugu" :
+              data.languageCode?.startsWith("bn") ? "Bengali" :
+              data.languageCode?.startsWith("ml") ? "Malayalam" :
+              data.languageCode?.startsWith("kn") ? "Kannada" :
+              data.languageCode?.startsWith("pa") ? "Punjabi" :
+              data.languageCode?.startsWith("gu") ? "Gujarati" :
+              data.languageCode?.startsWith("or") ? "Odia" : "English"
+            ),
             timestamp: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
           };
 
@@ -336,98 +488,326 @@ export default function AIVoiceChatbotEngine({
             setCurrentLanguageCode(data.languageCode);
           }
 
-          if (data.isComplete || data.step === "confirmation_complete" || data.extracted?.slot) {
+          // Only the turn where the booking is actually confirmed sets
+          // isComplete — NOT merely having a slot filled in (that's true on
+          // every turn from the confirmation step onward, so it fired the
+          // webhook, and the WhatsApp message it triggers via n8n, on every
+          // follow-up message too). The ref guard additionally caps it to
+          // once per call even if isComplete comes back true again later.
+          if (data.isComplete && !webhookSentRef.current) {
+            webhookSentRef.current = true;
             triggerWebhookDispatch(data.extracted || currentExt, finalHistory);
           }
 
           setIsProcessing(false);
 
-          if (channel === "voice" || isCallActive) {
-            speakTextAudible(data.reply, data.languageCode, () => {
-              if (isCallActive && !isMuted) {
-                startLiveListening();
+          const bookingJustCompleted = !!data.isComplete;
+          const callEnded = !!data.callEnded;
+          const resumeListeningAfterTurn = () => {
+            // Caller said bye/goodbye/hang up — end the call right away instead
+            // of reopening the mic or waiting on the post-booking grace timer.
+            if (callEnded) {
+              if (isCallActiveRef.current) handleEndCall();
+              return;
+            }
+            if (isCallActiveRef.current && !isMutedRef.current) {
+              startLiveListening();
+              if (bookingJustCompleted) armAutoEndCall();
+            }
+          };
+
+          // ── Audio Playback: Sarvam TTS → instant Browser TTS fallback ─────────
+          if (isVoiceTurn && isSpeakerOn) {
+            if (data.audioBase64) {
+              // Sarvam returned audio — play it directly
+              stopCurrentAudio();
+              setIsAiSpeaking(true);
+              setSpeechStatusText("AI speaking...");
+              try {
+                const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
+                currentAudioRef.current = audio;
+                const resumeAfterAudio = () => {
+                  stopCurrentAudio();
+                  setIsAiSpeaking(false);
+                  if (!bookingJustCompleted) setSpeechStatusText("Listening to you...");
+                  resumeListeningAfterTurn();
+                };
+                audio.onended = () => resolveAiSpeech(resumeAfterAudio);
+                audio.onerror = () => {
+                  // Audio decode error — immediately fall back to browser TTS
+                  resolveAiSpeech(() => {
+                    speakTextAudible(data.reply, data.languageCode, resumeListeningAfterTurn, data.tone);
+                  });
+                };
+                audio.onloadedmetadata = () => {
+                  if (isFinite(audio.duration) && audio.duration > 0) {
+                    armAiSpeechWatchdog(resumeAfterAudio, audio.duration * 1000 + 800);
+                  }
+                };
+                armAiSpeechWatchdog(resumeAfterAudio); // coarse ceiling until duration is known
+                await audio.play();
+                return;
+              } catch (audioErr) {
+                console.warn("Sarvam audio play error, falling to browser TTS:", audioErr);
               }
-            });
+            }
+
+            // Sarvam returned null or failed — immediately use browser TTS (zero extra wait)
+            speakTextAudible(data.reply, data.languageCode, resumeListeningAfterTurn, data.tone);
+          } else if (callEnded && isCallActiveRef.current) {
+            // No audio playback path taken (speaker off / text channel) —
+            // still honor the farewell and end the call.
+            handleEndCall();
           }
           return;
         }
+        // Response was ok but didn't carry a usable reply — treat as a failure below
+        failureReason = failureReason || "The assistant didn't return a valid reply. Please try again.";
       }
     } catch (e) {
       console.warn("Turn processing error fallback:", e);
+      failureReason = "Connection error — please try again.";
     }
 
+    // A prior implementation fell through to here silently on ANY failure —
+    // no visible error, and critically no resumption of listening, so a live
+    // call would just go dead with zero feedback. Surface the failure and
+    // keep the conversation loop alive instead.
     setIsProcessing(false);
-  }, [channel, isCallActive, isMuted, isProcessing, selectedIndustryId, speakTextAudible, stopCurrentAudio, stopLiveListening, triggerWebhookDispatch]);
+    setSpeechStatusText(`Error: ${failureReason || "Something went wrong. Please try again."}`);
+    if (isVoiceTurn && isCallActiveRef.current && !isMutedRef.current) {
+      startLiveListening();
+    }
+  }, [armAiSpeechWatchdog, channel, isCallActive, isMuted, isProcessing, isSpeakerOn, resolveAiSpeech, selectedIndustryId, selectedSpeaker, speakTextAudible, stopCurrentAudio, stopLiveListening, triggerWebhookDispatch]);
 
-  // Continuous speech recognition
-  const startLiveListening = useCallback(() => {
+
+  // Mic capture via MediaRecorder + amplitude-based voice activity detection (VAD).
+  // Replaces the browser's native SpeechRecognition, which (a) only supports
+  // whatever language/dialect quality the OS engine ships with — poor for
+  // Hindi/regional languages — and (b) locked recognition.lang to *last
+  // turn's* detected language, so a mid-call language switch was always one
+  // turn late. Recording is sent to /api/ai-demo/speech (Whisper STT) once
+  // the VAD detects ~700ms of silence after speech, and Whisper's own
+  // detected language becomes the authoritative signal passed into
+  // processConversationTurn — closing both gaps at once.
+  const startLiveListening = useCallback(async () => {
     if (typeof window === "undefined") return;
-    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
-
-    if (!SpeechRecognition) {
-      setSpeechStatusText("Browser speech recognition not supported. Use chat or quick test.");
+    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
+      setSpeechStatusText("Error: Microphone capture not supported in this browser. Use chat mode.");
       return;
     }
 
+    // Discard any stale in-progress capture before starting a fresh one.
+    stopLiveListening();
+
     try {
-      if (recognitionRef.current) {
-        try { recognitionRef.current.abort(); } catch (_) {}
+      // getUserMedia can hang indefinitely — neither resolving nor rejecting —
+      // if the OS mic device hasn't fully released from a just-ended recording
+      // session. Without a hard timeout, that hang is completely invisible:
+      // no error, mic just never comes back. Race it against a timeout so a
+      // stuck acquisition always surfaces as a real, catchable error instead.
+      const stream = await Promise.race([
+        navigator.mediaDevices.getUserMedia({
+          // Browser/OS-level noise suppression, echo cancellation, and gain
+          // normalization — these are standard, well-supported constraints
+          // that meaningfully cut background noise before it ever reaches
+          // the VAD or STT, rather than trying to filter it after the fact.
+          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
+        }),
+        new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error("getUserMedia timed out after 6s — mic device may be stuck busy from the previous turn")), 6000)
+        ),
+      ]);
+      mediaStreamRef.current = stream;
+
+      const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext;
+      const audioContext: AudioContext = new AudioContextCtor();
+      audioContextRef.current = audioContext;
+      if (audioContext.state === "suspended") {
+        try { await audioContext.resume(); } catch (_) {}
       }
+      const source = audioContext.createMediaStreamSource(stream);
+      const analyser = audioContext.createAnalyser();
+      analyser.fftSize = 512;
+      source.connect(analyser);
+      analyserRef.current = analyser;
 
-      const recognition = new SpeechRecognition();
-      recognitionRef.current = recognition;
-      recognition.continuous = false;
-      recognition.interimResults = true;
-      recognition.lang = currentLanguageCode || "en-IN";
+      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
+      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
+      mediaRecorderRef.current = recorder;
+      recordedChunksRef.current = [];
+      speechDetectedRef.current = false;
+      pendingFinalizeRef.current = false;
 
-      recognition.onstart = () => {
-        setIsUserSpeaking(true);
-        setSpeechStatusText("Listening to you... (Speak naturally)");
+      recorder.ondataavailable = (e: BlobEvent) => {
+        if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
       };
 
-      recognition.onresult = (event: any) => {
-        let interimText = "";
-        let finalText = "";
-        for (let i = event.resultIndex; i < event.results.length; ++i) {
-          if (event.results[i].isFinal) {
-            finalText += event.results[i][0].transcript;
-          } else {
-            interimText += event.results[i][0].transcript;
+      recorder.onstop = async () => {
+        const shouldFinalize = pendingFinalizeRef.current;
+        pendingFinalizeRef.current = false;
+        const chunks = recordedChunksRef.current;
+        recordedChunksRef.current = [];
+
+        stream.getTracks().forEach((t) => t.stop());
+        if (mediaStreamRef.current === stream) mediaStreamRef.current = null;
+        if (audioContextRef.current === audioContext) {
+          try { await audioContext.close(); } catch (_) {}
+          audioContextRef.current = null;
+        }
+
+        if (!shouldFinalize || chunks.length === 0) return;
+
+        const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
+        if (blob.size < 2000) {
+          // Too short to be meaningful speech (VAD false-positive on noise) — just resume listening
+          if (isCallActiveRef.current && !isMutedRef.current) startLiveListening();
+          return;
+        }
+
+        setSpeechStatusText("Transcribing...");
+        try {
+          const base64Audio = await blobToBase64(blob);
+          const res = await fetch("/api/ai-demo/speech", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              action: "stt",
+              audioBase64: base64Audio,
+              languageCode: manualLanguageHintRef.current,
+            }),
+          });
+
+          if (res.ok) {
+            const data = await res.json();
+            if (data.success && data.transcript && data.transcript.trim()) {
+              setLiveUserTranscript(data.transcript.trim());
+              processConversationTurn(
+                data.transcript.trim(),
+                data.detectedLanguageCode || "",
+                typeof data.languageProbability === "number" ? data.languageProbability : null
+              );
+              return;
+            }
           }
+        } catch (err) {
+          console.warn("STT request failed:", err);
         }
 
-        const activeTranscript = finalText || interimText;
-        setLiveUserTranscript(activeTranscript);
-
-        if (silenceTimeoutRef.current) {
-          clearTimeout(silenceTimeoutRef.current);
-        }
-
-        if (activeTranscript.trim().length > 0) {
-          silenceTimeoutRef.current = setTimeout(() => {
-            try { recognition.stop(); } catch (_) {}
-            processConversationTurn(activeTranscript);
-          }, 1400);
+        // No usable transcript came back — resume listening rather than hanging silently
+        if (isCallActiveRef.current && !isMutedRef.current) {
+          setSpeechStatusText("Didn't catch that — listening again...");
+          startLiveListening();
         }
       };
 
-      recognition.onerror = (event: any) => {
-        if (event.error !== "no-speech") {
-          console.warn("STT warning:", event.error);
-        }
-        setIsUserSpeaking(false);
-      };
+      recorder.start(250); // flush chunks every 250ms so short utterances still have data on stop()
 
-      recognition.onend = () => {
-        setIsUserSpeaking(false);
-      };
-
-      recognition.start();
-    } catch (err) {
-      console.warn("Could not start STT:", err);
       setIsUserSpeaking(false);
+      setSpeechStatusText("Listening to you... (Speak naturally)");
+
+      const dataArray = new Uint8Array(analyser.fftSize);
+      // Raised from 0.02, and now paired with a sustained-frames requirement
+      // below — a single loud frame (a door, a cough, distant noise) used to
+      // be enough to start capturing a "turn" and send it to STT as if the
+      // caller had spoken, which is exactly what was corrupting the
+      // conversation with background noise.
+      const SPEECH_RMS_THRESHOLD = 0.028;
+      // Require ~150ms of continuous energy above threshold before treating
+      // it as the caller actually starting to talk, not just a brief blip.
+      const REQUIRED_CONSECUTIVE_SPEECH_FRAMES = 9;
+      // Raised from 700ms — that was cutting people off during completely
+      // normal mid-sentence pauses (recalling a number, a breath, an "umm").
+      // The timer already correctly cancels and lets recording continue the
+      // instant speech resumes (see the rms > threshold branch above), so
+      // this only controls how long a genuine pause has to last before it's
+      // treated as "done talking" — 1100ms gives real breathing room while
+      // still being far snappier than the original fixed 2200ms wait.
+      const SILENCE_MS = 1100;
+      const MAX_RECORDING_MS = 20000;
+      const startedAt = Date.now();
+      let consecutiveSpeechFrames = 0;
+
+      const vadTick = () => {
+        if (!analyserRef.current) return;
+        analyserRef.current.getByteTimeDomainData(dataArray);
+
+        let sumSquares = 0;
+        for (let i = 0; i < dataArray.length; i++) {
+          const normalized = (dataArray[i] - 128) / 128;
+          sumSquares += normalized * normalized;
+        }
+        const rms = Math.sqrt(sumSquares / dataArray.length);
+
+        if (rms > SPEECH_RMS_THRESHOLD) {
+          consecutiveSpeechFrames++;
+          if (!speechDetectedRef.current && consecutiveSpeechFrames >= REQUIRED_CONSECUTIVE_SPEECH_FRAMES) {
+            speechDetectedRef.current = true;
+            setIsUserSpeaking(true);
+            // Caller is speaking again after a confirmed booking — they get
+            // to finish, not get cut off by the auto-hangup timer.
+            if (autoEndCallTimeoutRef.current) {
+              clearTimeout(autoEndCallTimeoutRef.current);
+              autoEndCallTimeoutRef.current = null;
+            }
+          }
+          if (silenceTimeoutRef.current) {
+            clearTimeout(silenceTimeoutRef.current);
+            silenceTimeoutRef.current = null;
+          }
+        } else {
+          // Energy dropped — a blip that didn't sustain long enough resets
+          // the counter instead of slowly accumulating across noise gaps.
+          consecutiveSpeechFrames = 0;
+        }
+
+        if (!(rms > SPEECH_RMS_THRESHOLD) && speechDetectedRef.current && !silenceTimeoutRef.current) {
+          silenceTimeoutRef.current = setTimeout(() => {
+            pendingFinalizeRef.current = true;
+            setIsUserSpeaking(false);
+            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+              try { mediaRecorderRef.current.stop(); } catch (_) {}
+            }
+          }, SILENCE_MS);
+        }
+
+        if (Date.now() - startedAt > MAX_RECORDING_MS) {
+          pendingFinalizeRef.current = speechDetectedRef.current;
+          if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
+            try { mediaRecorderRef.current.stop(); } catch (_) {}
+          }
+          return;
+        }
+
+        vadRafRef.current = requestAnimationFrame(vadTick);
+      };
+      vadRafRef.current = requestAnimationFrame(vadTick);
+    } catch (err: any) {
+      console.warn("Could not start microphone capture:", err);
+      // Surface the ACTUAL error instead of a hardcoded guess — a previous
+      // version always said "permission denied" here even when the real cause
+      // was something else entirely (e.g. a stuck device, or the new 6s
+      // timeout above), which actively hid what was really happening.
+      const name = err?.name || "";
+      const friendly =
+        name === "NotAllowedError" ? "Microphone permission denied. Use chat mode instead."
+        : name === "NotFoundError" ? "No microphone found on this device."
+        : name === "NotReadableError" ? "Microphone is busy or unavailable (may be in use by another app/tab)."
+        : err?.message?.includes("timed out") ? "Microphone didn't respond in time — device may still be busy from the previous turn. Retrying..."
+        : `Microphone error: ${err?.message || name || "unknown"}.`;
+      setSpeechStatusText(`Error: ${friendly}`);
+      setIsUserSpeaking(false);
+
+      // A stuck/busy device is often transient — retry once automatically
+      // instead of leaving the call permanently dead on a timeout.
+      if (err?.message?.includes("timed out") && isCallActiveRef.current && !isMutedRef.current) {
+        setTimeout(() => {
+          if (isCallActiveRef.current && !isMutedRef.current) startLiveListening();
+        }, 1000);
+      }
     }
-  }, [currentLanguageCode, processConversationTurn]);
+  }, [processConversationTurn, stopLiveListening]);
+
 
   const handleStartCall = async () => {
     setIsConnecting(true);
@@ -435,6 +815,8 @@ export default function AIVoiceChatbotEngine({
     setCallDuration(0);
     setLiveUserTranscript("");
     setIsMuted(false);
+    webhookSentRef.current = false;
+    setWebhookSent(false);
 
     await new Promise((r) => setTimeout(r, 600));
 
@@ -458,10 +840,14 @@ export default function AIVoiceChatbotEngine({
 
     speakTextAudible(activeIndustry.initialGreetingEnglish, "en-IN", () => {
       startLiveListening();
-    });
+    }, "greeting");
   };
 
   const handleEndCall = () => {
+    if (autoEndCallTimeoutRef.current) {
+      clearTimeout(autoEndCallTimeoutRef.current);
+      autoEndCallTimeoutRef.current = null;
+    }
     stopCurrentAudio();
     stopLiveListening();
     if (timerRef.current) {
@@ -472,12 +858,39 @@ export default function AIVoiceChatbotEngine({
     setSpeechStatusText("Call ended. Click to call again.");
   };
 
+  // ─── Auto-hangup after a confirmed booking ──────────────────────────────
+  // Once the AI reports isComplete (booking confirmed / webhook dispatched),
+  // the call doesn't need to stay open indefinitely — but hanging up the
+  // instant the confirmation audio ends would cut off a caller who wanted to
+  // ask one more thing. Instead: keep listening as normal, but arm a timer
+  // that ends the call automatically if nothing more is said. Any real
+  // speech detected before it fires cancels it — see the VAD tick's
+  // speechDetectedRef transition in startLiveListening.
+  const AUTO_END_CALL_DELAY_MS = 8000;
+
+  const cancelAutoEndCall = useCallback(() => {
+    if (autoEndCallTimeoutRef.current) {
+      clearTimeout(autoEndCallTimeoutRef.current);
+      autoEndCallTimeoutRef.current = null;
+    }
+  }, []);
+
+  const armAutoEndCall = useCallback(() => {
+    cancelAutoEndCall();
+    setSpeechStatusText("Booking confirmed — call will end automatically shortly. Speak now to continue.");
+    autoEndCallTimeoutRef.current = setTimeout(() => {
+      autoEndCallTimeoutRef.current = null;
+      handleEndCall();
+    }, AUTO_END_CALL_DELAY_MS);
+  }, [cancelAutoEndCall]);
+
   const handleReset = () => {
     handleEndCall();
     setConversationHistory([]);
     conversationHistoryRef.current = [];
     setExtractedData({});
     extractedDataRef.current = {};
+    webhookSentRef.current = false;
     setWebhookSent(false);
     setLiveUserTranscript("");
     setChatInput("");
@@ -931,32 +1344,98 @@ export default function AIVoiceChatbotEngine({
                   </span>
                 </div>
 
-                {/* Voice Persona Selector */}
-                <div style={{ display: "flex", alignItems: "center", gap: "2px", flexShrink: 0 }}>
-                  <span style={{ fontSize: "10px", color: "#8E8E93", marginRight: "2px" }}>Voice:</span>
-                  {VOICE_PERSONAS.map((vp) => {
-                    const isSelected = selectedSpeaker === vp.id;
-                    return (
-                      <button
-                        key={vp.id}
-                        onClick={() => setSelectedSpeaker(vp.id)}
-                        style={{
-                          padding: "2px 6px",
-                          borderRadius: "999px",
-                          fontSize: "9.5px",
-                          fontWeight: isSelected ? 700 : 500,
-                          background: isSelected ? "rgba(155, 234, 22, 0.18)" : "rgba(255, 255, 255, 0.04)",
-                          border: `1px solid ${isSelected ? "#9BEA16" : "rgba(255, 255, 255, 0.08)"}`,
-                          color: isSelected ? "#9BEA16" : "#A1A1AA",
-                          cursor: "pointer",
-                          transition: "all 0.2s ease",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        {vp.label}
-                      </button>
-                    );
-                  })}
+                {/* Voice Persona & Language Mode Selectors */}
+                <div style={{ display: "flex", alignItems: "center", gap: "8px", flexWrap: "wrap", justifyContent: "flex-end" }}>
+                  {/* Language Mode Selector — covers all 9 supported languages, not just
+                      Hindi/English. Auto-detection is measurably weaker for the
+                      lower-resource ones (Punjabi especially), so forcing the language
+                      explicitly here also passes a hint straight to Whisper, which
+                      meaningfully improves accuracy for exactly the languages that
+                      needed it most. */}
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "2px",
+                      overflowX: "auto",
+                      maxWidth: "100%",
+                      scrollSnapType: "x mandatory",
+                    }}
+                  >
+                    <Globe size={10} style={{ color: "#8E8E93", marginRight: "1px", flexShrink: 0 }} />
+                    {[
+                      { id: "auto", label: "Auto 🌐" },
+                      { id: "hi-IN", label: "हिन्दी" },
+                      { id: "en-IN", label: "English" },
+                      { id: "pa-IN", label: "ਪੰਜਾਬੀ" },
+                      { id: "ta-IN", label: "தமிழ்" },
+                      { id: "te-IN", label: "తెలుగు" },
+                      { id: "bn-IN", label: "বাংলা" },
+                      { id: "ml-IN", label: "മലയാളം" },
+                      { id: "kn-IN", label: "ಕನ್ನಡ" },
+                      { id: "gu-IN", label: "ગુજરાતી" },
+                      { id: "or-IN", label: "ଓଡ଼ିଆ" },
+                    ].map((l) => {
+                      const isSelected = speechLanguageMode === l.id;
+                      return (
+                        <button
+                          key={l.id}
+                          onClick={() => {
+                            setSpeechLanguageMode(l.id);
+                            // "auto" clears the hint so Whisper's own detection drives the
+                            // language every turn; any specific code forces that language
+                            // explicitly, including passing it to Whisper as a hint.
+                            manualLanguageHintRef.current = l.id === "auto" ? "" : l.id;
+                            if (l.id !== "auto") setCurrentLanguageCode(l.id);
+                          }}
+                          style={{
+                            padding: "2px 6px",
+                            borderRadius: "999px",
+                            fontSize: "9.5px",
+                            fontWeight: isSelected ? 700 : 500,
+                            background: isSelected ? "rgba(155, 234, 22, 0.18)" : "rgba(255, 255, 255, 0.04)",
+                            border: `1px solid ${isSelected ? "#9BEA16" : "rgba(255, 255, 255, 0.08)"}`,
+                            color: isSelected ? "#9BEA16" : "#A1A1AA",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            whiteSpace: "nowrap",
+                            flexShrink: 0,
+                            scrollSnapAlign: "start",
+                          }}
+                        >
+                          {l.label}
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Voice Persona Selector */}
+                  <div style={{ display: "flex", alignItems: "center", gap: "2px" }}>
+                    <span style={{ fontSize: "10px", color: "#8E8E93", marginRight: "2px" }}>Voice:</span>
+                    {VOICE_PERSONAS.map((vp) => {
+                      const isSelected = selectedSpeaker === vp.id;
+                      return (
+                        <button
+                          key={vp.id}
+                          onClick={() => setSelectedSpeaker(vp.id)}
+                          style={{
+                            padding: "2px 6px",
+                            borderRadius: "999px",
+                            fontSize: "9.5px",
+                            fontWeight: isSelected ? 700 : 500,
+                            background: isSelected ? "rgba(155, 234, 22, 0.18)" : "rgba(255, 255, 255, 0.04)",
+                            border: `1px solid ${isSelected ? "#9BEA16" : "rgba(255, 255, 255, 0.08)"}`,
+                            color: isSelected ? "#9BEA16" : "#A1A1AA",
+                            cursor: "pointer",
+                            transition: "all 0.2s ease",
+                            whiteSpace: "nowrap",
+                          }}
+                        >
+                          {vp.label}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
               </div>
 
@@ -1119,6 +1598,28 @@ export default function AIVoiceChatbotEngine({
                 >
                   {isAiSpeaking ? "AI Speaking (Click to interrupt)" : isUserSpeaking ? "Listening to you..." : isCallActive ? "Connected • Speak naturally" : "Tap Orb or Button to Start Voice Call"}
                 </span>
+
+                {/* Surfaces mic/STT/chat-API errors that were previously tracked in
+                    speechStatusText but never rendered anywhere — any failure in the
+                    voice pipeline looked identical to a normal, working call. */}
+                {isCallActive && (() => {
+                  const isError = speechStatusText.startsWith("Error:");
+                  const isNeutral = speechStatusText.includes("Transcribing") || speechStatusText.includes("Didn't catch") || speechStatusText.includes("will end automatically");
+                  if (!isError && !isNeutral) return null;
+                  return (
+                    <span
+                      style={{
+                        fontSize: "10px",
+                        fontWeight: 500,
+                        color: isError ? "#F87171" : "#A1A1AA",
+                        marginTop: "3px",
+                        textAlign: "center",
+                      }}
+                    >
+                      {speechStatusText}
+                    </span>
+                  );
+                })()}
               </div>
 
               {/* Real-time Subtitle & Transcription Bubble (ONLY SHOWN WHEN CONVERSATION/SPEECH EXISTS - RED MARKED INACTIVE BOX REMOVED) */}
@@ -1529,7 +2030,7 @@ export default function AIVoiceChatbotEngine({
               </span>
             </div>
 
-            {/* Extracted Entity Fields */}
+            {/* Extracted Entity Fields - 5 Dedicated Structured Cards */}
             <div
               style={{
                 display: "grid",
@@ -1538,17 +2039,17 @@ export default function AIVoiceChatbotEngine({
                 marginBottom: "14px",
               }}
             >
-              {/* Name */}
+              {/* 1. Name */}
               <div
                 style={{
-                  padding: "8px 12px",
+                  padding: "9px 12px",
                   borderRadius: "10px",
                   background: extractedData.name ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
-                  border: `1px solid ${extractedData.name ? "rgba(155, 234, 22, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
+                  border: `1px solid ${extractedData.name ? "rgba(155, 234, 22, 0.35)" : "rgba(255, 255, 255, 0.06)"}`,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10.5px", color: "#8E8E93" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "#8E8E93" }}>
                     <User size={11} color={extractedData.name ? "#9BEA16" : "#71717A"} />
                     <span>Caller Name</span>
                   </div>
@@ -1559,19 +2060,19 @@ export default function AIVoiceChatbotEngine({
                 </div>
               </div>
 
-              {/* Phone */}
+              {/* 2. Phone */}
               <div
                 style={{
-                  padding: "8px 12px",
+                  padding: "9px 12px",
                   borderRadius: "10px",
                   background: extractedData.mobile ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
-                  border: `1px solid ${extractedData.mobile ? "rgba(155, 234, 22, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
+                  border: `1px solid ${extractedData.mobile ? "rgba(155, 234, 22, 0.35)" : "rgba(255, 255, 255, 0.06)"}`,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10.5px", color: "#8E8E93" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "#8E8E93" }}>
                     <Phone size={11} color={extractedData.mobile ? "#9BEA16" : "#71717A"} />
-                    <span>Phone</span>
+                    <span>Mobile Contact</span>
                   </div>
                   {extractedData.mobile && <CheckCircle2 size={11} color="#9BEA16" />}
                 </div>
@@ -1580,46 +2081,87 @@ export default function AIVoiceChatbotEngine({
                 </div>
               </div>
 
-              {/* DOB / Department */}
+              {/* 3. Dedicated Age / DOB Card */}
               <div
                 style={{
-                  padding: "8px 12px",
+                  padding: "9px 12px",
                   borderRadius: "10px",
-                  background: extractedData.dob || extractedData.department ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
-                  border: `1px solid ${extractedData.dob || extractedData.department ? "rgba(155, 234, 22, 0.3)" : "rgba(255, 255, 255, 0.05)"}`,
+                  background: extractedData.dob ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
+                  border: `1px solid ${extractedData.dob ? "rgba(155, 234, 22, 0.35)" : "rgba(255, 255, 255, 0.06)"}`,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10.5px", color: "#8E8E93" }}>
-                    {activeIndustry.requiresDob ? <Calendar size={11} color={extractedData.dob ? "#9BEA16" : "#71717A"} /> : <Stethoscope size={11} color={extractedData.department ? "#9BEA16" : "#71717A"} />}
-                    <span>{activeIndustry.requiresDob ? "DOB / Age" : "Specialty"}</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "#8E8E93" }}>
+                    <Calendar size={11} color={extractedData.dob ? "#9BEA16" : "#71717A"} />
+                    <span>Age / DOB</span>
                   </div>
-                  {(extractedData.dob || extractedData.department) && <CheckCircle2 size={11} color="#9BEA16" />}
+                  {extractedData.dob && <CheckCircle2 size={11} color="#9BEA16" />}
                 </div>
-                <div style={{ fontSize: "12.5px", fontWeight: 600, color: extractedData.dob || extractedData.department ? "#F5F5F0" : "#52525B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {extractedData.dob || extractedData.department || "—"}
+                <div style={{ fontSize: "12.5px", fontWeight: 600, color: extractedData.dob ? "#F5F5F0" : "#52525B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {extractedData.dob || (activeIndustry.requiresDob ? "Pending Intake" : "Not Required")}
                 </div>
               </div>
 
-              {/* Slot */}
+              {/* 4. Department & Assigned Doctor */}
               <div
                 style={{
-                  padding: "8px 12px",
+                  padding: "9px 12px",
                   borderRadius: "10px",
-                  background: extractedData.slot ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.02)",
-                  border: `1px solid ${extractedData.slot ? "#9BEA16" : "rgba(255, 255, 255, 0.05)"}`,
+                  background: (extractedData.department || extractedData.doctor) ? "rgba(155, 234, 22, 0.08)" : "rgba(255, 255, 255, 0.02)",
+                  border: `1px solid ${(extractedData.department || extractedData.doctor) ? "rgba(155, 234, 22, 0.35)" : "rgba(255, 255, 255, 0.06)"}`,
                 }}
               >
                 <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "2px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10.5px", color: "#8E8E93" }}>
-                    <Clock size={11} color={extractedData.slot ? "#9BEA16" : "#71717A"} />
-                    <span>Booking Slot</span>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "#8E8E93" }}>
+                    <Stethoscope size={11} color={(extractedData.department || extractedData.doctor) ? "#9BEA16" : "#71717A"} />
+                    <span>Department / Doctor</span>
                   </div>
-                  {extractedData.slot && <CheckCircle2 size={11} color="#9BEA16" />}
+                  {(extractedData.department || extractedData.doctor) && <CheckCircle2 size={11} color="#9BEA16" />}
                 </div>
-                <div style={{ fontSize: "12.5px", fontWeight: 700, color: extractedData.slot ? "#9BEA16" : "#52525B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
-                  {extractedData.slot || "—"}
+                <div style={{ fontSize: "12px", fontWeight: 600, color: (extractedData.department || extractedData.doctor) ? "#F5F5F0" : "#52525B", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                  {extractedData.department
+                    ? (extractedData.doctor ? `${extractedData.department} • ${extractedData.doctor}` : extractedData.department)
+                    : (extractedData.doctor || "Awaiting Selection")}
                 </div>
+              </div>
+
+              {/* 5. Booking Slot (Spanning Full Width) */}
+              <div
+                style={{
+                  gridColumn: "1 / -1",
+                  padding: "10px 14px",
+                  borderRadius: "12px",
+                  background: extractedData.slot ? "rgba(155, 234, 22, 0.12)" : "rgba(255, 255, 255, 0.02)",
+                  border: `1px solid ${extractedData.slot ? "#9BEA16" : "rgba(255, 255, 255, 0.06)"}`,
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                }}
+              >
+                <div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "#8E8E93", marginBottom: "2px" }}>
+                    <Clock size={11} color={extractedData.slot ? "#9BEA16" : "#71717A"} />
+                    <span>Confirmed Booking Slot</span>
+                  </div>
+                  <div style={{ fontSize: "13px", fontWeight: 700, color: extractedData.slot ? "#9BEA16" : "#52525B" }}>
+                    {extractedData.slot || "Awaiting Slot Selection"}
+                  </div>
+                </div>
+                {extractedData.slot && (
+                  <span
+                    style={{
+                      fontSize: "9.5px",
+                      fontWeight: 700,
+                      padding: "3px 8px",
+                      borderRadius: "999px",
+                      background: "rgba(155, 234, 22, 0.2)",
+                      color: "#9BEA16",
+                      border: "1px solid rgba(155, 234, 22, 0.4)",
+                    }}
+                  >
+                    CONFIRMED
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -1682,10 +2224,19 @@ export default function AIVoiceChatbotEngine({
               >
                 {JSON.stringify(
                   {
-                    event: "lead.captured",
-                    token: "CCH-014",
-                    lead: extractedData,
-                    status: webhookSent ? "dispatched" : "collecting",
+                    event: "clinic.appointment.booked",
+                    appointment_id: extractedData.appointment_id || "ABC-88421",
+                    patient_name: extractedData.name || "—",
+                    mobile_number: extractedData.mobile || "—",
+                    age: extractedData.dob || "—",
+                    intent: extractedData.intent || "Doctor Appointment",
+                    appointment_type: "Doctor Appointment",
+                    department: extractedData.department || "Cardiology",
+                    doctor: extractedData.doctor || "—",
+                    preferred_date: "Tomorrow",
+                    preferred_time: extractedData.slot || "10:30 AM",
+                    confirmed: webhookSent || !!extractedData.slot,
+                    appointment_status: webhookSent ? "CONFIRMED" : (extractedData.slot ? "CONFIRMED" : "PENDING_INTAKE"),
                   },
                   null,
                   2

@@ -1,9 +1,24 @@
+import { CLINIC_BRAND_NAME, CLINIC_TEMPLATES } from "./clinicTemplates";
+
 export interface IndustryMessage {
   speaker: "ai" | "user";
   text: string;
   language?: string;
   langLabel?: string;
   timestamp?: string;
+}
+
+// A single deterministic step in the intake flow. Code — not the model —
+// decides which step is active (the first one whose `field` is still empty
+// in the extracted data) and asks exactly that question. The model's job is
+// narrowed to: extract the field(s) for THIS step from the user's reply, and
+// phrase the fixed ask in the detected language. This replaces letting the
+// model freely decide "what step are we on", which was unreliable.
+export interface FlowStep {
+  id: string;
+  field: string; // key into the extracted-data record this step fills
+  askEnglish: string;
+  askHindi: string;
 }
 
 export interface IndustryFlow {
@@ -28,6 +43,9 @@ export interface IndustryFlow {
     actionBadge: string;
   };
   systemPrompt: string;
+  /** Deterministic intake steps, in order. Optional — falls back to the
+   *  generic name → mobile → (dob) → department → slot sequence if omitted. */
+  steps?: FlowStep[];
 }
 
 export const INDUSTRY_FLOWS: Record<string, IndustryFlow> = {
@@ -35,66 +53,117 @@ export const INDUSTRY_FLOWS: Record<string, IndustryFlow> = {
     id: "doctors-clinics",
     name: "Doctors & Clinics",
     iconName: "Stethoscope",
-    brandName: "City Care Healthcare Clinic",
-    tagline: "OPD Appointments, Doctor Timings & Patient Intake",
+    brandName: CLINIC_BRAND_NAME,
+    tagline: "Virtual Receptionist • Multi-Specialty OPD & Lab Intake",
     badgeColor: "#10B981",
     requiresDob: true,
     systemActionType: "EMR_SLOT_BOOKED",
-    systemActionTitle: "EMR / Clinic Token Generated",
-    initialGreetingEnglish: "Hello and welcome to City Care Clinic. I am Namuste, your digital receptionist. May I have your name and mobile number to book your appointment?",
+    systemActionTitle: "Clinic Appointment Confirmed",
+    initialGreetingEnglish: CLINIC_TEMPLATES["en-IN"].greeting,
     presetExtracted: {
       name: "Rahul Verma",
       mobile: "+91 98765 43210",
-      dob: "15 Aug 1992 (33 Yrs)",
-      intent: "OPD Cardiology Consultation",
-      summary: "Dr. Sharma • Tomorrow 10:30 AM • Token #14",
+      dob: "33 Yrs",
+      intent: "Doctor Appointment — Cardiology",
+      summary: "Dr. R. K. Sharma • Tomorrow 10:30 AM • ID #SUN-88421",
       actionBadge: "EMR Synced & WhatsApp Confirmation Sent",
     },
     presetTurns: [
       {
         speaker: "ai",
-        text: "Hello and welcome to City Care Clinic. I am Namuste, your digital receptionist. May I have your name and mobile number to book your appointment?",
+        text: CLINIC_TEMPLATES["en-IN"].greeting,
         langLabel: "English",
       },
       {
         speaker: "user",
-        text: "Mera naam Rahul Verma hai, phone 9876543210. Kal subah Dr. Sharma (Cardiologist) ka slot mil sakta hai kya?",
-        langLabel: "Hinglish",
+        text: "My name is Rahul Verma.",
+        langLabel: "English",
       },
       {
         speaker: "ai",
-        text: "Ji Rahul ji. Patient record ke liye please apna date of birth ya age bata dijiye?",
-        langLabel: "Hinglish",
+        text: "Thank you, Rahul. Could you please provide your 10-digit mobile number?",
+        langLabel: "English",
       },
       {
         speaker: "user",
-        text: "15 August 1992, age 33 years.",
-        langLabel: "Hinglish",
+        text: "98765 43210",
+        langLabel: "English",
       },
       {
         speaker: "ai",
-        text: "Dr. Sharma kal subah 10:30 AM aur 11:45 AM par available hain. Kaunsa time aapke liye best rahega?",
-        langLabel: "Hindi",
+        text: "And may I know your age?",
+        langLabel: "English",
       },
       {
         speaker: "user",
-        text: "10:30 AM confirm kar dijiye.",
-        langLabel: "Hinglish",
+        text: "33 years.",
+        langLabel: "English",
       },
       {
         speaker: "ai",
-        text: "Aapka appointment kal subah 10:30 AM par Dr. Sharma ke saath confirm ho gaya hai (Token #14). Details WhatsApp par bhej di gayi hain.",
-        langLabel: "Hinglish",
+        text: "Thank you, Rahul. How can I help you today? I can assist with Doctor Appointments, Diagnostic Lab tests, or General Clinic information.",
+        langLabel: "English",
+      },
+      {
+        speaker: "user",
+        text: "I need a cardiology appointment with Dr Sharma tomorrow at 10:30 AM.",
+        langLabel: "English",
+      },
+      {
+        speaker: "ai",
+        text: "Let me confirm your appointment: Your name is Rahul Verma, mobile 9876543210, age 33, for Cardiology with Dr. R. K. Sharma on Tomorrow at 10:30 AM. Is that correct?",
+        langLabel: "English",
+      },
+      {
+        speaker: "user",
+        text: "Yes, that is correct.",
+        langLabel: "English",
+      },
+      {
+        speaker: "ai",
+        text: "Your appointment is confirmed! Your Appointment ID is SUN-88421. Details have been sent to your WhatsApp. Thank you!",
+        langLabel: "English",
       },
     ],
-    systemPrompt: `You are Namuste, the AI Digital Receptionist for 'City Care Healthcare Clinic'.
-You handle OPD appointments, doctor timings (Mon-Sat 9 AM - 8 PM), consultation fees (₹600), and patient triage intake.`,
+    systemPrompt: `${CLINIC_BRAND_NAME} — Clinical Knowledge Base:
+- Operating Hours: Monday to Saturday, 9:00 AM to 7:00 PM.
+- Consultation Fee: ₹600 for standard OPD consultation. Follow-up: ₹300.
+- Location: Central Health Complex, 2nd Floor (Wheelchair accessible, dedicated patient parking).
+- Diagnostic Lab: Open 7:00 AM to 7:00 PM (Fasting blood tests best taken between 7 AM and 11 AM).
+
+AVAILABLE SPECIALTIES & DOCTOR ROSTER:
+1. General Medicine (Fever, Infection, BP, Diabetes, General Health): Dr. Ananya Sen (MD) — Mon-Sat 9 AM - 2 PM, 4 PM - 7 PM
+2. Cardiology (Heart Care, Chest Discomfort, BP, ECG): Dr. R. K. Sharma (MD, DM) — Mon, Wed, Fri 10 AM - 2 PM
+3. Orthopedics (Joint & Knee Pain, Bone Fractures, Arthritis): Dr. Rajiv Verma (MS) — Mon-Sat 10 AM - 2 PM
+4. Dermatology (Skin Rashes, Acne, Hair Fall, Allergy): Dr. Pooja Gupta (MD) — Mon-Sat 11 AM - 6 PM
+5. ENT (Ear, Nose, Throat, Sinus, Hearing): Dr. Vikram Malhotra (MS) — Tue, Thu, Sat 11 AM - 3 PM
+6. Pediatrics (Child Health, Vaccination, Wellness): Dr. Meera Rao (MD) — Mon-Sat 9 AM - 1 PM
+7. Gynecology (Women's Health, Pregnancy, PCOD): Dr. Sunita Kapoor (MS) — Mon-Sat 10 AM - 4 PM
+8. Neurology (Migraine, Nerve Pain, Headache): Dr. Sanjay Kapoor (MD) — Mon, Wed, Fri 2 PM - 6 PM
+9. Dental Care (Toothache, Root Canal, Cleaning): Dr. Aman Joshi (BDS, MDS) — Mon-Sat 10 AM - 7 PM
+
+CRITICAL MEDICAL GUARDRAILS (VERY IMPORTANT):
+1. Emergency Guardrail:
+   If user mentions emergency symptoms (severe chest pain, difficulty breathing, unconscious, heavy bleeding, stroke, accident, severe allergy):
+   IMMEDIATELY SAY: "This sounds like it may require urgent medical attention. Our emergency services are available 24 hours a day. If this is a life-threatening emergency, please call 112 or go to the nearest emergency department immediately. Would you like me to provide the clinic's emergency desk contact?"
+   STOP normal booking immediately!
+2. No Medical Diagnosis:
+   If asked "What disease do I have?": Say "I am not able to diagnose medical conditions. I can help you arrange an appointment with our specialist doctor."
+3. No Prescriptions:
+   If asked "Which medicine should I take?": Say "I cannot prescribe or recommend medications. I can help schedule a consultation with our physician."
+4. Never Invent Doctors or Slots: Strictly adhere to our clinic roster and 9 AM - 7 PM hours.
+5. No Booking Without Explicit Confirmation: Always summarize and get a Yes before confirming.`,
     systemActionPayloadTemplate: {
-      emr_id: "EMR-88319",
-      doctor: "Dr. R. K. Sharma (MD, Cardiology)",
-      token: "14",
-      slot: "Tomorrow 10:30 AM",
-      status: "CONFIRMED",
+      appointment_id: "SUN-88421",
+      patient_name: "Rahul Verma",
+      mobile_number: "9876543210",
+      age: "33",
+      department: "Cardiology",
+      doctor: "Dr. R. K. Sharma",
+      preferred_date: "Tomorrow",
+      preferred_time: "10:30 AM",
+      confirmed: "true",
+      appointment_status: "CONFIRMED",
     },
   },
 
