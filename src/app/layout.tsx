@@ -29,6 +29,11 @@ export const metadata: Metadata = {
     description: "Turn customer enquiries into organised business outcomes across Voice, WhatsApp and Web.",
     images: ["https://namuste.com/revamp-assets/image1.png"],
   },
+  verification: {
+    other: {
+      "facebook-domain-verification": "4j116jf3okw1x4p3x0qm86ihthhwyr",
+    },
+  },
 };
 
 export const viewport: Viewport = {
