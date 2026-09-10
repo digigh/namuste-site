@@ -134,40 +134,37 @@ export function extractEntities(text: string, current: Record<string, string> = 
   // Industry-specific Domain extraction
   // Industry-specific Domain extraction
   if (industryId === "doctors-clinics") {
-    // Every alternative here MUST be word-bounded (\b...\b). Without it,
-    // "ear" (no boundary) matched inside "years" — so simply answering the
-    // DOB question with "30 years old" silently set department to ENT and
-    // skipped the actual department question on every single call. Same
-    // risk with "test" inside "fastest/latest", "lab" inside "label", "hair"
-    // inside "repair", etc. — bounding every word closes all of these.
-    if (/\bcardio\w*\b|\bheart\b|\bdil\b|\bchest\b/i.test(lower)) {
-      result.department = "Cardiology";
-      result.doctor = "Dr. R. K. Sharma";
-    } else if (/\bent\b|\bear\b|\bnose\b|\bthroat\b|\bkaan\b|\bnaak\b|\bgala\b|\bsinus\b/i.test(lower)) {
-      result.department = "ENT";
-      result.doctor = "Dr. Vikram Malhotra";
-    } else if (/\bortho\w*\b|\bbone\b|\bjoint\b|\bhaddi\b|\bghutna\b|\bknee\b|\bback pain\b/i.test(lower)) {
-      result.department = "Orthopedics";
-      result.doctor = "Dr. Rajiv Verma";
-    } else if (/\bderma\w*\b|\bskin\b|\bacne\b|\bhair\b|\btwacha\b|\bdaag\b/i.test(lower)) {
-      result.department = "Dermatology";
-      result.doctor = "Dr. Pooja Gupta";
-    } else if (/\bpediatric\w*\b|\bchild\b|\bbacche\b|\bbaby\b|\binfant\b|\bshishu\b/i.test(lower)) {
-      result.department = "Pediatrics";
-      result.doctor = "Dr. Meera Rao";
-    } else if (/\bgynec\w*\b|\bgynae\w*\b|\bwomen\b|\bpregnant\b|\bpregnancy\b|\bmahila\b/i.test(lower)) {
-      result.department = "Gynecology";
-      result.doctor = "Dr. Sunita Kapoor";
-    } else if (/\bdental\b|\bteeth\b|\btooth\b|\bdaant\w*\b|\bdant\w*\b|\bdentist\b|\btoothache\b|\bcavity\b|\broot\s*canal\b|\bmasud\w*\b|\bjaad\b/i.test(lower)) {
+    // Every alternative here MUST be word-bounded (\b...\b) for Latin words. Without it,
+    // "ear" matched inside "years" — bounding every word closes false matches.
+    // Devanagari script words are included for seamless native Hindi transcription support.
+    if (/\b(dental|dentist|teeth|tooth|toothache|cavity|root\s*canal|daant\w*|dant\w*|masud\w*|jaad|dadh|aman\s*joshi|dr\s*aman)\b|दांत|दाँत|दांतों|दाँतों|डेंटल|डेंटिस्ट|मसूड़|कैविटी|रूट\s*कैनाल|दाढ़|जाढ़|अमन\s*जोशी/i.test(lower)) {
       result.department = "Dental Care";
       result.doctor = "Dr. Aman Joshi";
-    } else if (/\beye\b|\baankh\b|\bvision\b|\bophthal\w*\b/i.test(lower)) {
+    } else if (/\b(derma\w*|skin|acne|hairfall|rash\w*|allergy|twacha|daag|khujli|pimple\w*|pooja\s*gupta|dr\s*pooja)\b|\bhair\s*(loss|fall|problem)\b|त्वचा|चमड़ी|डर्मा|डर्मेटोलॉ|खुजली|दाग|दाने|फुंसी|पिंपल|बाल\s*झड़|मुंहासे|मुँहासे|चेहरे|पूजा\s*गुप्ता/i.test(lower)) {
+      result.department = "Dermatology";
+      result.doctor = "Dr. Pooja Gupta";
+    } else if (/\b(cardio\w*|heart|dil\b|chest\s*pain|bp\b|blood\s*pressure|ecg\b|sharma|dr\s*sharma|r\s*k\s*sharma)\b|कार्डियो|कार्डियोलॉ|हार्ट|दिल|छाती|सीने|बीपी|ब्लड\s*प्रेशर|ईसीजी|आर\s*के\s*शर्मा/i.test(lower)) {
+      result.department = "Cardiology";
+      result.doctor = "Dr. R. K. Sharma";
+    } else if (/\b(ortho\w*|bone|joint|haddi|ghutna|knee|back\s*pain|spine|fracture|arthritis|kamar\s*dard|peeth\s*dard|rajiv\s*verma|dr\s*verma)\b|ऑर्थो|ऑर्थोपेडिक|हड्डी|हड्डियों|घुटना|घुटने|घुटनों|जोड़|जोड़ों|कमर\s*दर्द|पीठ\s*दर्द|फ्रैक्चर|रीढ़|राजीव\s*वर्मा/i.test(lower)) {
+      result.department = "Orthopedics";
+      result.doctor = "Dr. Rajiv Verma";
+    } else if (/\b(ent\b|ear\b|nose\b|throat\b|kaan\b|naak\b|gala\b|sinus|hearing|vikram\s*malhotra|dr\s*malhotra)\b|ईएनटी|कान|नाक|गला|गले|साइनस|सुनने|विक्रम\s*मल्होत्रा/i.test(lower)) {
+      result.department = "ENT";
+      result.doctor = "Dr. Vikram Malhotra";
+    } else if (/\b(pediatric\w*|child|children|bacche|baccha|baby|infant|shishu|vaccin\w*|meera\s*rao|dr\s*meera)\b|पीडियाट्रिक|पीडियाट्रिशियन|बच्चा|बच्चे|बच्चों|शिशु|टीका|टीकाकरण|मीरा\s*राव/i.test(lower)) {
+      result.department = "Pediatrics";
+      result.doctor = "Dr. Meera Rao";
+    } else if (/\b(gynec\w*|gynae\w*|women|pregnant|pregnancy|mahila|pcod|period\w*|sunita\s*kapoor|dr\s*sunita)\b|गायनी|गायनेकोलॉ|महिला|महिलाओं|स्त्री|गर्भवती|गर्भावस्था|मासिक|सुनीता\s*कपूर/i.test(lower)) {
+      result.department = "Gynecology";
+      result.doctor = "Dr. Sunita Kapoor";
+    } else if (/\b(ophthal\w*|eye\b|eyes\b|vision|aankh\w*|chashma|alok\s*nath|dr\s*alok)\b|ऑप्थल्मोलॉ|आंख|आँख|आंखों|आँखों|नजर|दृष्टि|चश्मा|आलोक\s*नाथ/i.test(lower)) {
       result.department = "Ophthalmology";
       result.doctor = "Dr. Alok Nath";
-    } else if (/\blab\b|\bblood\b|\btest\b|\bsugar\b|\bpathology\b/i.test(lower)) {
+    } else if (/\b(lab\b|blood\s*test|pathology|sugar\s*test|urine\s*test|x\s*ray|scan\b)\b|लैब|पैथोलॉजी|ब्लड\s*टेस्ट|खून\s*की\s*जांच|जांच|यूरिन\s*टेस्ट|शुगर\s*टेस्ट|एक्स\s*रे|स्कैन/i.test(lower)) {
       result.department = "Diagnostics & Pathology";
       result.doctor = "Central Pathology Desk";
-    } else if (/\bgeneral\b|\bfever\b|\bcough\b|\bcold\b|\bbukhar\b|\bkhansi\b|\bphysician\b/i.test(lower)) {
+    } else if (/\b(general\b|physician|fever|cough|cold|bukhar|khansi|sardi|jukam|stomach|pet\s*dard|vomit\w*|ulti|headache|sar\s*dard|kamzori|weakness|flu\b|infection|ananya\s*sen|dr\s*ananya)\b|जनरल\s*मेडिसिन|फिजिशियन|बुखार|खांसी|खाँसी|सर्दी|जुकाम|पेट\s*दर्द|सिर\s*दर्द|उल्टी|कमजोरी|दस्त|फ्लू|इन्फेक्शन|अनन्या\s*सेन/i.test(lower)) {
       result.department = "General Medicine";
       result.doctor = "Dr. Ananya Sen";
     }

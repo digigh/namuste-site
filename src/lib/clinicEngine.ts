@@ -295,11 +295,14 @@ export function runClinicFastPath(params: {
   if (!(advancedThisTurn || faqAnswer)) {
     // If caller specifically answered "doctor appointment" / "doctor" / "specialty", list the specialties
     const lowerMsg = userMessage.toLowerCase();
-    const isAskingForDoctor = currentStep?.id === "department" && /\b(doctor|dr|specialty|speciality|appointment|consultation|milna|dikhana)\b/i.test(lowerMsg);
+    const isAskingForDoctor =
+      currentStep?.id === "department" &&
+      (/\b(doctor|dr|specialty|speciality|appointment|consultation|milna|dikhana)\b/i.test(lowerMsg) ||
+       /डॉक्टर|अपॉइंटमेंट|स्पेशलिटी|दिखाना|मिलना|परामर्श/.test(userMessage));
     if (isAskingForDoctor && !dept) {
       const finalReply = lang === "hi-IN"
-        ? "जी बिल्कुल! डॉक्टर अपॉइंटमेंट के लिए हमारे पास जनरल मेडिसिन, डर्मेटोलॉजी, कार्डियोलॉजी, ऑर्थोपेडिक्स, ईएनटी, पीडियाट्रिक्स और डेंटल केयर उपलब्ध हैं। आप किस स्पेशलिटी या डॉक्टर के लिए अपॉइंटमेंट लेना चाहेंगे?"
-        : "Sure! For a doctor appointment, we have General Medicine, Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, and Dental Care. Which specialty or doctor would you like to consult?";
+        ? "जी बिल्कुल! डॉक्टर अपॉइंटमेंट के लिए हमारे पास डेंटल केयर, जनरल मेडिसिन, डर्मेटोलॉजी, कार्डियोलॉजी, ऑर्थोपेडिक्स, ईएनटी और पीडियाट्रिक्स उपलब्ध हैं। आप किस स्पेशलिटी या डॉक्टर के लिए अपॉइंटमेंट लेना चाहेंगे?"
+        : "Sure! For a doctor appointment, we have Dental Care, General Medicine, Dermatology, Cardiology, Orthopedics, ENT, and Pediatrics. Which specialty or doctor would you like to consult?";
       return {
         finalReply,
         finalSpokenText: "",
@@ -451,7 +454,11 @@ export function runClinicFastPath(params: {
       mobile: tpl.askMobile,
       dob: tpl.askDob,
       department: tpl.askDepartment,
-      slot: tpl.askSlot,
+      slot: dept
+        ? (lang === "hi-IN"
+            ? `${name ? name + " जी, " : ""}${dept}${doctorForDept ? " (" + doctorForDept + ")" : ""} के लिए आप कब अपॉइंटमेंट लेना चाहेंगे? हम सोमवार से शनिवार, सुबह 9 बजे से शाम 7 बजे तक खुले हैं।`
+            : `${name ? name + ", " : ""}what day and time would work best for your ${dept}${doctorForDept ? " with " + doctorForDept : ""} appointment? We're open Monday to Saturday, 9 AM to 7 PM.`)
+        : tpl.askSlot,
     };
     const askLine = fillTemplate(askTemplates[currentStep.id] || tpl.couldNotUnderstand, vars);
     // The "name" step's ask IS tpl.couldNotUnderstand (there's no dedicated

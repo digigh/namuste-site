@@ -15,18 +15,31 @@ import * as chrono from "chrono-node";
 //
 // Industry-agnostic — any vertical with scheduling can reuse this as-is.
 const HINGLISH_DATE_WORDS: [RegExp, string][] = [
-  [/\bparso\b/gi, "in 2 days"],
+  [/\bparso\b|परसों/gi, "in 2 days"],
   [/\bday after tomorrow\b/gi, "in 2 days"],
-  [/\bkal\b/gi, "tomorrow"], // "kal" also means "yesterday" in Hindi, but a booking is always forward-looking
-  [/\baaj\b/gi, "today"],
-  [/\bsubah\b/gi, "morning"],
-  [/\bshaam\b/gi, "evening"],
-  [/\bdopahar\b/gi, "afternoon"],
-  [/\bbaje\b/gi, "o'clock"],
+  [/\bkal\b|कल/gi, "tomorrow"], // "kal" also means "yesterday" in Hindi, but a booking is always forward-looking
+  [/\baaj\b|आज/gi, "today"],
+  [/\bsubah\b|सुबह/gi, "morning"],
+  [/\bshaam\b|शाम/gi, "evening"],
+  [/\bdopahar\b|दोपहर/gi, "afternoon"],
+  [/\bbaje\b|बजे/gi, "o'clock"],
+  [/सोमवार/gi, "Monday"],
+  [/मंगलवार/gi, "Tuesday"],
+  [/बुधवार/gi, "Wednesday"],
+  [/गुरुवार|बृहस्पतिवार/gi, "Thursday"],
+  [/शुक्रवार/gi, "Friday"],
+  [/शनिवार/gi, "Saturday"],
+  [/रविवार/gi, "Sunday"],
 ];
+
+const DEVANAGARI_DIGITS: Record<string, string> = {
+  "०": "0", "१": "1", "२": "2", "३": "3", "४": "4",
+  "५": "5", "६": "6", "७": "7", "८": "8", "९": "9",
+};
 
 function normalizeForChrono(text: string): string {
   let out = text || "";
+  out = out.replace(/[०-९]/g, (ch) => DEVANAGARI_DIGITS[ch] || ch);
   for (const [pattern, replacement] of HINGLISH_DATE_WORDS) {
     out = out.replace(pattern, replacement);
   }

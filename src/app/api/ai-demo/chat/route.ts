@@ -175,6 +175,10 @@ export async function POST(req: Request) {
         const currentStepInstruction = isReadyToConfirm
           ? `All required information has been collected. In ONE sentence, summarize everything known (name, mobile${industry.requiresDob ? ", age/DOB" : ""}, service/interest, and date & time if given) and explicitly ask the customer to confirm — e.g. "Is that correct?" / Hindi: "Kya yeh sahi hai?". Do NOT set isComplete or invent an appointment_id yet; wait for their explicit yes.
 - If the customer's LAST message is an explicit confirmation ("yes", "correct", "haan", "theek hai", "confirm", "book it"): thank them, say details have been sent to their WhatsApp, set isComplete: true and appointment_status: "CONFIRMED". Leave appointment_id BLANK — the system assigns the real reference ID, never invent one.`
+          : currentStep?.id === "department"
+          ? `The caller is choosing their department/doctor.
+- If the caller describes any symptoms, pain, condition, or mentions a specialty/doctor (e.g. tooth pain / daant dard -> Dental Care / Dr. Aman Joshi; skin/hair -> Dermatology / Dr. Pooja Gupta; chest/heart -> Cardiology / Dr. R. K. Sharma; bone/knee/joint -> Orthopedics / Dr. Rajiv Verma; ear/nose/throat -> ENT / Dr. Vikram Malhotra; child -> Pediatrics / Dr. Meera Rao; fever/cough/general -> General Medicine / Dr. Ananya Sen): IMMEDIATELY set extracted.department and extracted.doctor. In ONE sentence, acknowledge this warmly and ask what day and time they prefer.
+- If they have not given any symptom or department yet: Ask "${currentStep?.askEnglish}"`
           : `Ask exactly this one question next (translate/adapt naturally to the detected language below, keep it warm and short): "${currentStep?.askEnglish}"
 - Do not ask about anything else this turn. Do not skip ahead to later steps.`;
 
@@ -443,19 +447,20 @@ CRITICAL: every field above is EMPTY ("") because these are field NAMES, not exa
         const mentionedSlot = extracted.confirmedSlot || extracted.slotRequested;
         if (mentionedSlot) {
           finalReply = isHindi
-            ? `Theek hai, ${mentionedSlot} ka samay note kar liya hai. ${name} ji, kripya batayein aapko kis department ya doctor ke liye appointment chahiye? Hamare paas Dermatology, Cardiology, Orthopedics, ENT, Pediatrics aur General Medicine hain.`
-            : `Got it, ${mentionedSlot}. ${name}, which department or doctor would you like to consult? We have Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, and General Medicine.`;
+            ? `Theek hai, ${mentionedSlot} ka samay note kar liya hai. ${name} ji, kripya batayein aapko kis department ya doctor ke liye appointment chahiye? Hamare paas Dental Care, Dermatology, Cardiology, Orthopedics, ENT, Pediatrics aur General Medicine hain.`
+            : `Got it, ${mentionedSlot}. ${name}, which department or doctor would you like to consult? We have Dental Care, Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, and General Medicine.`;
         } else {
           finalReply = isHindi
-            ? `Shukriya ${name} ji! Aap kis department ya doctor ke liye appointment lena chahte hain? Hamare paas Dermatology, Cardiology, Orthopedics, ENT, Pediatrics aur General Medicine uplabdh hain.`
-            : `Thank you, ${name}! Which department or doctor would you like to book an appointment with? We have Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, and General Medicine.`;
+            ? `Shukriya ${name} ji! Aap kis department ya doctor ke liye appointment lena chahte hain? Hamare paas Dental Care, Dermatology, Cardiology, Orthopedics, ENT, Pediatrics aur General Medicine uplabdh hain.`
+            : `Thank you, ${name}! Which department or doctor would you like to book an appointment with? We have Dental Care, Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, and General Medicine.`;
         }
         finalStep = "service_menu";
       } else if (!slot) {
         // Department is chosen, next step is slot/timing
+        const doctorName = extracted.doctor || currentExtracted.doctor || (industryId === "doctors-clinics" && dept ? DOCTOR_ROSTER[dept]?.doctor : "");
         finalReply = isHindi
-          ? `${name} ji, aap ${dept} ke liye kab aana chahenge? Hum Monday se Saturday, subah 9 se shaam 7 baje tak khule hain.`
-          : `${name}, what day and time would work best for your ${dept} appointment? We are open Monday to Saturday, 9 AM to 7 PM.`;
+          ? `${name} ji, aap ${dept}${doctorName ? " (" + doctorName + ")" : ""} ke liye kab aana chahenge? Hum Monday se Saturday, subah 9 se shaam 7 baje tak khule hain.`
+          : `${name}, what day and time would work best for your ${dept}${doctorName ? " with " + doctorName : ""} appointment? We are open Monday to Saturday, 9 AM to 7 PM.`;
         finalStep = "slot";
       } else {
         // Both department and slot are present — check for affirmative confirmation
