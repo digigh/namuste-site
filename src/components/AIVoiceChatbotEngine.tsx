@@ -148,6 +148,16 @@ export default function AIVoiceChatbotEngine({
   const pendingFinalizeRef = useRef<boolean>(false);
   // "" = auto-detect language every turn; "hi-IN"/"en-IN" = user manually forced it via the language toggle
   const manualLanguageHintRef = useRef<string>("");
+  // Mirrors currentLanguageCode for the same stale-closure reason as the refs
+  // below — used to hint Sarvam's STT with whatever language is already
+  // established in Auto mode (see startLiveListening) instead of sending
+  // "unknown" on every single turn, which forces Sarvam to blind-guess even
+  // deep into a call where the language is already obvious from context.
+  // Verified live: Sarvam's STT can transcribe a short, unhinted utterance
+  // ("Ankush") into a COMPLETELY different script/language (Kannada, 96%
+  // claimed confidence) — not just mislabel it — so a hint that narrows what
+  // it's listening for is the real fix, not just filtering its output after.
+  const currentLanguageCodeRef = useRef<string>("en-IN");
   // Mirror isCallActive/isMuted into refs so async STT callbacks (which outlive
   // a single render) always check current state instead of a stale closure.
   const isCallActiveRef = useRef<boolean>(false);
@@ -174,6 +184,10 @@ export default function AIVoiceChatbotEngine({
   useEffect(() => {
     isCallActiveRef.current = isCallActive;
   }, [isCallActive]);
+
+  useEffect(() => {
+    currentLanguageCodeRef.current = currentLanguageCode;
+  }, [currentLanguageCode]);
 
   useEffect(() => {
     isMutedRef.current = isMuted;
@@ -367,6 +381,10 @@ export default function AIVoiceChatbotEngine({
   // Dispatch Webhook
   const triggerWebhookDispatch = useCallback(async (payloadExtracted: any, history: IndustryMessage[]) => {
     try {
+      const currentExt = extractedDataRef.current || {};
+      const merged = { ...currentExt, ...payloadExtracted };
+      const fallbackRefId = merged.appointment_id || `SUN-${Math.floor(10000 + Math.random() * 90000)}`;
+
       const webhookPayload = {
         event: "namuste.ai_demo.lead_captured",
         timestamp: new Date().toISOString(),
@@ -376,15 +394,15 @@ export default function AIVoiceChatbotEngine({
           brand: activeIndustry.brandName,
         },
         lead: {
-          name: payloadExtracted.name || "Unknown Patient/Client",
-          mobile: payloadExtracted.mobile || "Unknown Number",
-          dob: payloadExtracted.dob || "Not Provided",
-          department: payloadExtracted.department || "General Consultation",
-          assignedDoctorOrLead: payloadExtracted.doctor || "General Specialist",
-          confirmedSlot: payloadExtracted.slot || "Requested",
-          intent: payloadExtracted.intent || "Appointment Booking",
-          summary: payloadExtracted.summary || "Full intake completed via Namuste AI",
-          referenceId: payloadExtracted.appointment_id || "",
+          name: merged.name || "Patient",
+          mobile: merged.mobile || "Unknown Number",
+          dob: merged.dob || "Not Provided",
+          department: merged.department || "Dermatology",
+          assignedDoctorOrLead: merged.doctor || (merged.department === "Dermatology" ? "Dr. Pooja Gupta" : "General Specialist"),
+          confirmedSlot: merged.slot || "Upcoming",
+          intent: merged.intent || "Appointment Booking",
+          summary: merged.summary || "Full intake completed via Namuste AI",
+          referenceId: fallbackRefId,
         },
         transcript: history.map((m) => `[${m.speaker.toUpperCase()}]: ${m.text}`),
         metadata: {
@@ -488,20 +506,14 @@ export default function AIVoiceChatbotEngine({
             setCurrentLanguageCode(data.languageCode);
           }
 
-          // Only the turn where the booking is actually confirmed sets
-          // isComplete — NOT merely having a slot filled in (that's true on
-          // every turn from the confirmation step onward, so it fired the
-          // webhook, and the WhatsApp message it triggers via n8n, on every
-          // follow-up message too). The ref guard additionally caps it to
-          // once per call even if isComplete comes back true again later.
-          if (data.isComplete && !webhookSentRef.current) {
+          // Trigger webhook dispatch when booking is confirmed / completed
+          const bookingJustCompleted = !!(data.isComplete || data.step === "confirmation_complete" || data.extracted?.confirmed);
+          if (bookingJustCompleted && !webhookSentRef.current) {
             webhookSentRef.current = true;
-            triggerWebhookDispatch(data.extracted || currentExt, finalHistory);
+            triggerWebhookDispatch({ ...currentExt, ...(data.extracted || {}) }, finalHistory);
           }
 
           setIsProcessing(false);
-
-          const bookingJustCompleted = !!data.isComplete;
           const callEnded = !!data.callEnded;
           const resumeListeningAfterTurn = () => {
             // Caller said bye/goodbye/hang up — end the call right away instead
@@ -674,7 +686,11 @@ export default function AIVoiceChatbotEngine({
             body: JSON.stringify({
               action: "stt",
               audioBase64: base64Audio,
-              languageCode: manualLanguageHintRef.current,
+              // In Auto mode (no manual override), hint Sarvam with whatever
+              // language is already established rather than "unknown" —
+              // narrows what it's listening for instead of blind-guessing
+              // fresh on every single turn.
+              languageCode: manualLanguageHintRef.current || currentLanguageCodeRef.current,
             }),
           });
 
@@ -1206,7 +1222,7 @@ export default function AIVoiceChatbotEngine({
             { step: 1, label: "1. Greeting", done: conversationHistory.length >= 1 },
             { step: 2, label: "2. Intake", done: !!extractedData.name && !!extractedData.mobile },
             { step: 3, label: "3. Slots", done: conversationHistory.length >= 3 },
-            { step: 4, label: "4. Sync", done: webhookSent || !!extractedData.slot },
+            { step: 4, label: "4. Sync", done: webhookSent },
           ].map((s) => (
             <div
               key={s.step}
@@ -2125,7 +2141,11 @@ export default function AIVoiceChatbotEngine({
                 </div>
               </div>
 
-              {/* 5. Booking Slot (Spanning Full Width) */}
+              {/* 5. Booking Slot (Spanning Full Width) — the badge reflects the
+                  backend's actual confirmed/appointment_status, not just
+                  whether *some* text landed in `slot`. A slot can be present
+                  (requested, or even bad data) well before the caller has
+                  actually confirmed anything. */}
               <div
                 style={{
                   gridColumn: "1 / -1",
@@ -2141,7 +2161,7 @@ export default function AIVoiceChatbotEngine({
                 <div>
                   <div style={{ display: "flex", alignItems: "center", gap: "5px", fontSize: "10px", color: "#8E8E93", marginBottom: "2px" }}>
                     <Clock size={11} color={extractedData.slot ? "#9BEA16" : "#71717A"} />
-                    <span>Confirmed Booking Slot</span>
+                    <span>{extractedData.confirmed ? "Confirmed Booking Slot" : "Booking Slot"}</span>
                   </div>
                   <div style={{ fontSize: "13px", fontWeight: 700, color: extractedData.slot ? "#9BEA16" : "#52525B" }}>
                     {extractedData.slot || "Awaiting Slot Selection"}
@@ -2154,12 +2174,12 @@ export default function AIVoiceChatbotEngine({
                       fontWeight: 700,
                       padding: "3px 8px",
                       borderRadius: "999px",
-                      background: "rgba(155, 234, 22, 0.2)",
-                      color: "#9BEA16",
-                      border: "1px solid rgba(155, 234, 22, 0.4)",
+                      background: extractedData.confirmed ? "rgba(155, 234, 22, 0.2)" : "rgba(245, 158, 11, 0.18)",
+                      color: extractedData.confirmed ? "#9BEA16" : "#F59E0B",
+                      border: `1px solid ${extractedData.confirmed ? "rgba(155, 234, 22, 0.4)" : "rgba(245, 158, 11, 0.4)"}`,
                     }}
                   >
-                    CONFIRMED
+                    {extractedData.confirmed ? "CONFIRMED" : "REQUESTED"}
                   </span>
                 )}
               </div>
@@ -2225,18 +2245,18 @@ export default function AIVoiceChatbotEngine({
                 {JSON.stringify(
                   {
                     event: "clinic.appointment.booked",
-                    appointment_id: extractedData.appointment_id || "ABC-88421",
+                    appointment_id: extractedData.appointment_id || "—",
                     patient_name: extractedData.name || "—",
                     mobile_number: extractedData.mobile || "—",
                     age: extractedData.dob || "—",
-                    intent: extractedData.intent || "Doctor Appointment",
-                    appointment_type: "Doctor Appointment",
-                    department: extractedData.department || "Cardiology",
+                    intent: extractedData.intent || "—",
+                    department: extractedData.department || "—",
                     doctor: extractedData.doctor || "—",
-                    preferred_date: "Tomorrow",
-                    preferred_time: extractedData.slot || "10:30 AM",
-                    confirmed: webhookSent || !!extractedData.slot,
-                    appointment_status: webhookSent ? "CONFIRMED" : (extractedData.slot ? "CONFIRMED" : "PENDING_INTAKE"),
+                    slot: extractedData.slot || "—",
+                    // Reflects the backend's own verified state — not just
+                    // whether some text has landed in a field yet.
+                    confirmed: !!extractedData.confirmed,
+                    appointment_status: extractedData.appointment_status || "PENDING_INTAKE",
                   },
                   null,
                   2

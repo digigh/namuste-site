@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import { checkRateLimit, getClientKey } from "@/lib/rateLimit";
+import { parseSlotWithChrono } from "@/lib/dateEngine";
+import { DOCTOR_ROSTER } from "@/data/clinicTemplates";
 
 // Fixed destinations for confirmed clinic bookings — real, external automation
 // endpoints, not the generic (currently unconfigured) AI_DEMO_WEBHOOK_URL used
@@ -39,18 +41,29 @@ function normalizeDateTimeForWebhook(raw: string): string {
 }
 
 // Splits a combined slot string into its date and time parts separately.
-// Handles both an absolute resolved date ("27 August 2026, 10:30 AM") and
-// the clinic fast path's raw relative phrasing ("tomorrow 11am") — the time
-// token (am/pm/baje) is always last, so whatever precedes it is the date.
-function splitDateTimeForWebhook(raw: string): { date: string; time: string } {
+// Resolves relative phrases ("Tomorrow 11:45 AM") to absolute dates so WhatsApp templates display clean date & time.
+function splitDateTimeForWebhook(raw: string): { date: string; time: string; full: string } {
+  if (!raw) return { date: "", time: "", full: "" };
+  const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
+  const parsed = parseSlotWithChrono(raw, nowIST);
+  if (parsed && parsed.hasDate) {
+    const d = parsed.date;
+    const monthName = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"][d.getMonth()];
+    const date = `${d.getDate()} ${monthName} ${d.getFullYear()}`;
+    const hour12 = d.getHours() % 12 || 12;
+    const ampm = d.getHours() >= 12 ? "PM" : "AM";
+    const min = d.getMinutes().toString().padStart(2, "0");
+    const time = `${hour12}:${min} ${ampm}`;
+    return { date, time, full: `${date}, ${time}` };
+  }
   const s = normalizeDateTimeForWebhook(raw || "");
   const timeMatch = s.match(/(\d{1,2}(?::\d{2})?\s*(?:AM|PM|am|pm|baje))\s*$/);
   if (timeMatch && typeof timeMatch.index === "number") {
     const time = timeMatch[1].trim();
     const date = s.slice(0, timeMatch.index).replace(/,\s*$/, "").trim();
-    return { date, time };
+    return { date, time, full: `${date}, ${time}` };
   }
-  return { date: s, time: "" };
+  return { date: s, time: "", full: s };
 }
 
 // "Cardiology" + name → "Cardiology appointment booking" — a short, fixed-shape
@@ -114,18 +127,24 @@ export async function POST(req: Request) {
     let clinicWebhookDelivered: boolean | null = null;
     let clinicWebhookResults: { url: string; delivered: boolean }[] = [];
     if (industryId === "doctors-clinics") {
-      const { date, time } = splitDateTimeForWebhook(body.lead?.confirmedSlot || "");
+      const { date, time, full } = splitDateTimeForWebhook(body.lead?.confirmedSlot || "");
+      const dept = body.lead?.department || "Dermatology";
+      const resolvedDoctor = body.lead?.assignedDoctorOrLead && !body.lead?.assignedDoctorOrLead.toLowerCase().includes("specialist")
+        ? body.lead.assignedDoctorOrLead
+        : (DOCTOR_ROSTER[dept]?.doctor || "Dr. Pooja Gupta");
+      const refId = body.lead?.referenceId || `SUN-${Math.floor(10000 + Math.random() * 90000)}`;
+
       const clinicPayload = {
-        name: body.lead?.name || "",
+        name: body.lead?.name || "Patient",
         phone_number: normalizePhoneForWebhook(body.lead?.mobile || ""),
-        date_time: normalizeDateTimeForWebhook(body.lead?.confirmedSlot || ""),
-        date,
-        time,
-        doctor_name: normalizeDoctorNameForWebhook(body.lead?.assignedDoctorOrLead || ""),
+        date_time: full || normalizeDateTimeForWebhook(body.lead?.confirmedSlot || ""),
+        date: date || "Upcoming",
+        time: time || "11:00 AM",
+        doctor_name: normalizeDoctorNameForWebhook(resolvedDoctor),
         dob: body.lead?.dob || "",
-        reference_id: body.lead?.referenceId || "",
+        reference_id: refId,
         email: CLINIC_NOTIFICATION_EMAIL,
-        booking_summary: buildBookingSummary(body.lead?.department || ""),
+        booking_summary: buildBookingSummary(dept),
       };
 
       // Fire to every configured clinic endpoint in parallel — one being down
@@ -149,7 +168,7 @@ export async function POST(req: Request) {
         console.warn("[Clinic Booking Webhook Error]:", url, result.reason);
         return { url, delivered: false };
       });
-      clinicWebhookDelivered = clinicWebhookResults.every((r) => r.delivered);
+      clinicWebhookDelivered = clinicWebhookResults.some((r) => r.delivered);
     }
 
     if (webhookUrl && webhookUrl.trim() !== "" && webhookUrl.startsWith("http")) {

@@ -29,6 +29,7 @@ export interface ClinicTemplateBank {
   correction: string;
   couldNotUnderstand: string;
   farewell: string;
+  alreadyConfirmed: string; // {id} — booking already confirmed earlier this call; anything after that shouldn't re-enter confirm logic
 }
 
 export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
@@ -46,6 +47,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "No problem — what would you like to change?",
     couldNotUnderstand: "Sorry, I didn't quite catch that. Could you say it again?",
     farewell: `Thank you for calling ${CLINIC_BRAND_NAME}. Take care, and have a great day!`,
+    alreadyConfirmed: `Your appointment is already confirmed — reference ID {id}. Is there anything else I can help you with?`,
   },
   "hi-IN": {
     greeting: `नमस्ते! ${CLINIC_BRAND_NAME} में आपका स्वागत है। मैं आपकी वर्चुअल रिसेप्शनिस्ट हूं। मैं अपॉइंटमेंट और क्लिनिक की जानकारी में आपकी मदद कर सकती हूं। कृपया अपना नाम बताइए?`,
@@ -61,6 +63,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "कोई बात नहीं — आप क्या बदलना चाहेंगे?",
     couldNotUnderstand: "माफ़ कीजिए, मुझे समझ नहीं आया। क्या आप फिर से बता सकते हैं?",
     farewell: `${CLINIC_BRAND_NAME} को कॉल करने के लिए धन्यवाद। अपना ख्याल रखें, आपका दिन शुभ हो!`,
+    alreadyConfirmed: `आपकी अपॉइंटमेंट पहले से ही कन्फर्म है — रेफरेंस आईडी {id}। क्या मैं आपकी किसी और चीज़ में मदद कर सकती हूं?`,
   },
   "ta-IN": {
     greeting: `வணக்கம்! ${CLINIC_BRAND_NAME}-க்கு உங்களை வரவேற்கிறோம். நான் உங்கள் மெய்நிகர் வரவேற்பாளர். அப்பாயிண்ட்மென்ட் மற்றும் கிளினிக் தகவல்களுக்கு உதவ முடியும். உங்கள் பெயர் என்ன?`,
@@ -76,6 +79,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "பரவாயில்லை — நீங்கள் என்ன மாற்ற விரும்புகிறீர்கள்?",
     couldNotUnderstand: "மன்னிக்கவும், எனக்கு புரியவில்லை. மீண்டும் சொல்ல முடியுமா?",
     farewell: `${CLINIC_BRAND_NAME}-ஐ அழைத்ததற்கு நன்றி. உங்களை கவனித்துக்கொள்ளுங்கள், நல்ல நாளாக இருக்கட்டும்!`,
+    alreadyConfirmed: `உங்கள் அப்பாயிண்ட்மென்ட் ஏற்கனவே உறுதி செய்யப்பட்டது — ரெஃபரன்ஸ் ஐடி {id}. வேறு எதிலாவது உதவ முடியுமா?`,
   },
   "te-IN": {
     greeting: `నమస్కారం! ${CLINIC_BRAND_NAME} కి స్వాగతం. నేను మీ వర్చువల్ రిసెప్షనిస్ట్. అపాయింట్‌మెంట్లు మరియు క్లినిక్ సమాచారం కోసం సహాయం చేయగలను. మీ పేరు చెప్పగలరా?`,
@@ -91,6 +95,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "పర్వాలేదు — మీరు ఏమి మార్చాలనుకుంటున్నారు?",
     couldNotUnderstand: "క్షమించండి, నాకు అర్థం కాలేదు. మళ్ళీ చెప్పగలరా?",
     farewell: `${CLINIC_BRAND_NAME} కి కాల్ చేసినందుకు ధన్యవాదాలు. జాగ్రత్తగా ఉండండి, మంచి రోజు కావాలి!`,
+    alreadyConfirmed: `మీ అపాయింట్‌మెంట్ ఇప్పటికే నిర్ధారించబడింది — రిఫరెన్స్ ఐడి {id}. మరేదైనా సహాయం కావాలా?`,
   },
   "bn-IN": {
     greeting: `নমস্কার! ${CLINIC_BRAND_NAME}-এ আপনাকে স্বাগতম। আমি আপনার ভার্চুয়াল রিসেপশনিস্ট। অ্যাপয়েন্টমেন্ট ও ক্লিনিকের তথ্যের জন্য সাহায্য করতে পারি। আপনার নাম বলবেন?`,
@@ -106,6 +111,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "কোনো সমস্যা নেই — আপনি কী পরিবর্তন করতে চান?",
     couldNotUnderstand: "দুঃখিত, আমি বুঝতে পারিনি। আবার বলবেন?",
     farewell: `${CLINIC_BRAND_NAME}-এ কল করার জন্য ধন্যবাদ। নিজের যত্ন নিন, আপনার দিনটি শুভ হোক!`,
+    alreadyConfirmed: `আপনার অ্যাপয়েন্টমেন্ট ইতিমধ্যেই নিশ্চিত হয়ে গেছে — রেফারেন্স আইডি {id}। আর কিছুতে সাহায্য করতে পারি?`,
   },
   "ml-IN": {
     greeting: `നമസ്കാരം! ${CLINIC_BRAND_NAME}-ലേക്ക് സ്വാഗതം. ഞാൻ നിങ്ങളുടെ വെർച്വൽ റിസപ്ഷനിസ്റ്റ് ആണ്. അപ്പോയിന്റ്മെന്റുകൾക്കും ക്ലിനിക് വിവരങ്ങൾക്കും സഹായിക്കാം. നിങ്ങളുടെ പേര് പറയാമോ?`,
@@ -121,6 +127,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "കുഴപ്പമില്ല — എന്താണ് മാറ്റണ്ടത്?",
     couldNotUnderstand: "ക്ഷമിക്കണം, എനിക്ക് മനസ്സിലായില്ല. വീണ്ടും പറയാമോ?",
     farewell: `${CLINIC_BRAND_NAME}-ലേക്ക് വിളിച്ചതിന് നന്ദി. ശ്രദ്ധിക്കുക, നല്ല ദിവസം ആശംസിക്കുന്നു!`,
+    alreadyConfirmed: `നിങ്ങളുടെ അപ്പോയിന്റ്മെന്റ് ഇതിനകം സ്ഥിരീകരിച്ചു — റഫറൻസ് ഐഡി {id}. മറ്റെന്തെങ്കിലും സഹായം വേണോ?`,
   },
   "kn-IN": {
     greeting: `ನಮಸ್ಕಾರ! ${CLINIC_BRAND_NAME} ಗೆ ಸ್ವಾಗತ. ನಾನು ನಿಮ್ಮ ವರ್ಚುವಲ್ ರಿಸೆಪ್ಶನಿಸ್ಟ್. ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಮತ್ತು ಕ್ಲಿನಿಕ್ ಮಾಹಿತಿಗೆ ಸಹಾಯ ಮಾಡಬಲ್ಲೆ. ನಿಮ್ಮ ಹೆಸರು ಹೇಳಿ?`,
@@ -136,6 +143,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "ಪರವಾಗಿಲ್ಲ — ನೀವು ಏನು ಬದಲಾಯಿಸಲು ಬಯಸುತ್ತೀರಿ?",
     couldNotUnderstand: "ಕ್ಷಮಿಸಿ, ನನಗೆ ಅರ್ಥವಾಗಲಿಲ್ಲ. ಮತ್ತೆ ಹೇಳುತ್ತೀರಾ?",
     farewell: `${CLINIC_BRAND_NAME} ಗೆ ಕರೆ ಮಾಡಿದ್ದಕ್ಕೆ ಧನ್ಯವಾದಗಳು. ನಿಮ್ಮನ್ನು ನೀವು ಚೆನ್ನಾಗಿ ನೋಡಿಕೊಳ್ಳಿ, ಶುಭ ದಿನ!`,
+    alreadyConfirmed: `ನಿಮ್ಮ ಅಪಾಯಿಂಟ್‌ಮೆಂಟ್ ಈಗಾಗಲೇ ಖಚಿತಗೊಂಡಿದೆ — ರೆಫರೆನ್ಸ್ ಐಡಿ {id}. ಬೇರೆ ಏನಾದರೂ ಸಹಾಯ ಬೇಕೇ?`,
   },
   "pa-IN": {
     greeting: `ਸਤ ਸ੍ਰੀ ਅਕਾਲ! ${CLINIC_BRAND_NAME} ਵਿੱਚ ਤੁਹਾਡਾ ਸੁਆਗਤ ਹੈ। ਮੈਂ ਤੁਹਾਡੀ ਵਰਚੁਅਲ ਰਿਸੈਪਸ਼ਨਿਸਟ ਹਾਂ। ਅਪਾਇੰਟਮੈਂਟ ਅਤੇ ਕਲੀਨਿਕ ਜਾਣਕਾਰੀ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਦੀ ਹਾਂ। ਆਪਣਾ ਨਾਮ ਦੱਸੋ?`,
@@ -151,6 +159,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "ਕੋਈ ਗੱਲ ਨਹੀਂ — ਤੁਸੀਂ ਕੀ ਬਦਲਣਾ ਚਾਹੋਗੇ?",
     couldNotUnderstand: "ਮਾਫ਼ ਕਰਨਾ, ਮੈਨੂੰ ਸਮਝ ਨਹੀਂ ਆਇਆ। ਕੀ ਤੁਸੀਂ ਦੁਬਾਰਾ ਦੱਸ ਸਕਦੇ ਹੋ?",
     farewell: `${CLINIC_BRAND_NAME} ਨੂੰ ਕਾਲ ਕਰਨ ਲਈ ਧੰਨਵਾਦ। ਆਪਣਾ ਖਿਆਲ ਰੱਖੋ, ਤੁਹਾਡਾ ਦਿਨ ਸ਼ੁਭ ਹੋਵੇ!`,
+    alreadyConfirmed: `ਤੁਹਾਡੀ ਅਪਾਇੰਟਮੈਂਟ ਪਹਿਲਾਂ ਹੀ ਪੱਕੀ ਹੋ ਚੁੱਕੀ ਹੈ — ਰੈਫਰੈਂਸ ਆਈਡੀ {id}। ਕੀ ਮੈਂ ਕਿਸੇ ਹੋਰ ਚੀਜ਼ ਵਿੱਚ ਮਦਦ ਕਰ ਸਕਦੀ ਹਾਂ?`,
   },
   "gu-IN": {
     greeting: `નમસ્તે! ${CLINIC_BRAND_NAME} માં તમારું સ્વાગત છે. હું તમારી વર્ચ્યુઅલ રિસેપ્શનિસ્ટ છું. અપોઇન્ટમેન્ટ અને ક્લિનિક માહિતી માટે મદદ કરી શકું છું. તમારું નામ કહેશો?`,
@@ -166,6 +175,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "કોઈ વાંધો નહીં — તમે શું બદલવા માંગો છો?",
     couldNotUnderstand: "માફ કરશો, મને સમજાયું નહીં. શું તમે ફરીથી કહેશો?",
     farewell: `${CLINIC_BRAND_NAME} ને કૉલ કરવા બદલ આભાર. તમારું ધ્યાન રાખો, તમારો દિવસ શુભ રહે!`,
+    alreadyConfirmed: `તમારી અપોઇન્ટમેન્ટ પહેલેથી જ કન્ફર્મ છે — રેફરન્સ આઈડી {id}. શું હું બીજી કોઈ બાબતમાં મદદ કરી શકું?`,
   },
   "or-IN": {
     greeting: `ନମସ୍କାର! ${CLINIC_BRAND_NAME} କୁ ସ୍ୱାଗତ। ମୁଁ ଆପଣଙ୍କର ଭର୍ଚୁଆଲ୍ ରିସେପ୍ସନିଷ୍ଟ। ଆପଏଣ୍ଟମେଣ୍ଟ ଏବଂ କ୍ଲିନିକ୍ ସୂଚନା ପାଇଁ ସାହାଯ୍ୟ କରିପାରିବି। ଆପଣଙ୍କ ନାମ କ'ଣ?`,
@@ -181,6 +191,7 @@ export const CLINIC_TEMPLATES: Record<ClinicLang, ClinicTemplateBank> = {
     correction: "କୌଣସି ଅସୁବିଧା ନାହିଁ — ଆପଣ କ'ଣ ବଦଳାଇବାକୁ ଚାହାଁନ୍ତି?",
     couldNotUnderstand: "କ୍ଷମା କରନ୍ତୁ, ମୁଁ ବୁଝିପାରିଲି ନାହିଁ। ଆପଣ ପୁଣି କହିବେ କି?",
     farewell: `${CLINIC_BRAND_NAME} କୁ କଲ୍ କରିଥିବାରୁ ଧନ୍ୟବାଦ। ନିଜର ଯତ୍ନ ନିଅନ୍ତୁ, ଆପଣଙ୍କର ଦିନ ଶୁଭ ହେଉ!`,
+    alreadyConfirmed: `ଆପଣଙ୍କ ଆପଏଣ୍ଟମେଣ୍ଟ ପୂର୍ବରୁ ନିଶ୍ଚିତ ହୋଇଯାଇଛି — ରେଫରେନ୍ସ ଆଇଡି {id}। ଆଉ କୌଣସି ବିଷୟରେ ସାହାଯ୍ୟ କରିପାରିବି କି?`,
   },
 };
 
@@ -193,6 +204,7 @@ export interface ClinicKnowledgeBank {
   emergencyContact: string;
   specialtyList: string;
   doctorInfo: string; // {doctor} {specialty} {days} {hours}
+  operatingHours: string; // {days} {hours}
 }
 
 export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
@@ -204,6 +216,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "For emergencies, call 112 or visit our on-site desk — available 24/7.",
     specialtyList: "We have General Medicine, Cardiology, Orthopedics, Dermatology, ENT, Pediatrics, Gynecology, Neurology, and Dental Care.",
     doctorInfo: "{doctor} handles {specialty}, available {days}, {hours}.",
+    operatingHours: "We're open {days}, {hours}.",
   },
   "hi-IN": {
     consultationFee: "स्टैंडर्ड OPD consultation के लिए ₹600, फॉलो-अप के लिए ₹300।",
@@ -213,6 +226,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "इमरजेंसी के लिए 112 पर कॉल करें या हमारे ऑन-साइट डेस्क पर जाएं — 24/7 उपलब्ध।",
     specialtyList: "हमारे पास जनरल मेडिसिन, कार्डियोलॉजी, ऑर्थोपेडिक्स, डर्मेटोलॉजी, ईएनटी, पीडियाट्रिक्स, गायनेकोलॉजी, न्यूरोलॉजी और डेंटल केयर हैं।",
     doctorInfo: "{doctor} {specialty} देखते हैं, उपलब्ध {days}, {hours}।",
+    operatingHours: "हम {days}, {hours} खुले हैं।",
   },
   "ta-IN": {
     consultationFee: "ஸ்டாண்டர்ட் OPD கன்சல்டேஷனுக்கு ₹600, ஃபாலோ-அப்புக்கு ₹300.",
@@ -222,6 +236,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "அவசரநிலைக்கு 112-ஐ அழைக்கவும் அல்லது எங்கள் ஆன்-சைட் டெஸ்க்கிற்கு வரவும் — 24/7 கிடைக்கும்.",
     specialtyList: "எங்களிடம் ஜெனரல் மெடிசின், கார்டியாலஜி, ஆர்த்தோபெடிக்ஸ், டெர்மாட்டாலஜி, ENT, பீடியாட்ரிக்ஸ், கைனகாலஜி, நியூராலஜி, மற்றும் டெண்டல் கேர் உள்ளது.",
     doctorInfo: "{doctor} {specialty} பார்க்கிறார், கிடைக்கும் {days}, {hours}.",
+    operatingHours: "நாங்கள் {days}, {hours} திறந்திருக்கிறோம்.",
   },
   "te-IN": {
     consultationFee: "స్టాండర్డ్ OPD కన్సల్టేషన్‌కి ₹600, ఫాలో-అప్‌కి ₹300.",
@@ -231,6 +246,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "ఎమర్జెన్సీల కోసం 112కి కాల్ చేయండి లేదా మా ఆన్-సైట్ డెస్క్‌ని సందర్శించండి — 24/7 అందుబాటులో ఉంటుంది.",
     specialtyList: "మా వద్ద జనరల్ మెడిసిన్, కార్డియాలజీ, ఆర్థోపెడిక్స్, డెర్మటాలజీ, ENT, పీడియాట్రిక్స్, గైనకాలజీ, న్యూరాలజీ, డెంటల్ కేర్ ఉన్నాయి.",
     doctorInfo: "{doctor} {specialty} చూస్తారు, అందుబాటులో {days}, {hours}.",
+    operatingHours: "మేము {days}, {hours} తెరిచి ఉంటాము.",
   },
   "bn-IN": {
     consultationFee: "স্ট্যান্ডার্ড OPD কনসালটেশনের জন্য ₹৬০০, ফলো-আপের জন্য ₹৩০০।",
@@ -240,6 +256,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "জরুরী অবস্থায় ১১২ নম্বরে কল করুন বা আমাদের অন-সাইট ডেস্কে যান — ২৪/৭ উপলব্ধ।",
     specialtyList: "আমাদের কাছে জেনারেল মেডিসিন, কার্ডিওলজি, অর্থোপেডিক্স, ডার্মাটোলজি, ইএনটি, পেডিয়াট্রিক্স, গাইনোকোলজি, নিউরোলজি, এবং ডেন্টাল কেয়ার আছে।",
     doctorInfo: "{doctor} {specialty} দেখেন, উপলব্ধ {days}, {hours}।",
+    operatingHours: "আমরা {days}, {hours} খোলা থাকি।",
   },
   "ml-IN": {
     consultationFee: "സ്റ്റാൻഡേർഡ് OPD കൺസൾട്ടേഷന് ₹600, ഫോളോ-അപ്പിന് ₹300.",
@@ -249,6 +266,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "അടിയന്തിര ഘട്ടങ്ങളിൽ 112 വിളിക്കുക അല്ലെങ്കിൽ ഞങ്ങളുടെ ഓൺ-സൈറ്റ് ഡെസ്ക് സന്ദർശിക്കുക — 24/7 ലഭ്യമാണ്.",
     specialtyList: "ഞങ്ങൾക്ക് ജനറൽ മെഡിസിൻ, കാർഡിയോളജി, ഓർത്തോപീഡിക്സ്, ഡെർമറ്റോളജി, ENT, പീഡിയാട്രിക്സ്, ഗൈനക്കോളജി, ന്യൂറോളജി, ഡെന്റൽ കെയർ എന്നിവയുണ്ട്.",
     doctorInfo: "{doctor} {specialty} കാണുന്നു, ലഭ്യമായ സമയം {days}, {hours}.",
+    operatingHours: "ഞങ്ങൾ {days}, {hours} തുറന്നിരിക്കും.",
   },
   "kn-IN": {
     consultationFee: "ಸ್ಟ್ಯಾಂಡರ್ಡ್ OPD ಕನ್ಸಲ್ಟೇಶನ್‌ಗೆ ₹600, ಫಾಲೋ-ಅಪ್‌ಗೆ ₹300.",
@@ -258,6 +276,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "ತುರ್ತು ಸಂದರ್ಭಗಳಲ್ಲಿ 112 ಗೆ ಕರೆ ಮಾಡಿ ಅಥವಾ ನಮ್ಮ ಆನ್-ಸೈಟ್ ಡೆಸ್ಕ್‌ಗೆ ಭೇಟಿ ನೀಡಿ — 24/7 ಲಭ್ಯವಿದೆ.",
     specialtyList: "ನಮ್ಮಲ್ಲಿ ಜನರಲ್ ಮೆಡಿಸಿನ್, ಕಾರ್ಡಿಯಾಲಜಿ, ಆರ್ಥೋಪೆಡಿಕ್ಸ್, ಡರ್ಮಟಾಲಜಿ, ENT, ಪೀಡಿಯಾಟ್ರಿಕ್ಸ್, ಗೈನಕಾಲಜಿ, ನ್ಯೂರಾಲಜಿ, ಮತ್ತು ಡೆಂಟಲ್ ಕೇರ್ ಇವೆ.",
     doctorInfo: "{doctor} {specialty} ನೋಡುತ್ತಾರೆ, ಲಭ್ಯವಿರುವ ಸಮಯ {days}, {hours}.",
+    operatingHours: "ನಾವು {days}, {hours} ತೆರೆದಿರುತ್ತೇವೆ.",
   },
   "pa-IN": {
     consultationFee: "ਸਟੈਂਡਰਡ OPD ਕੰਸਲਟੇਸ਼ਨ ਲਈ ₹600, ਫਾਲੋ-ਅੱਪ ਲਈ ₹300।",
@@ -267,6 +286,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "ਐਮਰਜੈਂਸੀ ਲਈ 112 'ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਸਾਡੇ ਆਨ-ਸਾਈਟ ਡੈਸਕ 'ਤੇ ਜਾਓ — 24/7 ਉਪਲਬਧ।",
     specialtyList: "ਸਾਡੇ ਕੋਲ ਜਨਰਲ ਮੈਡੀਸਨ, ਕਾਰਡੀਓਲੋਜੀ, ਆਰਥੋਪੈਡਿਕਸ, ਡਰਮਾਟੋਲੋਜੀ, ENT, ਪੀਡੀਆਟ੍ਰਿਕਸ, ਗਾਇਨੀਕੋਲੋਜੀ, ਨਿਊਰੋਲੋਜੀ, ਅਤੇ ਡੈਂਟਲ ਕੇਅਰ ਹਨ।",
     doctorInfo: "{doctor} {specialty} ਦੇਖਦੇ ਹਨ, ਉਪਲਬਧ {days}, {hours}।",
+    operatingHours: "ਅਸੀਂ {days}, {hours} ਖੁੱਲ੍ਹੇ ਹਾਂ।",
   },
   "gu-IN": {
     consultationFee: "સ્ટાન્ડર્ડ OPD કન્સલ્ટેશન માટે ₹600, ફોલો-અપ માટે ₹300.",
@@ -276,6 +296,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "ઇમરજન્સી માટે 112 પર કૉલ કરો અથવા અમારા ઓન-સાઇટ ડેસ્કની મુલાકાત લો — 24/7 ઉપલબ્ધ.",
     specialtyList: "અમારી પાસે જનરલ મેડિસિન, કાર્ડિયોલોજી, ઓર્થોપેડિક્સ, ડર્મેટોલોજી, ENT, પીડિયાટ્રિક્સ, ગાયનેકોલોજી, ન્યુરોલોજી, અને ડેન્ટલ કેર છે.",
     doctorInfo: "{doctor} {specialty} જુએ છે, ઉપલબ્ધ {days}, {hours}.",
+    operatingHours: "અમે {days}, {hours} ખુલ્લા છીએ.",
   },
   "or-IN": {
     consultationFee: "ଷ୍ଟାଣ୍ଡାର୍ଡ OPD କନସଲଟେସନ୍ ପାଇଁ ₹600, ଫଲୋ-ଅପ୍ ପାଇଁ ₹300।",
@@ -285,6 +306,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     emergencyContact: "ଜରୁରୀକାଳୀନ ପାଇଁ 112କୁ କଲ୍ କରନ୍ତୁ କିମ୍ବା ଆମର ଅନ୍-ସାଇଟ୍ ଡେସ୍କକୁ ଯାଆନ୍ତୁ — 24/7 ଉପଲବ୍ଧ।",
     specialtyList: "ଆମ ପାଖରେ ଜେନେରାଲ୍ ମେଡିସିନ୍, କାର୍ଡିଓଲୋଜି, ଅର୍ଥୋପେଡିକ୍ସ, ଡର୍ମାଟୋଲୋଜି, ENT, ପେଡିଆଟ୍ରିକ୍ସ, ଗାଇନୋକୋଲୋଜି, ନ୍ୟୁରୋଲୋଜି, ଏବଂ ଡେଣ୍ଟାଲ୍ କେୟାର୍ ଅଛି।",
     doctorInfo: "{doctor} {specialty} ଦେଖନ୍ତି, ଉପଲବ୍ଧ {days}, {hours}।",
+    operatingHours: "ଆମେ {days}, {hours} ଖୋଲା ରହୁ।",
   },
 };
 
