@@ -14,15 +14,12 @@ export async function GET() {
     keys: {
       sarvam: {
         configured: hasSarvam,
-        masked: hasSarvam ? `${sarvamKey!.slice(0, 8)}...${sarvamKey!.slice(-4)}` : null,
       },
-      gemini: {
+      openai: {
         configured: hasOpenAI,
-        masked: hasOpenAI ? `${openaiKey!.slice(0, 7)}...${openaiKey!.slice(-4)}` : null,
       },
       webhook: {
         configured: hasWebhook,
-        url: hasWebhook ? webhookUrl : null,
       },
     },
   });
