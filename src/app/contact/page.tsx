@@ -88,11 +88,19 @@ export default function ContactPage() {
                 >
                   <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
                     <Mail size={16} style={{ color: "var(--green)" }} />
-                    <span>connect@namuste.com</span>
+                    <span>General: <strong>connect@namuste.com</strong></span>
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+                    <Mail size={16} style={{ color: "var(--green)" }} />
+                    <span>Billing & Payments: <strong>payments@namuste.com</strong></span>
                   </div>
                   <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
                     <MapPin size={16} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
                     <span>245 B/1, Raipur Road, Kolkata 700047, West Bengal, India</span>
+                  </div>
+                  <div style={{ borderTop: "1px solid var(--border)", paddingTop: "12px", marginTop: "4px", fontSize: "12px", color: "var(--text-dim)", lineHeight: 1.6 }}>
+                    <div>GST Number: <strong style={{ color: "var(--text-body)" }}>19AALCN3032B1ZR</strong></div>
+                    <div>CIN: <strong style={{ color: "var(--text-body)" }}>U62013WB2026PTC286896</strong></div>
                   </div>
                 </div>
               </div>

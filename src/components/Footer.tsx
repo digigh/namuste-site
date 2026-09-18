@@ -137,19 +137,42 @@ export default function Footer() {
             </ul>
           </div>
 
-          {/* Registered Office */}
+          {/* Registered Office & Legal */}
           <div className="footer-company-col">
             <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
-              Company
+              Company & Legal
             </h4>
-            <div style={{ display: "flex", flexDirection: "column", gap: "12px", color: "var(--text-muted)", fontSize: "13px" }}>
+            <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: "0 0 16px 0" }}>
+              <li><Link href="/privacy-policy" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Privacy Policy</Link></li>
+              <li><Link href="/terms-of-use" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Terms of Use</Link></li>
+              <li><Link href="/pricing" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Pricing & Plans</Link></li>
+              <li><Link href="/contact" style={{ color: "var(--text-muted)", textDecoration: "none", fontSize: "13px" }}>Contact Desk</Link></li>
+            </ul>
+            <div style={{ display: "flex", flexDirection: "column", gap: "10px", color: "var(--text-muted)", fontSize: "12.5px" }}>
               <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                <Mail size={15} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
-                <span>connect@namuste.com</span>
+                <Mail size={14} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
+                <span><strong style={{ color: "var(--text-body)" }}>General:</strong> connect@namuste.com</span>
               </div>
               <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
-                <MapPin size={15} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
+                <Mail size={14} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
+                <span><strong style={{ color: "var(--text-body)" }}>Payments:</strong> payments@namuste.com</span>
+              </div>
+              <div style={{ display: "flex", alignItems: "flex-start", gap: "8px" }}>
+                <MapPin size={14} style={{ color: "var(--green)", flexShrink: 0, marginTop: "2px" }} />
                 <span>245 B/1, Raipur Road, Kolkata 700047, West Bengal, India</span>
+              </div>
+              <div
+                style={{
+                  borderTop: "1px solid var(--border)",
+                  paddingTop: "10px",
+                  marginTop: "6px",
+                  fontSize: "11.5px",
+                  lineHeight: 1.6,
+                  color: "var(--text-dim)",
+                }}
+              >
+                <div><span style={{ color: "var(--text-muted)", fontWeight: 600 }}>GST Number:</span> 19AALCN3032B1ZR</div>
+                <div><span style={{ color: "var(--text-muted)", fontWeight: 600 }}>CIN:</span> U62013WB2026PTC286896</div>
               </div>
             </div>
           </div>
@@ -169,13 +192,19 @@ export default function Footer() {
             color: "var(--text-dim)",
           }}
         >
-          <div>
-            © {new Date().getFullYear()} Namuste Technologies Pvt. Ltd. All rights reserved.
+          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
+            <div>
+              © {new Date().getFullYear()} Namuste Technologies Pvt. Ltd. All rights reserved.
+            </div>
+            <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>
+              GSTIN: 19AALCN3032B1ZR &nbsp;|&nbsp; CIN: U62013WB2026PTC286896
+            </div>
           </div>
           <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
-            <Link href="/responsible-ai" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Privacy & Responsible AI</Link>
-            <Link href="/about" style={{ color: "var(--text-dim)", textDecoration: "none" }}>About Founders</Link>
-            <Link href="/contact" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Book a Demo</Link>
+            <Link href="/privacy-policy" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Privacy Policy</Link>
+            <Link href="/terms-of-use" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Terms of Use</Link>
+            <Link href="/responsible-ai" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Responsible AI</Link>
+            <Link href="/contact" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Contact</Link>
           </div>
         </div>
       </div>
