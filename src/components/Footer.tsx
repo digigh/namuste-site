@@ -1,57 +1,11 @@
 import Link from "next/link";
-import { ArrowRight, ShieldCheck, Mail, MapPin } from "lucide-react";
+import { ShieldCheck, Mail, MapPin } from "lucide-react";
 
 export default function Footer() {
   return (
     <footer style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", position: "relative" }}>
-      {/* Editorial Conversion Callout Banner */}
-      <div
-        style={{
-          borderBottom: "1px solid var(--border)",
-          background: "radial-gradient(ellipse at 50% 0%, rgba(118, 192, 67, 0.05) 0%, transparent 70%)",
-          padding: "80px 36px",
-        }}
-      >
-        <div
-          style={{
-            maxWidth: "1120px",
-            margin: "0 auto",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "32px",
-          }}
-        >
-          <div>
-            <div className="pill" style={{ marginBottom: "14px" }}>
-              <span className="pill-dot" /> Intelligent Outcomes
-            </div>
-            <h2
-              className="serif"
-              style={{
-                fontSize: "clamp(26px, 3.5vw, 42px)",
-                color: "var(--text-ivory)",
-                lineHeight: 1.2,
-                maxWidth: "640px",
-              }}
-            >
-              Every conversation deserves an intelligent response and a <span className="serif-italic">clear next step.</span>
-            </h2>
-          </div>
-          <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-            <Link href="/contact" className="btn-primary">
-              Book a Consultation <ArrowRight size={15} />
-            </Link>
-            <Link href="/industries/doctors-and-clinics" className="btn-secondary">
-              Explore Clinic Demo
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Main Sitemap Grid */}
-      <div className="footer-main-container" style={{ maxWidth: "1280px", margin: "0 auto", padding: "64px 36px 40px" }}>
+      <div className="footer-main-container" style={{ maxWidth: "1360px", margin: "0 auto", padding: "48px 40px 40px" }}>
         <div
           style={{
             display: "grid",
@@ -74,8 +28,9 @@ export default function Footer() {
               <img
                 src="/logo.png"
                 alt="Namuste"
+                className="brand-logo"
                 style={{
-                  height: "48px",
+                  height: "40px",
                   width: "auto",
                   display: "block",
                   objectFit: "contain",
@@ -85,7 +40,7 @@ export default function Footer() {
             <p style={{ color: "var(--text-muted)", fontSize: "13.5px", lineHeight: 1.7, maxWidth: "280px", marginBottom: "20px" }}>
               The horizontal AI voice and chat assistant platform turning fragmented customer enquiries into structured business outcomes.
             </p>
-            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "rgba(255,255,255,0.03)", border: "1px solid var(--border)", padding: "6px 12px", borderRadius: "8px" }}>
+            <div style={{ display: "inline-flex", alignItems: "center", gap: "8px", background: "var(--overlay-1)", border: "1px solid var(--border)", padding: "6px 12px", borderRadius: "8px" }}>
               <ShieldCheck size={14} style={{ color: "var(--green)" }} />
               <span style={{ fontSize: "11.5px", color: "var(--text-body)" }}>Responsible AI & Human In Loop</span>
             </div>
@@ -93,7 +48,7 @@ export default function Footer() {
 
           {/* Product & Channels */}
           <div>
-            <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
+            <h4 style={{ fontFamily: "'SF Mono', 'Menlo', monospace", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: "16px" }}>
               Platform
             </h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: 0 }}>
@@ -107,7 +62,7 @@ export default function Footer() {
 
           {/* Priority Industries */}
           <div>
-            <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
+            <h4 style={{ fontFamily: "'SF Mono', 'Menlo', monospace", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: "16px" }}>
               Industries
             </h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: 0 }}>
@@ -126,7 +81,7 @@ export default function Footer() {
 
           {/* Enterprise & Use Cases */}
           <div>
-            <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
+            <h4 style={{ fontFamily: "'SF Mono', 'Menlo', monospace", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: "16px" }}>
               Solutions
             </h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: 0 }}>
@@ -139,7 +94,7 @@ export default function Footer() {
 
           {/* Registered Office & Legal */}
           <div className="footer-company-col">
-            <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-ivory)", marginBottom: "16px" }}>
+            <h4 style={{ fontFamily: "'SF Mono', 'Menlo', monospace", fontSize: "11px", fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: "16px" }}>
               Company & Legal
             </h4>
             <ul style={{ listStyle: "none", display: "flex", flexDirection: "column", gap: "10px", padding: 0, margin: "0 0 16px 0" }}>
@@ -178,8 +133,9 @@ export default function Footer() {
           </div>
         </div>
 
-        {/* Bottom Rights Bar */}
+        {/* Bottom Rights Bar — the call-log signature, echoing the hero/menu timestamp motif */}
         <div
+          className="footer-bottom-bar"
           style={{
             borderTop: "1px solid var(--border)",
             paddingTop: "24px",
@@ -188,17 +144,14 @@ export default function Footer() {
             alignItems: "center",
             flexWrap: "wrap",
             gap: "16px",
-            fontSize: "12px",
+            fontFamily: "'SF Mono', 'Menlo', monospace",
+            fontSize: "11.5px",
             color: "var(--text-dim)",
           }}
         >
-          <div style={{ display: "flex", flexDirection: "column", gap: "4px" }}>
-            <div>
-              © {new Date().getFullYear()} Namuste Technologies Pvt. Ltd. All rights reserved.
-            </div>
-            <div style={{ fontSize: "11px", color: "var(--text-dim)" }}>
-              GSTIN: 19AALCN3032B1ZR &nbsp;|&nbsp; CIN: U62013WB2026PTC286896
-            </div>
+          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+            <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "var(--text-dim)" }} />
+            <span>CALL ENDED · © {new Date().getFullYear()} NAMUSTE TECHNOLOGIES PVT. LTD.</span>
           </div>
           <div style={{ display: "flex", gap: "20px", flexWrap: "wrap" }}>
             <Link href="/privacy-policy" style={{ color: "var(--text-dim)", textDecoration: "none" }}>Privacy Policy</Link>
@@ -235,6 +188,10 @@ export default function Footer() {
           .footer-company-col {
             grid-column: 1 / -1 !important;
             margin-top: 6px !important;
+          }
+          .footer-bottom-bar {
+            flex-direction: column !important;
+            align-items: flex-start !important;
           }
         }
       `}</style>

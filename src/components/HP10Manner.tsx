@@ -40,8 +40,8 @@ export default function HP10Manner() {
       className="hp10-section-pad"
       style={{
         minHeight: "90vh",
-        background: "#000000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+        background: "var(--bg)",
+        borderTop: "1px solid var(--border)",
         position: "relative",
       }}
     >
@@ -53,7 +53,7 @@ export default function HP10Manner() {
             fontSize: "11.5px",
             fontWeight: 700,
             letterSpacing: "0.2em",
-            color: "#8E8E93",
+            color: "var(--text-muted)",
             textTransform: "uppercase",
             marginBottom: "20px",
             display: "flex",
@@ -78,19 +78,18 @@ export default function HP10Manner() {
           {/* Left Column: Formatted Poetic Headline & Story */}
           <div>
             <h2
-              className="serif"
               style={{
                 fontSize: "clamp(34px, 4.2vw, 58px)",
-                fontWeight: 300,
+                fontWeight: 700,
                 lineHeight: 1.16,
                 letterSpacing: "-0.02em",
-                color: "#F5F5F0",
+                color: "var(--text-ivory)",
                 marginBottom: "22px",
               }}
             >
               People remember how a<br />
               business makes them feel.<br />
-              <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>
+              <span style={{ color: "var(--green)", fontWeight: 600 }}>
                 Namuste learns how yours should sound.
               </span>
             </h2>
@@ -98,7 +97,7 @@ export default function HP10Manner() {
             <p
               style={{
                 fontSize: "clamp(15px, 1.25vw, 17.5px)",
-                color: "#A1A1AA",
+                color: "var(--text-muted)",
                 lineHeight: 1.7,
                 maxWidth: "500px",
                 marginBottom: "32px",
@@ -132,7 +131,7 @@ export default function HP10Manner() {
               </Link>
             </div>
 
-            <p className="serif-italic" style={{ fontSize: "14.5px", color: "#8E8E93", fontStyle: "italic", margin: 0 }}>
+            <p style={{ fontSize: "14.5px", color: "var(--text-muted)", fontWeight: 600, margin: 0 }}>
               A recognisable brand voice. In every customer interaction.
             </p>
           </div>
@@ -147,7 +146,7 @@ export default function HP10Manner() {
               margin: "0 auto",
               width: "100%",
               background: "rgba(12, 14, 12, 0.8)",
-              border: "1px solid rgba(255, 255, 255, 0.1)",
+              border: "1px solid var(--border2)",
               borderRadius: "22px",
               padding: "26px",
               boxShadow: "0 20px 50px rgba(0, 0, 0, 0.85), 0 0 40px rgba(155, 234, 22, 0.04)",
@@ -161,7 +160,7 @@ export default function HP10Manner() {
                 padding: "14px 18px",
                 borderRadius: "14px",
                 background: "rgba(18, 18, 22, 0.85)",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
+                border: "1px solid var(--border2)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "6px" }}>
@@ -169,9 +168,9 @@ export default function HP10Manner() {
                   <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#F87171" }} />
                   Customer Query
                 </span>
-                <span style={{ fontSize: "10px", fontFamily: "monospace", color: "#8E8E93" }}>10:24 AM</span>
+                <span style={{ fontSize: "10px", fontFamily: "monospace", color: "var(--text-muted)" }}>10:24 AM</span>
               </div>
-              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13.5px", color: "#F5F5F0" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "13.5px", color: "var(--text-ivory)" }}>
                 <User size={15} style={{ color: "#9BEA16", flexShrink: 0 }} />
                 <span>&ldquo;Can you hold this for me until tomorrow?&rdquo;</span>
               </div>
@@ -180,7 +179,7 @@ export default function HP10Manner() {
             {/* 2. Choose Your Manner Segmented Selector */}
             <div>
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                <div style={{ fontSize: "10.5px", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.08em", color: "#8E8E93" }}>
+                <div style={{ fontSize: "10.5px", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.08em", color: "var(--text-muted)" }}>
                   Choose Your Manner
                 </div>
                 <div style={{ fontSize: "11px", color: current.toneColor, fontWeight: 600 }}>
@@ -194,7 +193,7 @@ export default function HP10Manner() {
                   display: "flex",
                   borderRadius: "12px",
                   background: "rgba(8, 8, 10, 0.9)",
-                  border: "1px solid rgba(255, 255, 255, 0.08)",
+                  border: "1px solid var(--border)",
                   padding: "4px",
                   gap: "4px",
                 }}
@@ -219,7 +218,7 @@ export default function HP10Manner() {
                         gap: "6px",
                         transition: "all 0.2s ease",
                         background: active ? "rgba(155, 234, 22, 0.16)" : "transparent",
-                        color: active ? "#9BEA16" : "#8E8E93",
+                        color: active ? "#9BEA16" : "var(--text-muted)",
                         border: active ? "1px solid #9BEA16" : "1px solid transparent",
                         boxShadow: active ? "0 0 15px rgba(155, 234, 22, 0.2)" : "none",
                       }}
@@ -232,7 +231,7 @@ export default function HP10Manner() {
               </div>
 
               {/* Dynamic Behavioral Tags */}
-              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", marginTop: "10px", fontSize: "11.5px", color: "#D4D0C7" }}>
+              <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", gap: "10px", marginTop: "10px", fontSize: "11.5px", color: "var(--text-body)" }}>
                 <span style={{ display: "inline-flex", alignItems: "center", gap: "4px", background: "rgba(255,255,255,0.04)", padding: "3px 8px", borderRadius: "6px" }}>
                   <Globe size={12} style={{ color: "#9BEA16" }} /> {current.tags[0]}
                 </span>
@@ -296,7 +295,7 @@ export default function HP10Manner() {
 
                 <div style={{ display: "flex", alignItems: "flex-start", gap: "10px" }}>
                   <Headphones size={16} style={{ color: "#9BEA16", flexShrink: 0, marginTop: "3px" }} />
-                  <p style={{ fontSize: "13.5px", color: "#F5F5F0", margin: 0, lineHeight: 1.6 }}>
+                  <p style={{ fontSize: "13.5px", color: "var(--text-ivory)", margin: 0, lineHeight: 1.6 }}>
                     &ldquo;{current.transcript}&rdquo;
                   </p>
                 </div>
@@ -309,17 +308,17 @@ export default function HP10Manner() {
                 padding: "10px 16px",
                 borderRadius: "10px",
                 background: "rgba(15, 15, 18, 0.7)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
+                border: "1px solid var(--border)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "space-between",
                 fontSize: "11.5px",
               }}
             >
-              <span style={{ textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.06em", color: "#8E8E93" }}>
+              <span style={{ textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.06em", color: "var(--text-muted)" }}>
                 Consistent Across
               </span>
-              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#D4D0C7", fontWeight: 500 }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "var(--text-body)", fontWeight: 500 }}>
                 <Check size={13} style={{ color: "#9BEA16" }} />
                 <span>Voice • WhatsApp • Web</span>
               </div>

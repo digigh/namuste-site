@@ -46,6 +46,12 @@ export interface IndustryFlow {
   /** Deterministic intake steps, in order. Optional — falls back to the
    *  generic name → mobile → (dob) → department → slot sequence if omitted. */
   steps?: FlowStep[];
+  /** True for every vertical that doesn't yet have real deterministic backend
+   *  support (a clinicEngine.ts-style fast path + curated knowledge base) —
+   *  only "doctors-clinics" has that today. The frontend renders a Coming
+   *  Soon panel instead of the live console for any industry flagged here,
+   *  rather than letting callers reach an ungated raw-GPT fallback. */
+  comingSoon?: boolean;
 }
 
 export const INDUSTRY_FLOWS: Record<string, IndustryFlow> = {
@@ -133,14 +139,23 @@ export const INDUSTRY_FLOWS: Record<string, IndustryFlow> = {
 
 AVAILABLE SPECIALTIES & DOCTOR ROSTER:
 1. General Medicine (Fever, Infection, BP, Diabetes, General Health): Dr. Ananya Sen (MD) — Mon-Sat 9 AM - 2 PM, 4 PM - 7 PM
-2. Cardiology (Heart Care, Chest Discomfort, BP, ECG): Dr. R. K. Sharma (MD, DM) — Mon, Wed, Fri 10 AM - 2 PM
+2. Cardiology (Heart Care, Chest Discomfort, BP, ECG consult): Dr. R. K. Sharma (MD, DM) — Mon, Wed, Fri 10 AM - 2 PM
 3. Orthopedics (Joint & Knee Pain, Bone Fractures, Arthritis): Dr. Rajiv Verma (MS) — Mon-Sat 10 AM - 2 PM
 4. Dermatology (Skin Rashes, Acne, Hair Fall, Allergy): Dr. Pooja Gupta (MD) — Mon-Sat 11 AM - 6 PM
 5. ENT (Ear, Nose, Throat, Sinus, Hearing): Dr. Vikram Malhotra (MS) — Tue, Thu, Sat 11 AM - 3 PM
 6. Pediatrics (Child Health, Vaccination, Wellness): Dr. Meera Rao (MD) — Mon-Sat 9 AM - 1 PM
 7. Gynecology (Women's Health, Pregnancy, PCOD): Dr. Sunita Kapoor (MS) — Mon-Sat 10 AM - 4 PM
 8. Neurology (Migraine, Nerve Pain, Headache): Dr. Sanjay Kapoor (MD) — Mon, Wed, Fri 2 PM - 6 PM
-9. Dental Care (Toothache, Root Canal, Cleaning): Dr. Aman Joshi (BDS, MDS) — Mon-Sat 10 AM - 7 PM
+9. Ophthalmology (Eye Checkups, Vision, Cataract Screening): Dr. Alok Nath (MS) — Mon-Sat 10 AM - 5 PM
+10. General Dentistry (Toothache, Cleaning, Checkups): Dr. Aman Joshi (BDS, MDS) — Mon-Sat 10 AM - 7 PM
+11. Root Canal Treatment (Endodontics): Dr. Neha Kulkarni (BDS, MDS) — Tue, Thu, Sat 11 AM - 5 PM
+12. Braces & Orthodontics: Dr. Karan Mehta (BDS, MDS) — Mon, Wed, Fri 10 AM - 4 PM
+13. Dental Crowns & Implants (Prosthodontics): Dr. Aman Joshi (BDS, MDS) — Mon-Sat 10 AM - 7 PM
+14. Blood Test / Pathology (Diagnostics & Pathology desk; fasting tests best 7-11 AM): Central Pathology Desk — Mon-Sat 7 AM - 7 PM
+15. X-Ray & Imaging (Diagnostics & Pathology desk): Central Pathology Desk — Mon-Sat 9 AM - 6 PM
+16. ECG (Diagnostics & Pathology desk — a standalone test, not a cardiology consult): Central Pathology Desk — Mon-Sat 9 AM - 6 PM
+
+IMPORTANT: extracted.department MUST be set to EXACTLY one of these 16 strings, verbatim, with no changes: "General Medicine", "Cardiology", "Orthopedics", "Dermatology", "ENT", "Pediatrics", "Gynecology", "Neurology", "Ophthalmology", "General Dentistry", "Root Canal Treatment (Endodontics)", "Braces & Orthodontics", "Dental Crowns & Implants (Prosthodontics)", "Blood Test / Pathology", "X-Ray & Imaging", "ECG". Never invent a different spelling or a broader category name like "Dental Care" or "Diagnostics & Pathology" — those are just the caller-facing group names, not valid values for extracted.department.
 
 CRITICAL MEDICAL GUARDRAILS (VERY IMPORTANT):
 1. Emergency Guardrail:
@@ -151,7 +166,7 @@ CRITICAL MEDICAL GUARDRAILS (VERY IMPORTANT):
    If asked "What disease do I have?": Say "I am not able to diagnose medical conditions. I can help you arrange an appointment with our specialist doctor."
 3. No Prescriptions:
    If asked "Which medicine should I take?": Say "I cannot prescribe or recommend medications. I can help schedule a consultation with our physician."
-4. Never Invent Doctors or Slots: Strictly adhere to our clinic roster and 9 AM - 7 PM hours.
+4. Never Invent Doctors or Slots: Strictly adhere to our clinic roster and each doctor's own listed hours above (the diagnostic lab opens earlier, at 7 AM, for fasting tests — do not reject a 7-9 AM lab booking).
 5. No Booking Without Explicit Confirmation: Always summarize and get a Yes before confirming.`,
     systemActionPayloadTemplate: {
       appointment_id: "SUN-88421",
@@ -174,6 +189,7 @@ CRITICAL MEDICAL GUARDRAILS (VERY IMPORTANT):
     brandName: "Apex Legal Associates",
     tagline: "Case Intake, Practice Areas & Retainer Consultations",
     badgeColor: "#3B82F6",
+    comingSoon: true,
     requiresDob: false,
     systemActionType: "LEGAL_CASE_INTAKE",
     systemActionTitle: "Legal Case File Opened",
@@ -240,6 +256,7 @@ You handle case intake (Property, Corporate, Civil, Family), appointment booking
     brandName: "FinCorp Chartered Accountants",
     tagline: "GST Filing, ITR & Tax Audit Consultations",
     badgeColor: "#F59E0B",
+    comingSoon: true,
     requiresDob: false,
     systemActionType: "TAX_INTAKE_ASSIGNED",
     systemActionTitle: "Tax Audit Assignment Created",
@@ -295,6 +312,7 @@ You handle GST returns, ITR filings, company audits, and consultation scheduling
     brandName: "Elevate Advisory Partners",
     tagline: "Management Consulting, GTM Strategy & Advisory",
     badgeColor: "#8B5CF6",
+    comingSoon: true,
     requiresDob: false,
     systemActionType: "DISCOVERY_CALL_LOCKED",
     systemActionTitle: "Discovery Strategy Session Scheduled",
@@ -350,6 +368,7 @@ You handle corporate growth advisory, GTM scopes, operations consulting, and dis
     brandName: "Studio Forma Architecture",
     tagline: "Residential, Interior Design & Site Inspections",
     badgeColor: "#EC4899",
+    comingSoon: true,
     requiresDob: false,
     systemActionType: "SITE_VISIT_BOOKED",
     systemActionTitle: "Architect Site Inspection Booked",
@@ -405,6 +424,7 @@ You handle architectural design, interior renovations, budget estimates, and sch
     brandName: "Skyline Heights Luxury Residences",
     tagline: "Site Visits, 2/3 BHK Inventory & Pricing Sheets",
     badgeColor: "#06B6D4",
+    comingSoon: true,
     requiresDob: false,
     systemActionType: "VIP_PASS_GENERATED",
     systemActionTitle: "VIP Model Flat Tour Pass Issued",
@@ -460,6 +480,7 @@ You handle luxury 2BHK/3BHK residential inquiries, brochure requests, pricing, a
     brandName: "Apex Academy Admissions",
     tagline: "Course Enquiries, Batch Timings & Demo Classes",
     badgeColor: "#6366F1",
+    comingSoon: true,
     requiresDob: true,
     systemActionType: "DEMO_CLASS_RESERVED",
     systemActionTitle: "Live Demo Class Seat Allocated",
@@ -526,6 +547,7 @@ You handle student enrollment (JEE, NEET, Foundation), batch schedules, syllabus
     brandName: "National Logistics & Supply",
     tagline: "Wholesale Inventory, Order Tracking & Bulk Dispatch",
     badgeColor: "#14B8A6",
+    comingSoon: true,
     requiresDob: false,
     systemActionType: "ERP_DISPATCH_LOCKED",
     systemActionTitle: "Warehouse Dispatch Order Reserved",
@@ -582,6 +604,7 @@ You handle wholesale inventory stock checks, SKU availability, bulk order tracki
     brandName: "Kisan Seva Krishi Kendra",
     tagline: "Vernacular Farmer Helplines, Seed Enquiries & Dealer Orders",
     badgeColor: "#84CC16",
+    comingSoon: true,
     requiresDob: false,
     systemActionType: "AGRI_ADVISORY_SENT",
     systemActionTitle: "Farmer Advisory & Dealer Dispatch Logged",
@@ -638,6 +661,7 @@ You handle crop advisory, fertilizer schedules, mandi prices, seed dealer querie
     brandName: "Global Pulse Insights",
     tagline: "Multilingual Participant Intake, Study Screening & Field Surveys",
     badgeColor: "#A855F7",
+    comingSoon: true,
     requiresDob: true,
     systemActionType: "PARTICIPANT_SCREENED",
     systemActionTitle: "Clinical Cohort Participant Qualified",

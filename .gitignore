@@ -34,6 +34,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# standalone extracted project (own git history, not part of this repo)
+/next_lvl
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

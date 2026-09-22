@@ -1,466 +1,613 @@
 "use client";
 
-import React, { useState } from "react";
-import { motion } from "framer-motion";
-import { ArrowRight, PhoneCall, MessageSquare, Globe, Check, User } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Caveat } from "next/font/google";
+import {
+  ArrowRight,
+  PhoneCall,
+  MessageSquare,
+  Globe,
+  FileText,
+  Calendar,
+  Send,
+  BarChart3,
+  Mic,
+  PhoneOff,
+  MoreHorizontal,
+  Clock,
+  Target,
+  TrendingUp,
+  Play,
+  Bot,
+  Check,
+  CheckCheck,
+} from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { CountingNumber } from "@/components/animate-ui/primitives/texts/counting-number";
+
+const caveat = Caveat({ subsets: ["latin"], weight: ["600", "700"] });
+
+type ChannelId = "voice" | "whatsapp" | "web";
+
+const CHANNELS: { id: ChannelId; label: string; icon: typeof PhoneCall }[] = [
+  { id: "voice", label: "Voice", icon: PhoneCall },
+  { id: "whatsapp", label: "WhatsApp", icon: MessageSquare },
+  { id: "web", label: "Web", icon: Globe },
+];
+
+const STEP_ICONS = [PhoneCall, FileText, Calendar, Send, BarChart3];
+
+const channelExamples: Record<ChannelId, { num: string; step: string; text: string; escalation?: string; isLearn?: boolean }[]> = {
+  voice: [
+    { num: "01", step: "Answer", text: "Answers within 1 ring with natural Indian vocal cadence." },
+    { num: "02", step: "Understand", text: "Extracts caller intent, pain urgency, and doctor preference." },
+    { num: "03", step: "Act", text: "Locks OPD calendar slot and checks insurance boundary." },
+    { num: "04", step: "Follow up", text: "Dispatches WhatsApp directions and clinic prep notes.", escalation: "Bring in a human" },
+    { num: "05", step: "Learn", text: "Staff reviews edge cases to improve practice guidelines.", isLearn: true },
+  ],
+  whatsapp: [
+    { num: "01", step: "Answer", text: "Instant sub-second greeting on official business WhatsApp." },
+    { num: "02", step: "Understand", text: "Understands voice notes, PDFs, and multi-lingual text." },
+    { num: "03", step: "Act", text: "Issues appointment barcode and reserves consultation slot." },
+    { num: "04", step: "Follow up", text: "Sends automated 2-hour pre-visit checklist.", escalation: "Bring in a human" },
+    { num: "05", step: "Learn", text: "Integrates patient feedback into knowledge base.", isLearn: true },
+  ],
+  web: [
+    { num: "01", step: "Answer", text: "Interactive concierge greets high-intent web visitors." },
+    { num: "02", step: "Understand", text: "Qualifies commercial scope, location, and urgency." },
+    { num: "03", step: "Act", text: "Routes verified brief to designated relationship partner." },
+    { num: "04", step: "Follow up", text: "Syncs lead telemetry with enterprise CRM.", escalation: "Bring in a human" },
+    { num: "05", step: "Learn", text: "Refines conversion scoring with sales feedback.", isLearn: true },
+  ],
+};
+
+const TRANSCRIPTS: Record<ChannelId, { from: "caller" | "ai"; text: string }[]> = {
+  voice: [
+    { from: "caller", text: "Hello, I want to book an appointment with a dermatologist." },
+    { from: "ai", text: "Sure! May I know your preferred date and time?" },
+    { from: "caller", text: "Tomorrow morning works." },
+    { from: "ai", text: "Your appointment is confirmed for tomorrow at 10:30 AM. I've also sent you the clinic location on WhatsApp." },
+  ],
+  whatsapp: [
+    { from: "caller", text: "Hi, do you have any slots open this week for a check-up?" },
+    { from: "ai", text: "Yes! We have Wednesday 4 PM and Friday 11 AM open." },
+    { from: "caller", text: "Friday 11 AM works for me." },
+    { from: "ai", text: "Booked! I've sent the address and prep instructions here on WhatsApp." },
+  ],
+  web: [
+    { from: "caller", text: "I'd like to know your consultation pricing." },
+    { from: "ai", text: "Our general consultation starts at ₹500. Would you like to book a slot?" },
+    { from: "caller", text: "Yes, please." },
+    { from: "ai", text: "Great — I've reserved a slot and sent confirmation to your email." },
+  ],
+};
+
+const CHANNEL_META: Record<ChannelId, { icon: typeof PhoneCall; live: string; handle: string }> = {
+  voice: { icon: PhoneCall, live: "Live Call", handle: "+91 98765 43210" },
+  whatsapp: { icon: MessageSquare, live: "Live Chat", handle: "+91 90000 12345" },
+  web: { icon: Globe, live: "Live Session", handle: "Web Visitor · Mumbai" },
+};
+
+// Real WhatsApp green for the WhatsApp card, the site's existing chat-blue
+// for Web — each channel gets its own accent instead of the call card
+// always rendering as a phone call regardless of which tab is active.
+const CHANNEL_VISUAL: Record<ChannelId, { accent: string; glow: string }> = {
+  voice: { accent: "var(--green)", glow: "var(--green-glow-strong)" },
+  whatsapp: { accent: "#25D366", glow: "rgba(37, 211, 102, 0.35)" },
+  web: { accent: "#3B6FE0", glow: "rgba(59, 111, 224, 0.3)" },
+};
+
+const METRICS = [
+  { icon: Clock, value: 30, suffix: "s", label: "Average answer time" },
+  { icon: Target, value: 92, suffix: "%", label: "Intent captured" },
+  { icon: TrendingUp, value: 3, suffix: "x", label: "More bookings" },
+];
+
+const SPARK_PATHS = [
+  "M2 16 C 10 8, 18 20, 26 12 S 42 4, 50 10",
+  "M2 14 C 10 18, 18 6, 26 14 S 42 18, 50 6",
+  "M2 12 C 10 4, 18 18, 26 8 S 42 16, 50 4",
+];
+
+function useLiveTimer() {
+  const [seconds, setSeconds] = useState(0);
+  useEffect(() => {
+    const id = setInterval(() => setSeconds((s) => (s + 1) % 3600), 1000);
+    return () => clearInterval(id);
+  }, []);
+  const mm = String(Math.floor(seconds / 60)).padStart(2, "0");
+  const ss = String(seconds % 60).padStart(2, "0");
+  return `${mm}:${ss}`;
+}
 
 export default function HP03ConversationMoves() {
-  const [selectedChannel, setSelectedChannel] = useState<"voice" | "whatsapp" | "web">("voice");
-
-  const channelExamples = {
-    voice: [
-      { num: "01", step: "Answer", label: "Be present", text: "Answers within 1 ring with natural Indian vocal cadence.", icon: PhoneCall },
-      { num: "02", step: "Understand", label: "Get the context", text: "Extracts caller intent, pain urgency, and doctor preference.", icon: User },
-      { num: "03", step: "Act", label: "Create the next step", text: "Locks OPD calendar slot and checks insurance boundary.", icon: Check },
-      { num: "04", step: "Follow up", label: "Keep it moving", text: "Dispatches WhatsApp directions and clinic prep notes.", icon: MessageSquare },
-      { num: "05", step: "Learn", label: "Improve the response", text: "Staff reviews edge cases to improve practice guidelines.", icon: Check },
-    ],
-    whatsapp: [
-      { num: "01", step: "Answer", label: "Be present", text: "Instant sub-second greeting on official business WhatsApp.", icon: MessageSquare },
-      { num: "02", step: "Understand", label: "Get the context", text: "Understands voice notes, PDFs, and multi-lingual text.", icon: User },
-      { num: "03", step: "Act", label: "Create the next step", text: "Issues appointment barcode and reserves consultation slot.", icon: Check },
-      { num: "04", step: "Follow up", label: "Keep it moving", text: "Sends automated 2-hour pre-visit checklist.", icon: MessageSquare },
-      { num: "05", step: "Learn", label: "Improve the response", text: "Integrates patient feedback into knowledge base.", icon: Check },
-    ],
-    web: [
-      { num: "01", step: "Answer", label: "Be present", text: "Interactive concierge greets high-intent web visitors.", icon: Globe },
-      { num: "02", step: "Understand", label: "Get the context", text: "Qualifies commercial scope, location, and urgency.", icon: User },
-      { num: "03", step: "Act", label: "Create the next step", text: "Routes verified brief to designated relationship partner.", icon: Check },
-      { num: "04", step: "Follow up", label: "Keep it moving", text: "Syncs lead telemetry with enterprise CRM.", icon: MessageSquare },
-      { num: "05", step: "Learn", label: "Improve the response", text: "Refines conversion scoring with sales feedback.", icon: Check },
-    ],
-  };
+  const [selectedChannel, setSelectedChannel] = useState<ChannelId>("voice");
+  const [activeIdx, setActiveIdx] = useState(0);
+  const [visibleMessages, setVisibleMessages] = useState(1);
+  const timer = useLiveTimer();
 
   const currentSteps = channelExamples[selectedChannel];
+  const transcript = TRANSCRIPTS[selectedChannel];
+  const meta = CHANNEL_META[selectedChannel];
+  const visual = CHANNEL_VISUAL[selectedChannel];
+  const HeaderIcon = meta.icon;
+
+  useEffect(() => {
+    setVisibleMessages(1);
+    const id = setInterval(() => {
+      setVisibleMessages((v) => (v >= transcript.length ? 1 : v + 1));
+    }, 2200);
+    return () => clearInterval(id);
+  }, [selectedChannel, transcript.length]);
 
   return (
     <section
       id="hp-03"
       className="hp03-section-pad"
-      style={{
-        minHeight: "90vh",
-        background: "#000000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-        position: "relative",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        overflow: "hidden",
-      }}
+      style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", position: "relative", overflow: "hidden" }}
     >
       <div style={{ maxWidth: "1360px", margin: "0 auto", width: "100%" }}>
-        {/* Eyebrow */}
         <div
           style={{
-            fontFamily: "var(--font-sans)",
+            fontFamily: "'SF Mono', 'Menlo', monospace",
             fontSize: "12px",
-            fontWeight: 600,
-            letterSpacing: "0.22em",
-            color: "#8E8E93",
-            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            color: "var(--text-muted)",
             marginBottom: "24px",
           }}
         >
-          How a Conversation Moves
+          CALL LOG · TRANSCRIPT · HOW A CONVERSATION MOVES
         </div>
 
-        {/* 2-Column Grid */}
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "0.8fr 1.2fr",
-            gap: "56px",
-            alignItems: "center",
-          }}
-          className="hp03-grid"
-        >
-          {/* Left Column */}
-          <motion.div
-            initial={{ opacity: 0, x: -20 }}
-            whileInView={{ opacity: 1, x: 0 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.8 }}
+        <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "space-between", alignItems: "flex-end", gap: "24px", marginBottom: "20px" }}>
+          <h2
+            style={{
+              fontFamily: "var(--font-sans)",
+              fontSize: "clamp(38px, 4.5vw, 58px)",
+              fontWeight: 700,
+              lineHeight: 1.05,
+              letterSpacing: "-0.025em",
+              color: "var(--text-ivory)",
+              margin: 0,
+            }}
           >
-            <h2
-              className="serif"
-              style={{
-                fontSize: "clamp(38px, 4.5vw, 66px)",
-                fontWeight: 300,
-                lineHeight: 1.12,
-                letterSpacing: "-0.025em",
-                color: "#F5F5F0",
-                marginBottom: "24px",
-              }}
-            >
-              From hello to<br />
-              an <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>outcome.</span>
-            </h2>
+            From hello to an <span style={{ color: "var(--green)" }}>outcome.</span>
+          </h2>
 
-            <p
-              style={{
-                fontSize: "clamp(16px, 1.3vw, 19px)",
-                color: "#A1A1AA",
-                lineHeight: 1.65,
-                maxWidth: "460px",
-                marginBottom: "28px",
-                fontFamily: "var(--font-sans)",
-              }}
-            >
-              Your Digital Receptionist does more than answer. It keeps the conversation moving.
-            </p>
+          <div style={{ display: "flex", gap: "8px" }}>
+            {CHANNELS.map((ch) => {
+              const Icon = ch.icon;
+              const active = selectedChannel === ch.id;
+              return (
+                <button
+                  key={ch.id}
+                  onClick={() => { setSelectedChannel(ch.id); setActiveIdx(0); }}
+                  className="hp03-channel-btn"
+                  style={{
+                    background: active ? "var(--green-glow)" : "var(--surface)",
+                    color: active ? "var(--green)" : "var(--text-muted)",
+                    border: `1px solid ${active ? "var(--border-green)" : "var(--border)"}`,
+                  }}
+                >
+                  <Icon size={13} />
+                  <span>{ch.label}</span>
+                </button>
+              );
+            })}
+          </div>
+        </div>
 
-            {/* Channel Switcher */}
-            <div style={{ display: "flex", gap: "8px", marginBottom: "32px" }}>
-              {[
-                { id: "voice" as const, label: "Voice", icon: PhoneCall },
-                { id: "whatsapp" as const, label: "WhatsApp", icon: MessageSquare },
-                { id: "web" as const, label: "Web", icon: Globe },
-              ].map((ch) => {
-                const Icon = ch.icon;
-                const active = selectedChannel === ch.id;
+        <p style={{ fontSize: "clamp(16px, 1.3vw, 19px)", color: "var(--text-muted)", lineHeight: 1.65, maxWidth: "560px", marginBottom: "48px" }}>
+          Your Digital Receptionist does more than answer. It keeps the conversation moving.
+        </p>
+
+        <div className="hp03-layout">
+          {/* Left — the numbered stepper, restyled as cards on a connecting line */}
+          <div className="hp03-steps">
+            <div className="hp03-steps-line" />
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={selectedChannel}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25 }}
+                className="hp03-steps-list"
+              >
+                {currentSteps.map((s, idx) => {
+                  const Icon = STEP_ICONS[idx];
+                  const isActive = idx === activeIdx;
+                  return (
+                    <motion.div
+                      key={s.num}
+                      initial={{ opacity: 0, y: 10 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.4, delay: idx * 0.06 }}
+                      className="hp03-step-row"
+                      onMouseEnter={() => setActiveIdx(idx)}
+                    >
+                      <div className="hp03-step-node" style={{
+                        background: isActive ? "var(--green)" : "var(--surface)",
+                        borderColor: isActive ? "var(--green)" : "var(--border2)",
+                      }}>
+                        <span style={{ color: isActive ? "#fff" : "var(--text-dim)" }}>{s.num}</span>
+                      </div>
+                      <Card className="hp03-step-card">
+                        <CardContent className="flex items-center gap-4">
+                          <span className="hp03-step-icon">
+                            <Icon size={18} />
+                          </span>
+                          <div style={{ minWidth: 0, flex: 1 }}>
+                            <div className="hp03-step-title">{s.step}</div>
+                            <div className="hp03-step-text">{s.text}</div>
+                            {s.escalation && (
+                              <Badge variant="destructive" className="hp03-step-badge">{s.escalation}</Badge>
+                            )}
+                            {s.isLearn && (
+                              <Badge className="hp03-step-badge hp03-step-badge-green">Hello was only the beginning.</Badge>
+                            )}
+                          </div>
+                          <ArrowRight size={16} className="hp03-step-arrow" />
+                        </CardContent>
+                      </Card>
+                    </motion.div>
+                  );
+                })}
+              </motion.div>
+            </AnimatePresence>
+
+            <div className="hp03-cta-row">
+              <a href="/contact" className="hp03-cta-btn">
+                See it in action <ArrowRight size={15} />
+              </a>
+              <a href="#professions" className="hp03-watch-link">
+                <span className="hp03-watch-play"><Play size={12} fill="currentColor" /></span>
+                <span>
+                  <span className="hp03-watch-title">Watch a conversation move</span>
+                  <span className="hp03-watch-sub">Real calls. Real outcomes.</span>
+                </span>
+              </a>
+            </div>
+          </div>
+
+          {/* Right — the live product visual: a call card, a transcript, and outcome metrics */}
+          <div className="hp03-visual">
+            <div className="hp03-visual-bg" aria-hidden />
+
+            <div className="hp03-visual-top">
+              <motion.div
+                key={`call-${selectedChannel}`}
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5 }}
+                className="hp03-call-card"
+              >
+                <Card>
+                  <CardContent className="flex flex-col gap-4">
+                    <div className="hp03-call-head">
+                      <span className="hp03-live-dot" style={{ background: visual.accent }} />
+                      <span className="hp03-live-label">{meta.live}</span>
+                      <span className="hp03-live-timer">{timer}</span>
+                    </div>
+
+                    {selectedChannel === "voice" ? (
+                      <div className="hp03-waveform">
+                        {Array.from({ length: 22 }).map((_, i) => (
+                          <motion.span
+                            key={i}
+                            className="hp03-wave-bar"
+                            initial={{ scaleY: 0.3 }}
+                            animate={{ scaleY: [0.3, 1, 0.3] }}
+                            transition={{ duration: 0.9 + (i % 4) * 0.15, repeat: Infinity, ease: "easeInOut", delay: i * 0.05 }}
+                          />
+                        ))}
+                      </div>
+                    ) : selectedChannel === "whatsapp" ? (
+                      <div className="hp03-status-row">
+                        <MessageSquare size={13} style={{ color: visual.accent }} />
+                        <span>Message delivered</span>
+                        <CheckCheck size={15} style={{ color: "#53BDEB", marginLeft: "auto" }} />
+                      </div>
+                    ) : (
+                      <div className="hp03-status-row">
+                        <Globe size={13} style={{ color: visual.accent }} />
+                        <span>Browsing your website</span>
+                        <span className="hp03-typing-dots"><i /><i /><i /></span>
+                      </div>
+                    )}
+
+                    <div className="hp03-call-center">
+                      <div className="hp03-call-ring-wrap">
+                        {selectedChannel === "voice" ? (
+                          <motion.span
+                            className="hp03-call-ring"
+                            style={{ borderColor: visual.accent }}
+                            initial={{ scale: 1, opacity: 0.6 }}
+                            animate={{ scale: [1, 1.5], opacity: [0.5, 0] }}
+                            transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                          />
+                        ) : (
+                          <motion.span
+                            className="hp03-call-ring hp03-call-ring-static"
+                            style={{ borderColor: visual.accent }}
+                            initial={{ scale: 0.85, opacity: 0 }}
+                            animate={{ scale: 1, opacity: 0.35 }}
+                            transition={{ duration: 0.5 }}
+                          />
+                        )}
+                        <span className="hp03-call-btn" style={{ background: visual.accent, boxShadow: `0 12px 24px -8px ${visual.glow}` }}><HeaderIcon size={24} /></span>
+                      </div>
+                      <div className="hp03-call-number">{meta.handle}</div>
+                      <div className="hp03-call-sub">Incoming {selectedChannel === "voice" ? "call" : selectedChannel === "whatsapp" ? "message" : "visitor"}</div>
+                    </div>
+
+                    <div className="hp03-call-controls">
+                      {selectedChannel === "voice" ? (
+                        <>
+                          <span className="hp03-ctrl-btn"><Mic size={16} /></span>
+                          <span className="hp03-ctrl-btn hp03-ctrl-end"><PhoneOff size={18} /></span>
+                          <span className="hp03-ctrl-btn"><MoreHorizontal size={16} /></span>
+                        </>
+                      ) : selectedChannel === "whatsapp" ? (
+                        <>
+                          <span className="hp03-ctrl-btn"><Check size={16} /></span>
+                          <span className="hp03-ctrl-btn hp03-ctrl-primary" style={{ background: visual.accent }}><Send size={16} /></span>
+                          <span className="hp03-ctrl-btn"><MoreHorizontal size={16} /></span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="hp03-ctrl-btn"><FileText size={16} /></span>
+                          <span className="hp03-ctrl-btn hp03-ctrl-primary" style={{ background: visual.accent }}><MessageSquare size={16} /></span>
+                          <span className="hp03-ctrl-btn"><MoreHorizontal size={16} /></span>
+                        </>
+                      )}
+                    </div>
+                  </CardContent>
+                </Card>
+              </motion.div>
+
+              <motion.div
+                initial={{ opacity: 0, y: 16 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ duration: 0.5, delay: 0.15 }}
+                className="hp03-chat-card"
+              >
+                <Card>
+                  <CardContent className="hp03-chat-content">
+                    {transcript.map((m, i) => (
+                      <AnimatePresence key={i} mode="popLayout">
+                        {i < visibleMessages && (
+                          <motion.div
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0 }}
+                            transition={{ duration: 0.35 }}
+                            className="hp03-chat-row"
+                          >
+                            <span className="hp03-chat-dot" style={{ background: m.from === "ai" ? "var(--green)" : "var(--text-dim)" }} />
+                            <div className={`hp03-chat-bubble ${m.from === "ai" ? "is-ai" : ""}`}>
+                              <div className="hp03-chat-from">
+                                {m.from === "ai" && <Bot size={11} />}
+                                {m.from === "ai" ? "AI Receptionist" : "Caller"}
+                              </div>
+                              <div className="hp03-chat-text">{m.text}</div>
+                            </div>
+                          </motion.div>
+                        )}
+                      </AnimatePresence>
+                    ))}
+                  </CardContent>
+                </Card>
+              </motion.div>
+            </div>
+
+            <div className="hp03-metrics-row">
+              {METRICS.map((m, i) => {
+                const Icon = m.icon;
                 return (
-                  <button
-                    key={ch.id}
-                    onClick={() => setSelectedChannel(ch.id)}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "8px 14px",
-                      borderRadius: "999px",
-                      fontSize: "12.5px",
-                      fontWeight: 600,
-                      cursor: "pointer",
-                      transition: "all 0.2s ease",
-                      background: active ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.04)",
-                      color: active ? "#9BEA16" : "#A1A1AA",
-                      border: `1px solid ${active ? "rgba(155, 234, 22, 0.4)" : "rgba(255, 255, 255, 0.08)"}`,
-                    }}
+                  <motion.div
+                    key={m.label}
+                    initial={{ opacity: 0, y: 14 }}
+                    whileInView={{ opacity: 1, y: 0 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
                   >
-                    <Icon size={13} />
-                    <span>{ch.label}</span>
-                  </button>
+                    <Card className="hp03-metric-card">
+                      <CardContent className="flex flex-col gap-2">
+                        <span className="hp03-metric-icon"><Icon size={14} /></span>
+                        <div className="hp03-metric-value">
+                          <CountingNumber number={m.value} inView inViewOnce transition={{ stiffness: 90, damping: 40 }} />{m.suffix}
+                        </div>
+                        <div className="hp03-metric-label">{m.label}</div>
+                        <svg viewBox="0 0 52 20" className="hp03-metric-spark" aria-hidden>
+                          <path d={SPARK_PATHS[i]} fill="none" stroke="var(--green)" strokeWidth="1.6" strokeLinecap="round" />
+                        </svg>
+                      </CardContent>
+                    </Card>
+                  </motion.div>
                 );
               })}
             </div>
 
-            <a
-              href="#hp-04"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "10px",
-                padding: "13px 26px",
-                borderRadius: "999px",
-                border: "1px solid rgba(143, 216, 19, 0.4)",
-                background: "rgba(143, 216, 19, 0.06)",
-                color: "#9BEA16",
-                fontSize: "14.5px",
-                fontWeight: 600,
-                textDecoration: "none",
-                transition: "all 0.25s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "rgba(143, 216, 19, 0.18)";
-                e.currentTarget.style.borderColor = "#9BEA16";
-                e.currentTarget.style.boxShadow = "0 0 20px rgba(143, 216, 19, 0.3)";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "rgba(143, 216, 19, 0.06)";
-                e.currentTarget.style.borderColor = "rgba(143, 216, 19, 0.4)";
-                e.currentTarget.style.boxShadow = "none";
-              }}
-            >
-              <span>Watch a conversation move</span>
-              <ArrowRight size={15} />
-            </a>
-          </motion.div>
-
-          {/* Right Column: 5 Fluid Wavy Nodes on Continuous Sine Wave */}
-          <div className="hp03-scaler-wrapper">
-            <div className="hp03-diagram-scaler" style={{ position: "relative", width: "700px", height: "340px", flexShrink: 0 }}>
-              <svg viewBox="0 0 700 340" style={{ width: "700px", height: "340px", overflow: "visible" }}>
-                <defs>
-                  {/* Dynamic Sine Wave Gradient */}
-                  <linearGradient id="movesGrad03" x1="0%" y1="0%" x2="100%" y2="0%">
-                    <stop offset="0%" stopColor="#9BEA16" stopOpacity="0.4" />
-                    <stop offset="20%" stopColor="#9BEA16" stopOpacity="1" />
-                    <stop offset="45%" stopColor="#8FD813" stopOpacity="1" />
-                    <stop offset="70%" stopColor="#F59E0B" stopOpacity="0.9" />
-                    <stop offset="100%" stopColor="#9BEA16" stopOpacity="0.85" />
-                  </linearGradient>
-
-                  {/* Atmospheric Glow Filters */}
-                  <filter id="waveGlow" x="-30%" y="-30%" width="160%" height="160%">
-                    <feGaussianBlur stdDeviation="8" result="blur1" />
-                    <feGaussianBlur stdDeviation="2.5" result="blur2" />
-                    <feMerge>
-                      <feMergeNode in="blur1" />
-                      <feMergeNode in="blur2" />
-                      <feMergeNode in="SourceGraphic" />
-                    </feMerge>
-                  </filter>
-
-                  <radialGradient id="nodeCoreGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="rgba(155, 234, 22, 0.45)" />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-
-                  <radialGradient id="humanCoralGlow" cx="50%" cy="50%" r="50%">
-                    <stop offset="0%" stopColor="rgba(248, 113, 113, 0.4)" />
-                    <stop offset="100%" stopColor="transparent" />
-                  </radialGradient>
-                </defs>
-
-                {/* 1. Atmospheric Wide Sine Glow Aura */}
-                <path
-                  d="M 15 150 C 35 20, 60 20, 80 150 C 100 280, 160 280, 200 150 C 240 40, 290 40, 330 150 C 370 260, 420 260, 460 150 C 500 70, 550 70, 590 150 C 625 210, 665 210, 690 150"
-                  fill="none"
-                  stroke="url(#movesGrad03)"
-                  strokeWidth="12"
-                  strokeOpacity="0.16"
-                  filter="url(#waveGlow)"
+            <div className={`hp03-annotation ${caveat.className}`}>
+              Conversations<br />that care.
+              <svg width="60" height="46" viewBox="0 0 60 46" className="hp03-annotation-arrow" aria-hidden>
+                <motion.path
+                  d="M4 4 C 20 8, 34 18, 40 34 C 42 39, 44 42, 48 43"
+                  fill="none" stroke="var(--green)" strokeWidth="2.2" strokeLinecap="round"
+                  initial={{ pathLength: 0 }}
+                  whileInView={{ pathLength: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.8, delay: 0.6 }}
                 />
-
-                {/* 2. Secondary Dashed Frequency Harmonics */}
-                <path
-                  d="M 15 150 C 35 20, 60 20, 80 150 C 100 280, 160 280, 200 150 C 240 40, 290 40, 330 150 C 370 260, 420 260, 460 150 C 500 70, 550 70, 590 150 C 625 210, 665 210, 690 150"
-                  fill="none"
-                  stroke="rgba(255, 255, 255, 0.12)"
-                  strokeWidth="1"
-                  strokeDasharray="4 6"
-                />
-
-                {/* 3. Primary Dotted Green Sine Spine (Mathematically hits every node at y=150) */}
-                <path
-                  id="sineMovementTrack"
-                  d="M 15 150 C 35 20, 60 20, 80 150 C 100 280, 160 280, 200 150 C 240 40, 290 40, 330 150 C 370 260, 420 260, 460 150 C 500 70, 550 70, 590 150 C 625 210, 665 210, 690 150"
-                  fill="none"
-                  stroke="url(#movesGrad03)"
-                  strokeWidth="2.8"
-                  strokeDasharray="3 5"
-                  filter="url(#waveGlow)"
-                />
-
-                {/* 4. Continuous Traveling Laser Photons along Waveform */}
-                <circle r="4" fill="#FFFFFF">
-                  <animateMotion
-                    path="M 15 150 C 35 20, 60 20, 80 150 C 100 280, 160 280, 200 150 C 240 40, 290 40, 330 150 C 370 260, 420 260, 460 150 C 500 70, 550 70, 590 150 C 625 210, 665 210, 690 150"
-                    dur="4.5s"
-                    repeatCount="indefinite"
-                  />
-                </circle>
-                <circle r="8" fill="rgba(155, 234, 22, 0.6)" filter="url(#waveGlow)">
-                  <animateMotion
-                    path="M 15 150 C 35 20, 60 20, 80 150 C 100 280, 160 280, 200 150 C 240 40, 290 40, 330 150 C 370 260, 420 260, 460 150 C 500 70, 550 70, 590 150 C 625 210, 665 210, 690 150"
-                    dur="4.5s"
-                    repeatCount="indefinite"
-                  />
-                </circle>
-
-                {/* Second trailing photon */}
-                <circle r="3" fill="#F59E0B">
-                  <animateMotion
-                    path="M 15 150 C 35 20, 60 20, 80 150 C 100 280, 160 280, 200 150 C 240 40, 290 40, 330 150 C 370 260, 420 260, 460 150 C 500 70, 550 70, 590 150 C 625 210, 665 210, 690 150"
-                    dur="4.5s"
-                    begin="2.25s"
-                    repeatCount="indefinite"
-                  />
-                </circle>
-
-                {/* 5. Red Safety Escalation Branch (Node 04 -> Bring in a human UPWARDS into open space) */}
-                <path d="M 460 130 Q 460 85, 460 70" fill="none" stroke="#F87171" strokeWidth="1.8" strokeDasharray="3 3" />
-
-                {/* 6. Milestone Pods Circles (Centered strictly at x=80, 200, 330, 460, 590) */}
-                {/* Node 01: Answer */}
-                <circle cx="80" cy="150" r="30" fill="url(#nodeCoreGlow)" pointerEvents="none" />
-                <circle cx="80" cy="150" r="22" fill="none" stroke="rgba(155, 234, 22, 0.25)" strokeWidth="1" strokeDasharray="2 3" />
-                <circle cx="80" cy="150" r="16" fill="#080808" stroke="#9BEA16" strokeWidth="2.2" filter="url(#waveGlow)" />
-                <circle cx="80" cy="150" r="6" fill="rgba(155, 234, 22, 0.5)" />
-
-                {/* Node 02: Understand */}
-                <circle cx="200" cy="150" r="30" fill="url(#nodeCoreGlow)" pointerEvents="none" />
-                <circle cx="200" cy="150" r="22" fill="none" stroke="rgba(155, 234, 22, 0.25)" strokeWidth="1" strokeDasharray="2 3" />
-                <circle cx="200" cy="150" r="16" fill="#080808" stroke="#9BEA16" strokeWidth="2.2" filter="url(#waveGlow)" />
-                <circle cx="200" cy="150" r="6" fill="rgba(155, 234, 22, 0.5)" />
-
-                {/* Node 03: Act */}
-                <circle cx="330" cy="150" r="30" fill="url(#nodeCoreGlow)" pointerEvents="none" />
-                <circle cx="330" cy="150" r="22" fill="none" stroke="rgba(155, 234, 22, 0.25)" strokeWidth="1" strokeDasharray="2 3" />
-                <circle cx="330" cy="150" r="16" fill="#080808" stroke="#9BEA16" strokeWidth="2.2" filter="url(#waveGlow)" />
-                <circle cx="330" cy="150" r="6" fill="rgba(155, 234, 22, 0.5)" />
-
-                {/* Node 04: Follow up */}
-                <circle cx="460" cy="150" r="30" fill="url(#nodeCoreGlow)" pointerEvents="none" />
-                <circle cx="460" cy="150" r="22" fill="none" stroke="rgba(155, 234, 22, 0.25)" strokeWidth="1" strokeDasharray="2 3" />
-                <circle cx="460" cy="150" r="16" fill="#080808" stroke="#9BEA16" strokeWidth="2.2" filter="url(#waveGlow)" />
-                <circle cx="460" cy="150" r="6" fill="rgba(155, 234, 22, 0.5)" />
-
-                {/* Node 05: Learn (Continuous Radar Wave) */}
-                <circle cx="590" cy="150" r="44" fill="none" stroke="rgba(155, 234, 22, 0.15)" strokeWidth="1" strokeDasharray="3 4">
-                  <animate attributeName="r" values="36;52;36" dur="3.5s" repeatCount="indefinite" />
-                </circle>
-                <circle cx="590" cy="150" r="32" fill="none" stroke="rgba(155, 234, 22, 0.28)" strokeWidth="1.2" />
-                <circle cx="590" cy="150" r="20" fill="none" stroke="rgba(155, 234, 22, 0.45)" strokeWidth="1.5" />
-                <circle cx="590" cy="150" r="14" fill="#080808" stroke="#9BEA16" strokeWidth="2.5" filter="url(#waveGlow)" />
-                <path d="M 585 150 L 588 153 L 595 146" fill="none" stroke="#9BEA16" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" />
-
-                {/* Branch Target: Bring in a human (Cleanly placed at top y=68) */}
-                <circle cx="460" cy="68" r="18" fill="url(#humanCoralGlow)" pointerEvents="none" />
-                <circle cx="460" cy="68" r="11" fill="#080808" stroke="#F87171" strokeWidth="1.8" />
-                <circle cx="460" cy="68" r="4" fill="#F87171" />
+                <path d="M42 36 L 48 43 L 54 35" fill="none" stroke="var(--green)" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" />
               </svg>
-
-              {/* Top Branch Node Tag: Bring in a human (Positioned at top with zero overlap) */}
-              <div
-                style={{
-                  position: "absolute",
-                  left: "398px",
-                  top: "22px",
-                  textAlign: "center",
-                  width: "124px",
-                }}
-              >
-                <div
-                  style={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: "4px",
-                    padding: "4px 9px",
-                    borderRadius: "999px",
-                    background: "rgba(28, 10, 10, 0.92)",
-                    border: "1px solid rgba(248, 113, 113, 0.45)",
-                    fontSize: "11px",
-                    color: "#F87171",
-                    fontWeight: 600,
-                    boxShadow: "0 4px 16px rgba(0, 0, 0, 0.9), 0 0 12px rgba(248, 113, 113, 0.2)",
-                    backdropFilter: "blur(12px)",
-                  }}
-                >
-                  <span>Bring in a human</span>
-                </div>
-              </div>
-
-              {/* Glassmorphic Labels Overlayed for the 5 Milestones (Unobstructed at bottom) */}
-              {currentSteps.map((s, idx) => {
-                const leftPositions = [36, 156, 286, 416, 532];
-                return (
-                  <motion.div
-                    key={idx}
-                    whileHover={{ y: -4 }}
-                    style={{
-                      position: "absolute",
-                      left: `${leftPositions[idx]}px`,
-                      top: "192px",
-                      textAlign: "center",
-                      width: idx === 4 ? "124px" : "88px",
-                      cursor: "default",
-                    }}
-                  >
-                    {/* Number Badge */}
-                    <div
-                      style={{
-                        display: "inline-block",
-                        fontSize: "10.5px",
-                        fontFamily: "monospace",
-                        color: "#9BEA16",
-                        background: "rgba(155, 234, 22, 0.1)",
-                        border: "1px solid rgba(155, 234, 22, 0.25)",
-                        padding: "1px 6px",
-                        borderRadius: "4px",
-                        fontWeight: 700,
-                        marginBottom: "3px",
-                      }}
-                    >
-                      {s.num}
-                    </div>
-                    <div style={{ fontSize: "13.5px", fontWeight: 600, color: "#F5F5F0", letterSpacing: "-0.01em" }}>
-                      {s.step}
-                    </div>
-                    <div style={{ fontSize: "11px", color: "#8E8E93", marginTop: "2px", lineHeight: 1.3 }}>
-                      {s.label}
-                    </div>
-                    {idx === 4 && (
-                      <div
-                        style={{
-                          fontSize: "11px",
-                          color: "#9BEA16",
-                          fontFamily: "var(--font-serif)",
-                          fontStyle: "italic",
-                          marginTop: "4px",
-                          whiteSpace: "nowrap",
-                        }}
-                      >
-                        Hello was only the beginning.
-                      </div>
-                    )}
-                  </motion.div>
-                );
-              })}
             </div>
           </div>
         </div>
       </div>
 
       <style>{`
-        .hp03-section-pad {
-          padding: 130px 40px 110px;
+        .hp03-section-pad { padding: 130px 40px 110px; }
+
+        .hp03-channel-btn {
+          display: flex; align-items: center; gap: 6px; padding: 8px 14px; border-radius: 999px;
+          font-size: 12.5px; font-weight: 600; cursor: pointer; transition: all 0.2s ease;
         }
-        .hp03-scaler-wrapper {
+
+        .hp03-layout {
+          display: grid;
+          grid-template-columns: 1fr 1fr;
+          gap: 56px;
+          align-items: start;
+        }
+
+        /* Steps */
+        .hp03-steps { position: relative; }
+        .hp03-steps-line {
+          position: absolute; top: 20px; bottom: 76px; left: 19px;
+          width: 2px; background: var(--border2);
+        }
+        .hp03-steps-list { display: flex; flex-direction: column; gap: 14px; }
+        .hp03-step-row { display: grid; grid-template-columns: 40px 1fr; gap: 16px; align-items: flex-start; position: relative; }
+        .hp03-step-node {
+          position: relative; z-index: 1;
+          width: 40px; height: 40px; border-radius: 50%; border: 2px solid;
+          display: flex; align-items: center; justify-content: center;
+          font-family: 'SF Mono', 'Menlo', monospace; font-size: 12.5px; font-weight: 700;
+          transition: all 0.25s ease;
+          margin-top: 6px;
+        }
+        .hp03-step-card {
+          box-shadow: 0 1px 0 rgba(255,255,255,0.05) inset, 0 20px 36px -28px rgba(11, 15, 13, 0.35);
+          transition: border-color 0.2s ease, transform 0.2s ease;
+        }
+        .hp03-step-row:hover .hp03-step-card { transform: translateY(-1px); border-color: var(--border2); }
+        .hp03-step-icon {
+          width: 38px; height: 38px; border-radius: 12px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--green-glow); color: var(--green);
+        }
+        .hp03-step-title { font-size: 16px; font-weight: 700; color: var(--text-ivory); }
+        .hp03-step-text { font-size: 13.5px; color: var(--text-muted); line-height: 1.5; margin-top: 3px; }
+        .hp03-step-badge { display: inline-flex; margin-top: 8px; font-size: 11px; }
+        .hp03-step-badge-green { background: var(--green-glow); color: var(--green); }
+        .hp03-step-arrow { color: var(--text-dim); flex-shrink: 0; }
+
+        .hp03-cta-row { display: flex; align-items: center; gap: 22px; margin-top: 28px; flex-wrap: wrap; }
+        .hp03-cta-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 13px 22px; border-radius: 999px;
+          background: var(--text-ivory); color: var(--bg);
+          font-size: 13.5px; font-weight: 700; text-decoration: none;
+          box-shadow: 0 12px 24px -10px rgba(11, 15, 13, 0.4);
+          transition: transform 0.2s ease;
+        }
+        .hp03-cta-btn:hover { transform: translateY(-2px); }
+        .hp03-watch-link { display: flex; align-items: center; gap: 12px; text-decoration: none; }
+        .hp03-watch-play {
+          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          border: 1px solid var(--border2); color: var(--text-ivory);
+        }
+        .hp03-watch-title { display: block; font-size: 13.5px; font-weight: 700; color: var(--text-ivory); }
+        .hp03-watch-sub { display: block; font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+
+        /* Visual */
+        .hp03-visual { position: relative; }
+        .hp03-visual-bg {
+          position: absolute; top: -60px; right: -60px; width: 340px; height: 340px;
+          background: radial-gradient(circle, var(--green-glow) 0%, transparent 70%);
+          border-radius: 50%;
+          pointer-events: none;
+        }
+        .hp03-visual-top { position: relative; display: grid; grid-template-columns: 1fr 1.1fr; gap: 20px; }
+
+        .hp03-call-head { display: flex; align-items: center; gap: 8px; }
+        .hp03-live-dot { width: 7px; height: 7px; border-radius: 50%; background: var(--green); animation: hp03Pulse 1.6s ease-in-out infinite; }
+        @keyframes hp03Pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 1; } }
+        .hp03-live-label { font-size: 12.5px; font-weight: 700; color: var(--text-ivory); }
+        .hp03-live-timer { margin-left: auto; font-family: 'SF Mono', 'Menlo', monospace; font-size: 12px; color: var(--text-dim); }
+
+        .hp03-waveform { display: flex; align-items: center; gap: 2.5px; height: 28px; }
+        .hp03-wave-bar { display: block; width: 3px; height: 100%; border-radius: 2px; background: var(--green-luminous); transform-origin: center; }
+
+        .hp03-status-row { display: flex; align-items: center; gap: 7px; height: 28px; font-size: 12.5px; color: var(--text-muted); }
+        .hp03-typing-dots { display: inline-flex; gap: 3px; margin-left: auto; }
+        .hp03-typing-dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--text-dim); display: block; animation: hp03TypingDot 1.2s ease-in-out infinite; }
+        .hp03-typing-dots i:nth-child(2) { animation-delay: 0.15s; }
+        .hp03-typing-dots i:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes hp03TypingDot { 0%, 60%, 100% { opacity: 0.3; transform: translateY(0); } 30% { opacity: 1; transform: translateY(-2px); } }
+
+        .hp03-call-center { display: flex; flex-direction: column; align-items: center; padding: 8px 0; }
+        .hp03-call-ring-wrap { position: relative; width: 72px; height: 72px; display: flex; align-items: center; justify-content: center; }
+        .hp03-call-ring { position: absolute; inset: 0; border-radius: 50%; border: 2px solid var(--green); }
+        .hp03-call-btn {
+          position: relative; width: 60px; height: 60px; border-radius: 50%;
+          background: var(--green); color: #fff;
+          display: flex; align-items: center; justify-content: center;
+          box-shadow: 0 12px 24px -8px var(--green-glow-strong);
+        }
+        .hp03-call-number { margin-top: 12px; font-size: 15px; font-weight: 700; color: var(--text-ivory); }
+        .hp03-call-sub { font-size: 12px; color: var(--text-muted); margin-top: 2px; }
+
+        .hp03-call-controls { display: flex; align-items: center; justify-content: center; gap: 14px; }
+        .hp03-ctrl-btn {
+          width: 38px; height: 38px; border-radius: 50%;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--surface2); color: var(--text-muted);
+          border: 1px solid var(--border);
+        }
+        .hp03-ctrl-end { background: var(--coral); color: #fff; border-color: var(--coral); }
+        .hp03-ctrl-primary { color: #fff; border-color: transparent; }
+
+        .hp03-chat-content { display: flex; flex-direction: column; gap: 12px; min-height: 220px; }
+        .hp03-chat-row { display: flex; gap: 8px; align-items: flex-start; }
+        .hp03-chat-dot { width: 6px; height: 6px; border-radius: 50%; margin-top: 7px; flex-shrink: 0; }
+        .hp03-chat-bubble {
+          flex: 1; min-width: 0;
+          background: var(--surface2);
+          border-radius: 12px;
+          padding: 9px 12px;
+        }
+        .hp03-chat-bubble.is-ai { background: var(--green-glow); }
+        .hp03-chat-from { display: flex; align-items: center; gap: 4px; font-size: 10.5px; font-weight: 700; color: var(--text-dim); text-transform: uppercase; letter-spacing: 0.04em; }
+        .hp03-chat-bubble.is-ai .hp03-chat-from { color: var(--green); }
+        .hp03-chat-text { font-size: 13px; color: var(--text-ivory); line-height: 1.45; margin-top: 3px; }
+
+        .hp03-metrics-row { position: relative; display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-top: 20px; }
+        .hp03-metric-icon {
+          width: 28px; height: 28px; border-radius: 8px;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--green-glow); color: var(--green);
+        }
+        .hp03-metric-value { font-size: 20px; font-weight: 700; color: var(--text-ivory); font-family: 'SF Mono', 'Menlo', monospace; }
+        .hp03-metric-label { font-size: 11px; color: var(--text-muted); line-height: 1.3; }
+        .hp03-metric-spark { width: 100%; height: 18px; margin-top: 2px; opacity: 0.7; }
+
+        .hp03-annotation {
           position: relative;
-          width: 100%;
-          min-height: 360px;
-          display: flex;
-          align-items: center;
-          justifyContent: center;
+          margin-top: 18px;
+          text-align: right;
+          font-size: 22px; line-height: 1.15; color: var(--text-muted);
         }
-        .hp03-diagram-scaler {
-          position: relative;
-          width: 700px;
-          height: 340px;
-          transform-origin: center center;
+        .hp03-annotation-arrow { display: inline-block; margin-left: 8px; vertical-align: -14px; }
+
+        @media (max-width: 980px) {
+          .hp03-layout { grid-template-columns: 1fr; gap: 48px; }
+          .hp03-visual-top { grid-template-columns: 1fr; }
         }
-        @media (max-width: 900px) {
-          .hp03-grid {
-            grid-template-columns: 1fr !important;
-            gap: 40px !important;
-          }
-        }
-        @media (max-width: 768px) {
-          .hp03-section-pad {
-            padding: 56px 16px 40px !important;
-          }
-          .hp03-scaler-wrapper {
-            height: 200px !important;
-            min-height: 200px !important;
-            overflow: hidden !important;
-            display: block !important;
-          }
-          .hp03-diagram-scaler {
-            position: absolute !important;
-            left: 50% !important;
-            top: 50% !important;
-            transform: translate(-50%, -50%) scale(0.46) !important;
-            transform-origin: center center !important;
-          }
-        }
-        @media (max-width: 400px) {
-          .hp03-scaler-wrapper {
-            height: 180px !important;
-            min-height: 180px !important;
-          }
-          .hp03-diagram-scaler {
-            transform: translate(-50%, -50%) scale(0.42) !important;
-          }
-        }
-        @media (max-width: 350px) {
-          .hp03-scaler-wrapper {
-            height: 165px !important;
-            min-height: 165px !important;
-          }
-          .hp03-diagram-scaler {
-            transform: translate(-50%, -50%) scale(0.38) !important;
-          }
+
+        @media (max-width: 700px) {
+          .hp03-section-pad { padding: 56px 20px 40px !important; }
+          .hp03-metrics-row { grid-template-columns: repeat(3, 1fr); gap: 8px; }
+          .hp03-cta-row { flex-direction: column; align-items: stretch; }
+          .hp03-cta-btn { justify-content: center; }
         }
       `}</style>
     </section>

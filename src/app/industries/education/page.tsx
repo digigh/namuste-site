@@ -1,14 +1,13 @@
 import type { Metadata } from "next";
-import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import AIVoiceChatbotEngine from "@/components/AIVoiceChatbotEngine";
-import { GraduationCap, BookOpen, Calendar, CheckCircle2, ArrowRight, Sparkles, MessageSquare } from "lucide-react";
+import IndustryComingSoon from "@/components/IndustryComingSoon";
+import { GraduationCap } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "AI Admissions & Student Counselling Assistant — Namuste",
+  title: "Education & Admissions AI Assistant — Coming Soon | Namuste",
   description:
-    "Namuste answers course enquiries, qualifies student eligibility, and schedules counselling sessions automatically across voice, WhatsApp, and web.",
+    "AI-driven admissions counselling, campus tour scheduling and eligibility checks for education and academies — coming soon to Namuste.",
 };
 
 export default function EducationPage() {
@@ -16,115 +15,16 @@ export default function EducationPage() {
     <>
       <Navbar />
       <main style={{ background: "var(--bg)", minHeight: "100vh", overflowX: "hidden" }}>
-        {/* HERO */}
-        <section
-          style={{
-            minHeight: "85vh",
-            paddingTop: "140px",
-            paddingBottom: "80px",
-            position: "relative",
-            display: "flex",
-            flexDirection: "column",
-            justifyContent: "space-between",
-          }}
-          className="bg-radial-hero"
-        >
-          <div style={{ maxWidth: "1360px", margin: "0 auto", padding: "0 36px", width: "100%" }}>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", fontSize: "12px", color: "var(--text-muted)", marginBottom: "24px" }}>
-              <Link href="/" style={{ color: "var(--text-muted)", textDecoration: "none" }}>Industries</Link>
-              <span>/</span>
-              <span style={{ color: "var(--green)" }}>Education & Admissions</span>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1.1fr 0.9fr", gap: "48px", alignItems: "center" }} className="hero-grid">
-              <div>
-                <h1 className="serif" style={{ fontSize: "clamp(30px, 3.4vw, 46px)", fontWeight: 400, lineHeight: 1.2, letterSpacing: "-0.018em", color: "var(--text-ivory)", marginBottom: "20px", maxWidth: "520px" }}>
-                  Interest is immediate. Admissions follow-up <span className="serif-italic">rarely is.</span>
-                </h1>
-                <p style={{ color: "var(--text-muted)", fontSize: "clamp(15px, 1.3vw, 17px)", lineHeight: 1.65, maxWidth: "480px", marginBottom: "32px" }}>
-                  Prospective students ask questions across channels, but slow responses reduce counselling and application conversion.
-                </p>
-                <div style={{ display: "flex", gap: "14px", flexWrap: "wrap" }}>
-                  <a href="#admissions-demo" className="btn-primary">
-                    Experience Admissions Assistant <ArrowRight size={15} />
-                  </a>
-                  <Link href="/contact" className="btn-secondary">
-                    Book a Demo <ArrowRight size={15} />
-                  </Link>
-                </div>
-              </div>
-
-              {/* Connected Trail */}
-              <div className="glass-card" style={{ padding: "28px", borderRadius: "18px", background: "rgba(12, 14, 12, 0.85)" }}>
-                <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
-                  <div style={{ background: "rgba(255, 255, 255, 0.03)", padding: "14px 18px", borderRadius: "12px", border: "1px solid var(--border-coral)" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--coral)", textTransform: "uppercase" }}>Student Query:</div>
-                    <div style={{ fontSize: "13.5px", color: "var(--text-ivory)" }}>What is the deadline and eligibility for the MBA Data Science program?</div>
-                  </div>
-                  <div style={{ background: "rgba(118, 192, 67, 0.08)", padding: "14px 18px", borderRadius: "12px", border: "1px solid var(--border-green)" }}>
-                    <div style={{ fontSize: "11px", fontWeight: 700, color: "var(--green)", textTransform: "uppercase" }}>Namuste Admissions AI:</div>
-                    <div style={{ fontSize: "13.5px", color: "var(--text-ivory)" }}>Applications close on July 15. Requires 50%+ in undergrad. Would you like to schedule a 1-on-1 counselor call?</div>
-                  </div>
-                  <div style={{ background: "rgba(10, 18, 10, 0.9)", padding: "12px 18px", borderRadius: "12px", border: "1px solid var(--green)", display: "flex", alignItems: "center", gap: "8px" }}>
-                    <CheckCircle2 size={16} style={{ color: "var(--green-luminous)" }} />
-                    <span style={{ fontSize: "13px", fontWeight: 600, color: "var(--green-luminous)" }}>Counselling session booked & brochure PDF delivered</span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div style={{ textAlign: "center", marginTop: "60px", borderTop: "1px solid var(--border)", paddingTop: "40px" }}>
-            <span className="serif" style={{ fontSize: "clamp(20px, 2.5vw, 32px)", color: "var(--text-ivory)" }}>
-              From first question to <span className="serif-italic">completed next step.</span>
-            </span>
-          </div>
-        </section>
-
-        {/* LIVE ADMISSIONS ASSISTANT DEMO */}
-        <section id="admissions-demo" style={{ padding: "100px 36px", background: "rgba(10, 12, 10, 0.9)", borderTop: "1px solid var(--border)" }}>
-          <div style={{ maxWidth: "1200px", margin: "0 auto" }}>
-            <div style={{ textAlign: "center", maxWidth: "640px", margin: "0 auto 48px" }}>
-              <div className="pill" style={{ marginBottom: "14px" }}>Interactive Admissions Demo</div>
-              <h2 className="serif" style={{ fontSize: "clamp(28px, 4vw, 44px)", color: "var(--text-ivory)", lineHeight: 1.2, marginBottom: "14px" }}>
-                Test the <span className="serif-italic">Admissions Counselor</span> live.
-              </h2>
-              <p style={{ color: "var(--text-muted)", fontSize: "15px", lineHeight: 1.65 }}>
-                Experience how Namuste handles student intake, syllabus inquiries, and demo masterclass scheduling in real-time.
-              </p>
-            </div>
-
-            <AIVoiceChatbotEngine lockedIndustryId="education" hideIndustrySelector={true} />
-          </div>
-        </section>
-
-        {/* EDUCATION CAPABILITIES */}
-        <section style={{ padding: "100px 36px", background: "var(--bg2)", borderTop: "1px solid var(--border)" }}>
-          <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
-            <div style={{ maxWidth: "640px", marginBottom: "56px" }}>
-              <div className="pill" style={{ marginBottom: "14px" }}>Admissions Workflows</div>
-              <h2 className="serif" style={{ fontSize: "clamp(28px, 3.8vw, 42px)", color: "var(--text-ivory)", lineHeight: 1.2 }}>
-                Engage prospective students <span className="serif-italic">at the peak of intent.</span>
-              </h2>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "24px" }} className="cards-grid-3">
-              {[
-                { title: "Course Discovery & Eligibility", desc: "Answers entrance criteria, fee structures, scholarship options, and syllabus questions instantly." },
-                { title: "Lead Qualification & Scoring", desc: "Screens academic background and graduation timeline to prioritize high-intent student leads for counsellors." },
-                { title: "Deadline Reminders & WhatsApp Follow-up", desc: "Automates reminders for document submissions, entrance test dates, and fee payment deadlines." },
-              ].map((c, i) => (
-                <div key={i} className="glass-card" style={{ padding: "32px", borderRadius: "18px" }}>
-                  <h3 className="serif" style={{ fontSize: "20px", color: "var(--text-ivory)", marginBottom: "10px" }}>{c.title}</h3>
-                  <p style={{ fontSize: "13.5px", color: "var(--text-muted)", lineHeight: 1.65 }}>{c.desc}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
+        <IndustryComingSoon
+          breadcrumbLabel="Education & Academies"
+          headline="Class is"
+          headlineAccent="about to begin."
+          description="Admissions counselling, campus tours and eligibility checks — in development."
+          icon={<GraduationCap size={26} />}
+          chips={["Admissions", "Campus Tours", "Eligibility Checks", "Counselling"]}
+        />
       </main>
       <Footer />
-      <style>{`@media (max-width: 900px) { .cards-grid-3 { grid-template-columns: 1fr !important; } }`}</style>
     </>
   );
 }

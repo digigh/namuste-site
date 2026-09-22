@@ -129,6 +129,47 @@ export function detectLanguage(text: string): string {
   return "en-IN";
 }
 
+// ─── Explicit language-switch requests ─────────────────────────────────────
+// Everything above is PASSIVE detection — inferring the language from what
+// the caller is already saying. That leaves no way for a caller who
+// explicitly ASKS to switch ("please speak in Hindi", "hindi mein baat
+// karo") to be understood as a request rather than just more content to
+// route: with no dedicated handler, that message fell through the same
+// keyword paths as everything else and could be misread entirely (e.g. as a
+// booking correction, if it happened to land on the confirmation step).
+const LANGUAGE_NAME_TRIGGERS: { code: string; pattern: RegExp }[] = [
+  { code: "hi-IN", pattern: /hindi|हिंदी|हिन्दी/i },
+  { code: "ta-IN", pattern: /tamil|தமிழ்/i },
+  { code: "te-IN", pattern: /telugu|తెలుగు/i },
+  { code: "bn-IN", pattern: /bengali|bangla|বাংলা/i },
+  { code: "ml-IN", pattern: /malayalam|മലയാളം/i },
+  { code: "kn-IN", pattern: /kannada|ಕನ್ನಡ/i },
+  { code: "pa-IN", pattern: /punjabi|ਪੰਜਾਬੀ/i },
+  { code: "gu-IN", pattern: /gujarati|ગુજરાતી/i },
+  { code: "or-IN", pattern: /\bodia\b|\boriya\b|ଓଡ଼ିଆ/i },
+  { code: "en-IN", pattern: /english|angrezi|angreji/i },
+];
+
+// A phrase shaped like "speak/talk/reply in ___", "switch/change to ___", or
+// the Hindi/Hinglish "___ mein baat karo/bolo" pattern — checked BEFORE
+// looking for which language name it names, so a language name mentioned for
+// an unrelated reason (a caller saying "I only know Hindi" as an aside,
+// without asking for a switch) doesn't misfire.
+const LANGUAGE_SWITCH_PHRASE = /\b(speak|talk|reply|respond|continue|switch|change)\b[\s\w]{0,20}\b(in|to)\b|\b(mein|mai|me)\s+(baat|bol|bolo|bolna|bataiye|kaho|karo)|में\s*(बात|बोलो|बोलिए|बोलना)/i;
+
+// Returns the BCP-47 code the caller explicitly asked to switch to, or null
+// if this message isn't a language-switch request at all. Callers should let
+// this override BOTH the normal per-turn detection and language stickiness —
+// an explicit ask should always win, never get anchored away by whatever
+// language the conversation happened to be in already.
+export function detectExplicitLanguageSwitchRequest(text: string): string | null {
+  if (!text || !LANGUAGE_SWITCH_PHRASE.test(text)) return null;
+  for (const { code, pattern } of LANGUAGE_NAME_TRIGGERS) {
+    if (pattern.test(text)) return code;
+  }
+  return null;
+}
+
 // ─── Language Stickiness ──────────────────────────────────────────────────
 // Bengali speakers reported the AI randomly flipping to Hindi or English
 // mid-conversation while they kept speaking Bengali the whole time. Root
@@ -138,9 +179,24 @@ export function detectLanguage(text: string): string {
 // (a one-word "yes", a name that sounds similar across languages) was enough
 // to flip the whole conversation. Anchor to the language the conversation
 // has actually been happening in, and only let it change with real evidence.
-export function establishedLanguageFromHistory(messages: { speaker: string; text: string }[]): string {
+export function establishedLanguageFromHistory(messages: { speaker: string; text: string; language?: string }[]): string {
   for (let i = messages.length - 1; i >= 0; i--) {
-    if (messages[i].speaker === "ai") return detectLanguage(messages[i].text);
+    if (messages[i].speaker === "ai") {
+      // Prefer the language this turn was actually generated in — the
+      // frontend stores it verbatim from the response that produced this
+      // message. Falling back to detectLanguage() only for older/preset
+      // history that predates this field (or a genuine gap). This matters
+      // because re-deriving from TEXT alone is lossy for GPT's romanized
+      // Hindi replies: they vary in phrasing and often use common words
+      // ("hai", "hain", "kar", "mein") that aren't on the fixed Hinglish
+      // keyword list detectLanguage() matches against, so a real Hindi
+      // reply could get silently misread as English — breaking stickiness
+      // for the very next turn, which is what made language switching feel
+      // unreliable.
+      const stored = messages[i].language;
+      if (stored) return stored;
+      return detectLanguage(messages[i].text);
+    }
   }
   return "en-IN"; // no AI turn yet — first message of the call, nothing to anchor to
 }

@@ -117,6 +117,142 @@ export async function callOpenAI(
   return parsed as Record<string, any>;
 }
 
+// Scans a growing buffer of raw (possibly-incomplete) JSON text for a given
+// top-level string field and returns its decoded value the INSTANT it's
+// syntactically complete (an unescaped closing quote found) — before the
+// rest of the JSON object has necessarily finished. Returns null if the
+// field hasn't appeared yet, isn't a string, or hasn't closed yet; callers
+// should keep calling this as more of the stream arrives. Not a general JSON
+// parser — deliberately narrow, since the exact schema (reply is always the
+// first field) is known ahead of time.
+function extractCompletedJsonStringField(buffer: string, fieldName: string): string | null {
+  const keyPattern = `"${fieldName}"`;
+  const keyIdx = buffer.indexOf(keyPattern);
+  if (keyIdx === -1) return null;
+
+  let i = keyIdx + keyPattern.length;
+  while (i < buffer.length && /\s/.test(buffer[i])) i++;
+  if (buffer[i] !== ":") return null;
+  i++;
+  while (i < buffer.length && /\s/.test(buffer[i])) i++;
+  if (buffer[i] !== '"') return null;
+
+  const valueStart = i;
+  let j = valueStart + 1;
+  while (j < buffer.length) {
+    if (buffer[j] === "\\") { j += 2; continue; }
+    if (buffer[j] === '"') {
+      const literal = buffer.slice(valueStart, j + 1);
+      try {
+        return JSON.parse(literal);
+      } catch {
+        return null;
+      }
+    }
+    j++;
+  }
+  return null; // not closed yet — more of the stream still to arrive
+}
+
+// ─── OpenAI Chat Handler — streaming variant ─────────────────────────────────
+// Same request/response contract as callOpenAI() — extracted/isComplete etc.
+// go through the exact same complete, fully-parsed JSON at the end, so
+// nothing about validation changes. The only difference: since the schema
+// always writes "reply" first, onReplyReady fires with the caller's spoken
+// reply text (and the language it was generated for) the moment that one
+// field closes — typically well before the rest of the JSON (extracted,
+// isComplete, etc.) finishes streaming — so a caller can start synthesizing
+// speech for it immediately instead of waiting for the whole turn to
+// resolve. On any failure (network, non-OK, malformed JSON), this throws;
+// callers are expected to fall back to the non-streaming callOpenAI(), which
+// keeps its own retry + Gemini fallback chain unchanged as the safety net.
+export async function callOpenAIStreaming(
+  systemPrompt: string,
+  messages: { role: "user" | "assistant"; content: string }[],
+  apiKey: string,
+  onReplyReady?: (replyText: string) => void
+): Promise<Record<string, any>> {
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 8000);
+  let res: Response;
+  try {
+    res = await fetch("https://api.openai.com/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${apiKey}`,
+      },
+      signal: controller.signal,
+      body: JSON.stringify({
+        model: "gpt-4o-mini",
+        messages: [
+          { role: "system", content: systemPrompt },
+          ...messages,
+        ],
+        response_format: { type: "json_object" },
+        temperature: 0.2,
+        max_tokens: 350,
+        stream: true,
+      }),
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+
+  if (!res.ok || !res.body) {
+    const errText = await res.text().catch(() => "");
+    throw new Error(`OpenAI streaming ${res.status}: ${errText}`);
+  }
+
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let sseBuffer = "";
+  let contentBuffer = "";
+  let replyFired = false;
+
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    sseBuffer += decoder.decode(value, { stream: true });
+
+    let newlineIdx;
+    while ((newlineIdx = sseBuffer.indexOf("\n")) >= 0) {
+      const line = sseBuffer.slice(0, newlineIdx).trim();
+      sseBuffer = sseBuffer.slice(newlineIdx + 1);
+      if (!line.startsWith("data:")) continue;
+      const payload = line.slice(5).trim();
+      if (!payload || payload === "[DONE]") continue;
+      try {
+        const evt = JSON.parse(payload);
+        const delta = evt.choices?.[0]?.delta?.content;
+        if (typeof delta === "string") {
+          contentBuffer += delta;
+          if (!replyFired && onReplyReady) {
+            const reply = extractCompletedJsonStringField(contentBuffer, "reply");
+            if (reply !== null) {
+              replyFired = true;
+              onReplyReady(reply);
+            }
+          }
+        }
+      } catch {
+        // Partial/malformed SSE chunk boundary — the next chunk completes it.
+      }
+    }
+  }
+
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(contentBuffer);
+  } catch {
+    throw new Error("OpenAI streaming returned malformed JSON");
+  }
+  if (typeof parsed !== "object" || parsed === null || typeof (parsed as { reply?: unknown }).reply !== "string") {
+    throw new Error("OpenAI streaming response missing required 'reply' field");
+  }
+  return parsed as Record<string, any>;
+}
+
 async function callGemini(
   systemPrompt: string,
   messages: { role: "user" | "assistant"; content: string }[],

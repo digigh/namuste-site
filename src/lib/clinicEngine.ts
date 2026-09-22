@@ -226,14 +226,20 @@ export function runClinicFastPath(params: {
   if (effectiveSlot && dept) {
     const resolved = resolveDayAndHour(effectiveSlot, nowIST);
     if (resolved) {
-      const clinicOk = CLINIC_OPEN_DAYS.includes(resolved.dayOfWeek) && resolved.hour >= CLINIC_OPEN_HOUR && resolved.hour < CLINIC_CLOSE_HOUR;
+      // A department's own roster entry (when one exists) is the authoritative
+      // hours window — e.g. the diagnostic lab opens at 7 AM for fasting tests,
+      // narrower general clinic hours would wrongly reject a legitimate early
+      // booking. General clinic hours are only the fallback for a department
+      // with no roster entry.
       const doctorEntry = DOCTOR_ROSTER[dept];
-      const doctorOk = !doctorEntry || (doctorEntry.days.includes(resolved.dayOfWeek) && resolved.hour >= doctorEntry.startHour && resolved.hour < doctorEntry.endHour);
+      const clinicOk = doctorEntry
+        ? doctorEntry.days.includes(resolved.dayOfWeek) && resolved.hour >= doctorEntry.startHour && resolved.hour < doctorEntry.endHour
+        : CLINIC_OPEN_DAYS.includes(resolved.dayOfWeek) && resolved.hour >= CLINIC_OPEN_HOUR && resolved.hour < CLINIC_CLOSE_HOUR;
 
       let finalReply = "";
-      if (!clinicOk) {
+      if (!clinicOk && !doctorEntry) {
         finalReply = tpl.outOfHours;
-      } else if (!doctorOk && doctorEntry) {
+      } else if (!clinicOk && doctorEntry) {
         finalReply = fillTemplate(tpl.doctorDayMismatch, {
           doctor: doctorEntry.doctor,
           days: formatDaysList(doctorEntry.days, lang),
@@ -264,8 +270,8 @@ export function runClinicFastPath(params: {
   if (currentStep?.id === "department" && effectiveSlot) {
     const slotDisplay = resolvedEffectiveSlot || effectiveSlot;
     const finalReply = lang === "hi-IN"
-      ? `ठीक है, ${slotDisplay} का समय नोट कर लिया है। कृपया बताइए आप किस डिपार्टमेंट या डॉक्टर के लिए अपॉइंटमेंट लेना चाहते हैं? हमारे पास Dermatology, Cardiology, Orthopedics, ENT, Pediatrics और General Medicine हैं।`
-      : `Got it, ${slotDisplay}. Which department or doctor would you like to consult? We have Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, and General Medicine.`;
+      ? `ठीक है, ${slotDisplay} का समय नोट कर लिया है। कृपया बताइए आप किस डिपार्टमेंट या डॉक्टर के लिए अपॉइंटमेंट लेना चाहते हैं? हमारे पास Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, General Medicine, Ophthalmology, Dental Care और Diagnostics & Pathology हैं।`
+      : `Got it, ${slotDisplay}. Which department or doctor would you like to consult? We have Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, General Medicine, Ophthalmology, Dental Care, and Diagnostics & Pathology.`;
     return {
       finalReply,
       finalSpokenText: "",
@@ -301,8 +307,8 @@ export function runClinicFastPath(params: {
        /डॉक्टर|अपॉइंटमेंट|स्पेशलिटी|दिखाना|मिलना|परामर्श/.test(userMessage));
     if (isAskingForDoctor && !dept) {
       const finalReply = lang === "hi-IN"
-        ? "जी बिल्कुल! डॉक्टर अपॉइंटमेंट के लिए हमारे पास डेंटल केयर, जनरल मेडिसिन, डर्मेटोलॉजी, कार्डियोलॉजी, ऑर्थोपेडिक्स, ईएनटी और पीडियाट्रिक्स उपलब्ध हैं। आप किस स्पेशलिटी या डॉक्टर के लिए अपॉइंटमेंट लेना चाहेंगे?"
-        : "Sure! For a doctor appointment, we have Dental Care, General Medicine, Dermatology, Cardiology, Orthopedics, ENT, and Pediatrics. Which specialty or doctor would you like to consult?";
+        ? "जी बिल्कुल! डॉक्टर अपॉइंटमेंट के लिए हमारे पास डेंटल केयर, जनरल मेडिसिन, डर्मेटोलॉजी, कार्डियोलॉजी, ऑर्थोपेडिक्स, ईएनटी, पीडियाट्रिक्स, ऑप्थल्मोलॉजी और डायग्नोस्टिक्स एंड पैथोलॉजी उपलब्ध हैं। आप किस स्पेशलिटी या डॉक्टर के लिए अपॉइंटमेंट लेना चाहेंगे?"
+        : "Sure! For a doctor appointment, we have Dental Care, General Medicine, Dermatology, Cardiology, Orthopedics, ENT, Pediatrics, Ophthalmology, and Diagnostics & Pathology. Which specialty or doctor would you like to consult?";
       return {
         finalReply,
         finalSpokenText: "",
@@ -403,6 +409,18 @@ export function runClinicFastPath(params: {
       // Plain "no" with nothing new said — ask what to change instead of
       // parroting back the exact same confirmation line, which just looked
       // broken/unresponsive to a caller who clearly rejected it.
+      //
+      // But this template can only ever ask the SAME question — it has no
+      // way to actually understand whatever the caller says next. If that
+      // next reply also doesn't restate one of the tracked fields (a
+      // language-switch request, a rephrased rejection this regex doesn't
+      // recognize, anything free-form), this branch fired again and repeated
+      // the identical line forever with no escape. Once already asked this
+      // turn's-ago, hand off to GPT instead of asking a second time — GPT
+      // can actually parse open-ended phrasing this can't.
+      if (currentExtracted.correctionAsked) {
+        return null;
+      }
       const finalReply = faqAnswer ? `${faqAnswer} ${tpl.correction}` : tpl.correction;
       return {
         finalReply,
@@ -412,6 +430,7 @@ export function runClinicFastPath(params: {
           name, mobile, dob, department: dept, doctor: doctorForDept, slot: resolvedSlot,
           intent: currentExtracted.intent || (dept ? `${dept} Consultation` : ""),
           summary: finalReply.slice(0, 80),
+          correctionAsked: true,
         },
         finalIsComplete: false,
         responseSource: "clinic-template",

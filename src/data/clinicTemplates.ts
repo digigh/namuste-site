@@ -214,7 +214,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "Central Health Complex, 2nd Floor — wheelchair accessible, with dedicated parking.",
     paymentMethods: "We accept cash, UPI, and all major cards. An insurance TPA desk is also available.",
     emergencyContact: "For emergencies, call 112 or visit our on-site desk — available 24/7.",
-    specialtyList: "We have General Medicine, Cardiology, Orthopedics, Dermatology, ENT, Pediatrics, Gynecology, Neurology, and Dental Care.",
+    specialtyList: "We have General Medicine, Cardiology, Orthopedics, Dermatology, ENT, Pediatrics, Gynecology, Neurology, Ophthalmology, Dental Care, and Diagnostics & Pathology (lab tests, X-Ray, ECG).",
     doctorInfo: "{doctor} handles {specialty}, available {days}, {hours}.",
     operatingHours: "We're open {days}, {hours}.",
   },
@@ -224,7 +224,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "सेंट्रल हेल्थ कॉम्प्लेक्स, दूसरी मंजिल — व्हीलचेयर एक्सेसिबल, डेडिकेटेड पार्किंग के साथ।",
     paymentMethods: "हम कैश, UPI और सभी प्रमुख कार्ड स्वीकार करते हैं। इंश्योरेंस TPA डेस्क भी उपलब्ध है।",
     emergencyContact: "इमरजेंसी के लिए 112 पर कॉल करें या हमारे ऑन-साइट डेस्क पर जाएं — 24/7 उपलब्ध।",
-    specialtyList: "हमारे पास जनरल मेडिसिन, कार्डियोलॉजी, ऑर्थोपेडिक्स, डर्मेटोलॉजी, ईएनटी, पीडियाट्रिक्स, गायनेकोलॉजी, न्यूरोलॉजी और डेंटल केयर हैं।",
+    specialtyList: "हमारे पास जनरल मेडिसिन, कार्डियोलॉजी, ऑर्थोपेडिक्स, डर्मेटोलॉजी, ईएनटी, पीडियाट्रिक्स, गायनेकोलॉजी, न्यूरोलॉजी, ऑप्थल्मोलॉजी, डेंटल केयर, और डायग्नोस्टिक्स एंड पैथोलॉजी (लैब टेस्ट, एक्स-रे, ईसीजी) हैं।",
     doctorInfo: "{doctor} {specialty} देखते हैं, उपलब्ध {days}, {hours}।",
     operatingHours: "हम {days}, {hours} खुले हैं।",
   },
@@ -234,7 +234,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "சென்ட்ரல் ஹெல்த் காம்ப்ளக்ஸ், 2வது தளம் — வீல்சேர் அணுகல், தனி பார்க்கிங் வசதி.",
     paymentMethods: "நாங்கள் கேஷ், UPI, மற்றும் அனைத்து முக்கிய கார்டுகளையும் ஏற்கிறோம். இன்சூரன்ஸ் TPA டெஸ்க்கும் உள்ளது.",
     emergencyContact: "அவசரநிலைக்கு 112-ஐ அழைக்கவும் அல்லது எங்கள் ஆன்-சைட் டெஸ்க்கிற்கு வரவும் — 24/7 கிடைக்கும்.",
-    specialtyList: "எங்களிடம் ஜெனரல் மெடிசின், கார்டியாலஜி, ஆர்த்தோபெடிக்ஸ், டெர்மாட்டாலஜி, ENT, பீடியாட்ரிக்ஸ், கைனகாலஜி, நியூராலஜி, மற்றும் டெண்டல் கேர் உள்ளது.",
+    specialtyList: "எங்களிடம் ஜெனரல் மெடிசின், கார்டியாலஜி, ஆர்த்தோபெடிக்ஸ், டெர்மாட்டாலஜி, ENT, பீடியாட்ரிக்ஸ், கைனகாலஜி, நியூராலஜி, ஆஃப்தல்மாலஜி, டெண்டல் கேர், மற்றும் டயாக்னோஸ்டிக்ஸ் & பேத்தாலஜி (லேப் டெஸ்ட், எக்ஸ்-ரே, ஈசிஜி) உள்ளது.",
     doctorInfo: "{doctor} {specialty} பார்க்கிறார், கிடைக்கும் {days}, {hours}.",
     operatingHours: "நாங்கள் {days}, {hours} திறந்திருக்கிறோம்.",
   },
@@ -244,7 +244,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "సెంట్రల్ హెల్త్ కాంప్లెక్స్, 2వ అంతస్తు — వీల్‌చైర్ యాక్సెస్, ప్రత్యేక పార్కింగ్‌తో.",
     paymentMethods: "మేము క్యాష్, UPI, మరియు అన్ని ప్రధాన కార్డులను అంగీకరిస్తాము. ఇన్సూరెన్స్ TPA డెస్క్ కూడా అందుబాటులో ఉంది.",
     emergencyContact: "ఎమర్జెన్సీల కోసం 112కి కాల్ చేయండి లేదా మా ఆన్-సైట్ డెస్క్‌ని సందర్శించండి — 24/7 అందుబాటులో ఉంటుంది.",
-    specialtyList: "మా వద్ద జనరల్ మెడిసిన్, కార్డియాలజీ, ఆర్థోపెడిక్స్, డెర్మటాలజీ, ENT, పీడియాట్రిక్స్, గైనకాలజీ, న్యూరాలజీ, డెంటల్ కేర్ ఉన్నాయి.",
+    specialtyList: "మా వద్ద జనరల్ మెడిసిన్, కార్డియాలజీ, ఆర్థోపెడిక్స్, డెర్మటాలజీ, ENT, పీడియాట్రిక్స్, గైనకాలజీ, న్యూరాలజీ, ఆప్తాల్మాలజీ, డెంటల్ కేర్, మరియు డయాగ్నోస్టిక్స్ & పాథాలజీ (ల్యాబ్ టెస్ట్‌లు, ఎక్స్-రే, ఈసీజీ) ఉన్నాయి.",
     doctorInfo: "{doctor} {specialty} చూస్తారు, అందుబాటులో {days}, {hours}.",
     operatingHours: "మేము {days}, {hours} తెరిచి ఉంటాము.",
   },
@@ -254,7 +254,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "সেন্ট্রাল হেলথ কমপ্লেক্স, ২য় তলা — হুইলচেয়ার অ্যাক্সেসযোগ্য, নিজস্ব পার্কিং সহ।",
     paymentMethods: "আমরা ক্যাশ, UPI, এবং সব প্রধান কার্ড গ্রহণ করি। ইনস্যুরেন্স TPA ডেস্কও আছে।",
     emergencyContact: "জরুরী অবস্থায় ১১২ নম্বরে কল করুন বা আমাদের অন-সাইট ডেস্কে যান — ২৪/৭ উপলব্ধ।",
-    specialtyList: "আমাদের কাছে জেনারেল মেডিসিন, কার্ডিওলজি, অর্থোপেডিক্স, ডার্মাটোলজি, ইএনটি, পেডিয়াট্রিক্স, গাইনোকোলজি, নিউরোলজি, এবং ডেন্টাল কেয়ার আছে।",
+    specialtyList: "আমাদের কাছে জেনারেল মেডিসিন, কার্ডিওলজি, অর্থোপেডিক্স, ডার্মাটোলজি, ইএনটি, পেডিয়াট্রিক্স, গাইনোকোলজি, নিউরোলজি, অপথালমোলজি, ডেন্টাল কেয়ার, এবং ডায়াগনস্টিকস অ্যান্ড প্যাথলজি (ল্যাব টেস্ট, এক্স-রে, ইসিজি) আছে।",
     doctorInfo: "{doctor} {specialty} দেখেন, উপলব্ধ {days}, {hours}।",
     operatingHours: "আমরা {days}, {hours} খোলা থাকি।",
   },
@@ -264,7 +264,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "സെൻട്രൽ ഹെൽത്ത് കോംപ്ലക്സ്, 2-ാം നില — വീൽചെയർ ആക്സസ്, പ്രത്യേക പാർക്കിംഗ്.",
     paymentMethods: "ഞങ്ങൾ ക്യാഷ്, UPI, എല്ലാ പ്രധാന കാർഡുകളും സ്വീകരിക്കുന്നു. ഇൻഷുറൻസ് TPA ഡെസ്കും ലഭ്യമാണ്.",
     emergencyContact: "അടിയന്തിര ഘട്ടങ്ങളിൽ 112 വിളിക്കുക അല്ലെങ്കിൽ ഞങ്ങളുടെ ഓൺ-സൈറ്റ് ഡെസ്ക് സന്ദർശിക്കുക — 24/7 ലഭ്യമാണ്.",
-    specialtyList: "ഞങ്ങൾക്ക് ജനറൽ മെഡിസിൻ, കാർഡിയോളജി, ഓർത്തോപീഡിക്സ്, ഡെർമറ്റോളജി, ENT, പീഡിയാട്രിക്സ്, ഗൈനക്കോളജി, ന്യൂറോളജി, ഡെന്റൽ കെയർ എന്നിവയുണ്ട്.",
+    specialtyList: "ഞങ്ങൾക്ക് ജനറൽ മെഡിസിൻ, കാർഡിയോളജി, ഓർത്തോപീഡിക്സ്, ഡെർമറ്റോളജി, ENT, പീഡിയാട്രിക്സ്, ഗൈനക്കോളജി, ന്യൂറോളജി, ഒഫ്താൽമോളജി, ഡെന്റൽ കെയർ, ഡയഗ്നോസ്റ്റിക്സ് & പാത്തോളജി (ലാബ് ടെസ്റ്റുകൾ, എക്സ്-റേ, ഇസിജി) എന്നിവയുണ്ട്.",
     doctorInfo: "{doctor} {specialty} കാണുന്നു, ലഭ്യമായ സമയം {days}, {hours}.",
     operatingHours: "ഞങ്ങൾ {days}, {hours} തുറന്നിരിക്കും.",
   },
@@ -274,7 +274,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "ಸೆಂಟ್ರಲ್ ಹೆಲ್ತ್ ಕಾಂಪ್ಲೆಕ್ಸ್, 2ನೇ ಮಹಡಿ — ವೀಲ್‌ಚೇರ್ ಪ್ರವೇಶ, ಪ್ರತ್ಯೇಕ ಪಾರ್ಕಿಂಗ್.",
     paymentMethods: "ನಾವು ಕ್ಯಾಶ್, UPI, ಮತ್ತು ಎಲ್ಲಾ ಪ್ರಮುಖ ಕಾರ್ಡ್‌ಗಳನ್ನು ಸ್ವೀಕರಿಸುತ್ತೇವೆ. ಇನ್ಶೂರೆನ್ಸ್ TPA ಡೆಸ್ಕ್ ಸಹ ಲಭ್ಯವಿದೆ.",
     emergencyContact: "ತುರ್ತು ಸಂದರ್ಭಗಳಲ್ಲಿ 112 ಗೆ ಕರೆ ಮಾಡಿ ಅಥವಾ ನಮ್ಮ ಆನ್-ಸೈಟ್ ಡೆಸ್ಕ್‌ಗೆ ಭೇಟಿ ನೀಡಿ — 24/7 ಲಭ್ಯವಿದೆ.",
-    specialtyList: "ನಮ್ಮಲ್ಲಿ ಜನರಲ್ ಮೆಡಿಸಿನ್, ಕಾರ್ಡಿಯಾಲಜಿ, ಆರ್ಥೋಪೆಡಿಕ್ಸ್, ಡರ್ಮಟಾಲಜಿ, ENT, ಪೀಡಿಯಾಟ್ರಿಕ್ಸ್, ಗೈನಕಾಲಜಿ, ನ್ಯೂರಾಲಜಿ, ಮತ್ತು ಡೆಂಟಲ್ ಕೇರ್ ಇವೆ.",
+    specialtyList: "ನಮ್ಮಲ್ಲಿ ಜನರಲ್ ಮೆಡಿಸಿನ್, ಕಾರ್ಡಿಯಾಲಜಿ, ಆರ್ಥೋಪೆಡಿಕ್ಸ್, ಡರ್ಮಟಾಲಜಿ, ENT, ಪೀಡಿಯಾಟ್ರಿಕ್ಸ್, ಗೈನಕಾಲಜಿ, ನ್ಯೂರಾಲಜಿ, ಆಫ್ತಾಲ್ಮಾಲಜಿ, ಡೆಂಟಲ್ ಕೇರ್, ಮತ್ತು ಡಯಾಗ್ನೋಸ್ಟಿಕ್ಸ್ & ಪ್ಯಾಥಾಲಜಿ (ಲ್ಯಾಬ್ ಟೆಸ್ಟ್‌ಗಳು, ಎಕ್ಸ್-ರೇ, ಇಸಿಜಿ) ಇವೆ.",
     doctorInfo: "{doctor} {specialty} ನೋಡುತ್ತಾರೆ, ಲಭ್ಯವಿರುವ ಸಮಯ {days}, {hours}.",
     operatingHours: "ನಾವು {days}, {hours} ತೆರೆದಿರುತ್ತೇವೆ.",
   },
@@ -284,7 +284,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "ਸੈਂਟਰਲ ਹੈਲਥ ਕੰਪਲੈਕਸ, ਦੂਜੀ ਮੰਜ਼ਿਲ — ਵ੍ਹੀਲਚੇਅਰ ਪਹੁੰਚ, ਵੱਖਰੀ ਪਾਰਕਿੰਗ ਨਾਲ।",
     paymentMethods: "ਅਸੀਂ ਕੈਸ਼, UPI, ਅਤੇ ਸਾਰੇ ਮੁੱਖ ਕਾਰਡ ਸਵੀਕਾਰ ਕਰਦੇ ਹਾਂ। ਇੰਸ਼ੋਰੈਂਸ TPA ਡੈਸਕ ਵੀ ਉਪਲਬਧ ਹੈ।",
     emergencyContact: "ਐਮਰਜੈਂਸੀ ਲਈ 112 'ਤੇ ਕਾਲ ਕਰੋ ਜਾਂ ਸਾਡੇ ਆਨ-ਸਾਈਟ ਡੈਸਕ 'ਤੇ ਜਾਓ — 24/7 ਉਪਲਬਧ।",
-    specialtyList: "ਸਾਡੇ ਕੋਲ ਜਨਰਲ ਮੈਡੀਸਨ, ਕਾਰਡੀਓਲੋਜੀ, ਆਰਥੋਪੈਡਿਕਸ, ਡਰਮਾਟੋਲੋਜੀ, ENT, ਪੀਡੀਆਟ੍ਰਿਕਸ, ਗਾਇਨੀਕੋਲੋਜੀ, ਨਿਊਰੋਲੋਜੀ, ਅਤੇ ਡੈਂਟਲ ਕੇਅਰ ਹਨ।",
+    specialtyList: "ਸਾਡੇ ਕੋਲ ਜਨਰਲ ਮੈਡੀਸਨ, ਕਾਰਡੀਓਲੋਜੀ, ਆਰਥੋਪੈਡਿਕਸ, ਡਰਮਾਟੋਲੋਜੀ, ENT, ਪੀਡੀਆਟ੍ਰਿਕਸ, ਗਾਇਨੀਕੋਲੋਜੀ, ਨਿਊਰੋਲੋਜੀ, ਓਫਥਾਲਮੋਲੋਜੀ, ਡੈਂਟਲ ਕੇਅਰ, ਅਤੇ ਡਾਇਗਨੌਸਟਿਕਸ ਐਂਡ ਪੈਥੋਲੋਜੀ (ਲੈਬ ਟੈਸਟ, ਐਕਸ-ਰੇ, ਈਸੀਜੀ) ਹਨ।",
     doctorInfo: "{doctor} {specialty} ਦੇਖਦੇ ਹਨ, ਉਪਲਬਧ {days}, {hours}।",
     operatingHours: "ਅਸੀਂ {days}, {hours} ਖੁੱਲ੍ਹੇ ਹਾਂ।",
   },
@@ -294,7 +294,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "સેન્ટ્રલ હેલ્થ કોમ્પ્લેક્સ, 2જો માળ — વ્હીલચેર એક્સેસ, અલગ પાર્કિંગ સાથે.",
     paymentMethods: "અમે કેશ, UPI, અને તમામ મુખ્ય કાર્ડ સ્વીકારીએ છીએ. ઈન્શ્યોરન્સ TPA ડેસ્ક પણ ઉપલબ્ધ છે.",
     emergencyContact: "ઇમરજન્સી માટે 112 પર કૉલ કરો અથવા અમારા ઓન-સાઇટ ડેસ્કની મુલાકાત લો — 24/7 ઉપલબ્ધ.",
-    specialtyList: "અમારી પાસે જનરલ મેડિસિન, કાર્ડિયોલોજી, ઓર્થોપેડિક્સ, ડર્મેટોલોજી, ENT, પીડિયાટ્રિક્સ, ગાયનેકોલોજી, ન્યુરોલોજી, અને ડેન્ટલ કેર છે.",
+    specialtyList: "અમારી પાસે જનરલ મેડિસિન, કાર્ડિયોલોજી, ઓર્થોપેડિક્સ, ડર્મેટોલોજી, ENT, પીડિયાટ્રિક્સ, ગાયનેકોલોજી, ન્યુરોલોજી, ઓપ્થાલ્મોલોજી, ડેન્ટલ કેર, અને ડાયગ્નોસ્ટિક્સ એન્ડ પેથોલોજી (લેબ ટેસ્ટ, એક્સ-રે, ઈસીજી) છે.",
     doctorInfo: "{doctor} {specialty} જુએ છે, ઉપલબ્ધ {days}, {hours}.",
     operatingHours: "અમે {days}, {hours} ખુલ્લા છીએ.",
   },
@@ -304,7 +304,7 @@ export const CLINIC_KB: Record<ClinicLang, ClinicKnowledgeBank> = {
     location: "ସେଣ୍ଟ୍ରାଲ୍ ହେଲ୍ଥ କମ୍ପ୍ଲେକ୍ସ, 2ୟ ମହଲା — ହୁଇଲଚେୟାର୍ ପ୍ରବେଶ, ନିଜସ୍ୱ ପାର୍କିଂ ସହିତ।",
     paymentMethods: "ଆମେ କ୍ୟାଶ୍, UPI, ଏବଂ ସମସ୍ତ ପ୍ରମୁଖ କାର୍ଡ ଗ୍ରହଣ କରୁ। ଇନସ୍ୟୁରାନ୍ସ TPA ଡେସ୍କ ମଧ୍ୟ ଉପଲବ୍ଧ।",
     emergencyContact: "ଜରୁରୀକାଳୀନ ପାଇଁ 112କୁ କଲ୍ କରନ୍ତୁ କିମ୍ବା ଆମର ଅନ୍-ସାଇଟ୍ ଡେସ୍କକୁ ଯାଆନ୍ତୁ — 24/7 ଉପଲବ୍ଧ।",
-    specialtyList: "ଆମ ପାଖରେ ଜେନେରାଲ୍ ମେଡିସିନ୍, କାର୍ଡିଓଲୋଜି, ଅର୍ଥୋପେଡିକ୍ସ, ଡର୍ମାଟୋଲୋଜି, ENT, ପେଡିଆଟ୍ରିକ୍ସ, ଗାଇନୋକୋଲୋଜି, ନ୍ୟୁରୋଲୋଜି, ଏବଂ ଡେଣ୍ଟାଲ୍ କେୟାର୍ ଅଛି।",
+    specialtyList: "ଆମ ପାଖରେ ଜେନେରାଲ୍ ମେଡିସିନ୍, କାର୍ଡିଓଲୋଜି, ଅର୍ଥୋପେଡିକ୍ସ, ଡର୍ମାଟୋଲୋଜି, ENT, ପେଡିଆଟ୍ରିକ୍ସ, ଗାଇନୋକୋଲୋଜି, ନ୍ୟୁରୋଲୋଜି, ଅଫ୍ଥାଲ୍ମୋଲୋଜି, ଡେଣ୍ଟାଲ୍ କେୟାର୍, ଏବଂ ଡାଇଗ୍ନୋଷ୍ଟିକ୍ସ ଏବଂ ପାଥୋଲୋଜି (ଲ୍ୟାବ୍ ଟେଷ୍ଟ, ଏକ୍ସ-ରେ, ଇସିଜି) ଅଛି।",
     doctorInfo: "{doctor} {specialty} ଦେଖନ୍ତି, ଉପଲବ୍ଧ {days}, {hours}।",
     operatingHours: "ଆମେ {days}, {hours} ଖୋଲା ରହୁ।",
   },
@@ -317,6 +317,7 @@ export interface DoctorRosterEntry {
   days: number[]; // 0=Sun .. 6=Sat
   startHour: number; // 24hr
   endHour: number;   // 24hr
+  requiresFasting?: boolean;
 }
 
 export const DOCTOR_ROSTER: Record<string, DoctorRosterEntry> = {
@@ -328,7 +329,14 @@ export const DOCTOR_ROSTER: Record<string, DoctorRosterEntry> = {
   "Pediatrics": { specialtyEn: "Pediatrics", doctor: "Dr. Meera Rao", days: [1, 2, 3, 4, 5, 6], startHour: 9, endHour: 13 },
   "Gynecology": { specialtyEn: "Gynecology", doctor: "Dr. Sunita Kapoor", days: [1, 2, 3, 4, 5, 6], startHour: 10, endHour: 16 },
   "Neurology": { specialtyEn: "Neurology", doctor: "Dr. Sanjay Kapoor", days: [1, 3, 5], startHour: 14, endHour: 18 },
-  "Dental Care": { specialtyEn: "Dental Care", doctor: "Dr. Aman Joshi", days: [1, 2, 3, 4, 5, 6], startHour: 10, endHour: 19 },
+  "General Dentistry": { specialtyEn: "General Dentistry", doctor: "Dr. Aman Joshi", days: [1, 2, 3, 4, 5, 6], startHour: 10, endHour: 19 },
+  "Root Canal Treatment (Endodontics)": { specialtyEn: "Root Canal Treatment (Endodontics)", doctor: "Dr. Neha Kulkarni", days: [2, 4, 6], startHour: 11, endHour: 17 },
+  "Braces & Orthodontics": { specialtyEn: "Braces & Orthodontics", doctor: "Dr. Karan Mehta", days: [1, 3, 5], startHour: 10, endHour: 16 },
+  "Dental Crowns & Implants (Prosthodontics)": { specialtyEn: "Dental Crowns & Implants (Prosthodontics)", doctor: "Dr. Aman Joshi", days: [1, 2, 3, 4, 5, 6], startHour: 10, endHour: 19 },
+  "Ophthalmology": { specialtyEn: "Ophthalmology", doctor: "Dr. Alok Nath", days: [1, 2, 3, 4, 5, 6], startHour: 10, endHour: 17 },
+  "Blood Test / Pathology": { specialtyEn: "Blood Test / Pathology", doctor: "Central Pathology Desk", days: [1, 2, 3, 4, 5, 6], startHour: 7, endHour: 19, requiresFasting: true },
+  "X-Ray & Imaging": { specialtyEn: "X-Ray & Imaging", doctor: "Central Pathology Desk", days: [1, 2, 3, 4, 5, 6], startHour: 9, endHour: 18 },
+  "ECG": { specialtyEn: "ECG", doctor: "Central Pathology Desk", days: [1, 2, 3, 4, 5, 6], startHour: 9, endHour: 18 },
 };
 
 export const CLINIC_OPEN_DAYS = [1, 2, 3, 4, 5, 6]; // Mon-Sat, closed Sunday

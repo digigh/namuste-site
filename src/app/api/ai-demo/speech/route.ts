@@ -261,6 +261,175 @@ export async function generateSarvamTTS(
   return { audioBase64: null, detectedLang: targetLang };
 }
 
+export interface TranscribeSpeechResult {
+  success: boolean;
+  source: string;
+  transcript?: string;
+  detectedLanguageCode?: string;
+  languageProbability?: number | null;
+  noSpeechScore?: number;
+  message?: string;
+}
+
+// ─── Speech to Text — Sarvam Saaras (primary) → OpenAI Whisper (fallback) ────
+// Pure function, no HTTP — assumes audioBase64 is already a validated,
+// size-bounded string (the POST handler below checks that before calling
+// this). Extracted out so the Plivo phone-call routes can transcribe a
+// downloaded call recording through the exact same provider chain, instead
+// of duplicating it or making a self-HTTP call.
+export async function transcribeSpeech(audioBase64: string, languageCode = "en-IN"): Promise<TranscribeSpeechResult> {
+  const openaiKey = process.env.OPENAI_API_KEY?.trim() || "";
+  const buffer = Buffer.from(audioBase64, "base64");
+
+  // Sarvam's Saaras model is purpose-built for Indian languages and
+  // Hindi-English code-mixing — meaningfully more accurate than Whisper's
+  // generic global model for exactly the lower-resource languages
+  // (Punjabi, Odia, etc.) that were getting misheard as Hindi. It also
+  // returns proper BCP-47 codes directly, matching what the rest of this
+  // app already expects, instead of needing a name→code mapping table.
+  const sarvamKey = process.env.SARVAM_API_KEY?.trim() || "";
+  if (sarvamKey) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      const formData = new FormData();
+      const audioBlob = new Blob([buffer], { type: "audio/webm" });
+      formData.append("file", audioBlob, "speech.webm");
+      formData.append("model", "saaras:v3");
+      // Explicit language hint when the caller manually forced one (helps
+      // accuracy most for the languages that need it most); otherwise let
+      // Sarvam auto-detect, same "auto" contract used with Whisper.
+      formData.append("language_code", languageCode && speechLangIsExplicit(languageCode) ? languageCode : "unknown");
+
+      let sarvamRes: Response;
+      try {
+        sarvamRes = await fetch("https://api.sarvam.ai/speech-to-text", {
+          method: "POST",
+          headers: { "api-subscription-key": sarvamKey },
+          signal: controller.signal,
+          body: formData,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      if (sarvamRes.ok) {
+        const data = await sarvamRes.json();
+        const transcript = (data.transcript || "").trim();
+
+        if (!transcript) {
+          return {
+            success: false,
+            source: "sarvam-saaras",
+            message: "No genuine speech detected (likely background noise).",
+          };
+        }
+
+        return {
+          success: true,
+          source: "sarvam-saaras",
+          transcript,
+          detectedLanguageCode: data.language_code || "en-IN",
+          languageProbability: typeof data.language_probability === "number" ? data.language_probability : null,
+        };
+      }
+      console.warn("[Sarvam STT non-OK response]:", sarvamRes.status, await sarvamRes.text().catch(() => ""));
+    } catch (e) {
+      console.warn("[Sarvam STT warn — falling back to Whisper]:", e);
+    }
+  }
+
+  // Sarvam unavailable/failed/no key — fall back to Whisper.
+  if (openaiKey) {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 8000);
+
+      const formData = new FormData();
+      const audioBlob = new Blob([buffer], { type: "audio/webm" });
+      formData.append("file", audioBlob, "speech.webm");
+      formData.append("model", "whisper-1");
+      formData.append("response_format", "verbose_json");
+      formData.append("prompt", "Indian English, Hindi, Hinglish, Tamil, Telugu, Bengali, and other Indian regional languages. Customer appointment intake conversation.");
+      // NOTE: no forced `language` param — Whisper's own detection is more reliable
+      // than guessing hi/en up front, and forcing it wrong actively corrupts
+      // transcripts in every other supported language.
+      if (languageCode && speechLangIsExplicit(languageCode)) {
+        formData.append("language", whisperLangCode(languageCode));
+      }
+
+      let whisperRes: Response;
+      try {
+        whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+          method: "POST",
+          headers: { Authorization: `Bearer ${openaiKey}` },
+          signal: controller.signal,
+          body: formData,
+        });
+      } finally {
+        clearTimeout(timeout);
+      }
+
+      if (whisperRes.ok) {
+        const data = await whisperRes.json();
+        const transcript = (data.text || "").trim();
+
+        // Whisper transcribes SOMETHING for almost any audio — including
+        // background noise, another conversation in the room, a TV, etc.
+        // — and can even hallucinate plausible-looking text from pure
+        // noise. verbose_json's per-segment no_speech_prob is the model's
+        // own confidence that a segment contains no real speech at all;
+        // averaging it across segments (weighted by duration, since a
+        // short noise blip shouldn't be swamped by one long clear
+        // segment) is a far more reliable signal than anything client-side
+        // amplitude detection can provide. Reject low-confidence audio
+        // here rather than letting it masquerade as something the caller
+        // actually said.
+        const segments: Array<{ no_speech_prob?: number; avg_logprob?: number; start?: number; end?: number }> = data.segments || [];
+        let noSpeechScore = 0;
+        if (segments.length > 0) {
+          let totalDuration = 0;
+          let weightedNoSpeech = 0;
+          for (const seg of segments) {
+            const duration = Math.max((seg.end ?? 0) - (seg.start ?? 0), 0.01);
+            weightedNoSpeech += (seg.no_speech_prob ?? 0) * duration;
+            totalDuration += duration;
+          }
+          noSpeechScore = totalDuration > 0 ? weightedNoSpeech / totalDuration : 0;
+        }
+
+        const NO_SPEECH_THRESHOLD = 0.6;
+        if (!transcript || noSpeechScore > NO_SPEECH_THRESHOLD) {
+          return {
+            success: false,
+            source: "openai-whisper",
+            message: "No genuine speech detected (likely background noise).",
+            noSpeechScore,
+          };
+        }
+
+        const detectedLanguageCode = whisperToBcp47(data.language);
+        return {
+          success: true,
+          source: "openai-whisper",
+          transcript,
+          detectedLanguageCode,
+          noSpeechScore,
+        };
+      }
+    } catch (e) {
+      console.warn("Whisper STT fallback:", e);
+    }
+  }
+
+  return {
+    success: false,
+    source: "fallback",
+    message: "STT processing unavailable.",
+  };
+}
+
 export async function POST(req: Request) {
   try {
     const clientKey = getClientKey(req);
@@ -271,7 +440,6 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Rate limit exceeded. Please slow down." }, { status: 429 });
     }
 
-    const openaiKey = process.env.OPENAI_API_KEY?.trim() || "";
     const body = await req.json();
     const {
       action = "tts",
@@ -313,7 +481,7 @@ export async function POST(req: Request) {
       });
     }
 
-    // ── 2. Speech to Text — Sarvam Saaras (primary) → OpenAI Whisper (fallback) ──
+    // ── 2. Speech to Text ────────────────────────────────────────────────────
     if (action === "stt") {
       if (!audioBase64) {
         return NextResponse.json({ error: "Audio base64 is required for STT" }, { status: 400 });
@@ -322,155 +490,8 @@ export async function POST(req: Request) {
         return NextResponse.json({ error: "Audio payload too large" }, { status: 413 });
       }
 
-      const buffer = Buffer.from(audioBase64, "base64");
-
-      // Sarvam's Saaras model is purpose-built for Indian languages and
-      // Hindi-English code-mixing — meaningfully more accurate than Whisper's
-      // generic global model for exactly the lower-resource languages
-      // (Punjabi, Odia, etc.) that were getting misheard as Hindi. It also
-      // returns proper BCP-47 codes directly, matching what the rest of this
-      // app already expects, instead of needing a name→code mapping table.
-      const sarvamKey = process.env.SARVAM_API_KEY?.trim() || "";
-      if (sarvamKey) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 8000);
-
-          const formData = new FormData();
-          const audioBlob = new Blob([buffer], { type: "audio/webm" });
-          formData.append("file", audioBlob, "speech.webm");
-          formData.append("model", "saaras:v3");
-          // Explicit language hint when the caller manually forced one (helps
-          // accuracy most for the languages that need it most); otherwise let
-          // Sarvam auto-detect, same "auto" contract used with Whisper.
-          formData.append("language_code", languageCode && speechLangIsExplicit(languageCode) ? languageCode : "unknown");
-
-          let sarvamRes: Response;
-          try {
-            sarvamRes = await fetch("https://api.sarvam.ai/speech-to-text", {
-              method: "POST",
-              headers: { "api-subscription-key": sarvamKey },
-              signal: controller.signal,
-              body: formData,
-            });
-          } finally {
-            clearTimeout(timeout);
-          }
-
-          if (sarvamRes.ok) {
-            const data = await sarvamRes.json();
-            const transcript = (data.transcript || "").trim();
-
-            if (!transcript) {
-              return NextResponse.json({
-                success: false,
-                source: "sarvam-saaras",
-                message: "No genuine speech detected (likely background noise).",
-              });
-            }
-
-            return NextResponse.json({
-              success: true,
-              source: "sarvam-saaras",
-              transcript,
-              detectedLanguageCode: data.language_code || "en-IN",
-              languageProbability: typeof data.language_probability === "number" ? data.language_probability : null,
-            });
-          }
-          console.warn("[Sarvam STT non-OK response]:", sarvamRes.status, await sarvamRes.text().catch(() => ""));
-        } catch (e) {
-          console.warn("[Sarvam STT warn — falling back to Whisper]:", e);
-        }
-      }
-
-      // Sarvam unavailable/failed/no key — fall back to Whisper.
-      if (openaiKey) {
-        try {
-          const controller = new AbortController();
-          const timeout = setTimeout(() => controller.abort(), 8000);
-
-          const formData = new FormData();
-          const audioBlob = new Blob([buffer], { type: "audio/webm" });
-          formData.append("file", audioBlob, "speech.webm");
-          formData.append("model", "whisper-1");
-          formData.append("response_format", "verbose_json");
-          formData.append("prompt", "Indian English, Hindi, Hinglish, Tamil, Telugu, Bengali, and other Indian regional languages. Customer appointment intake conversation.");
-          // NOTE: no forced `language` param — Whisper's own detection is more reliable
-          // than guessing hi/en up front, and forcing it wrong actively corrupts
-          // transcripts in every other supported language.
-          if (languageCode && speechLangIsExplicit(languageCode)) {
-            formData.append("language", whisperLangCode(languageCode));
-          }
-
-          let whisperRes: Response;
-          try {
-            whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
-              method: "POST",
-              headers: { Authorization: `Bearer ${openaiKey}` },
-              signal: controller.signal,
-              body: formData,
-            });
-          } finally {
-            clearTimeout(timeout);
-          }
-
-          if (whisperRes.ok) {
-            const data = await whisperRes.json();
-            const transcript = (data.text || "").trim();
-
-            // Whisper transcribes SOMETHING for almost any audio — including
-            // background noise, another conversation in the room, a TV, etc.
-            // — and can even hallucinate plausible-looking text from pure
-            // noise. verbose_json's per-segment no_speech_prob is the model's
-            // own confidence that a segment contains no real speech at all;
-            // averaging it across segments (weighted by duration, since a
-            // short noise blip shouldn't be swamped by one long clear
-            // segment) is a far more reliable signal than anything client-side
-            // amplitude detection can provide. Reject low-confidence audio
-            // here rather than letting it masquerade as something the caller
-            // actually said.
-            const segments: Array<{ no_speech_prob?: number; avg_logprob?: number; start?: number; end?: number }> = data.segments || [];
-            let noSpeechScore = 0;
-            if (segments.length > 0) {
-              let totalDuration = 0;
-              let weightedNoSpeech = 0;
-              for (const seg of segments) {
-                const duration = Math.max((seg.end ?? 0) - (seg.start ?? 0), 0.01);
-                weightedNoSpeech += (seg.no_speech_prob ?? 0) * duration;
-                totalDuration += duration;
-              }
-              noSpeechScore = totalDuration > 0 ? weightedNoSpeech / totalDuration : 0;
-            }
-
-            const NO_SPEECH_THRESHOLD = 0.6;
-            if (!transcript || noSpeechScore > NO_SPEECH_THRESHOLD) {
-              return NextResponse.json({
-                success: false,
-                source: "openai-whisper",
-                message: "No genuine speech detected (likely background noise).",
-                noSpeechScore,
-              });
-            }
-
-            const detectedLanguageCode = whisperToBcp47(data.language);
-            return NextResponse.json({
-              success: true,
-              source: "openai-whisper",
-              transcript,
-              detectedLanguageCode,
-              noSpeechScore,
-            });
-          }
-        } catch (e) {
-          console.warn("Whisper STT fallback:", e);
-        }
-      }
-
-      return NextResponse.json({
-        success: false,
-        source: "fallback",
-        message: "STT processing unavailable.",
-      });
+      const result = await transcribeSpeech(audioBase64, languageCode);
+      return NextResponse.json(result);
     }
 
     return NextResponse.json({ error: "Invalid action" }, { status: 400 });

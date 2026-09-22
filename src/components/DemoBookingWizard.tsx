@@ -1,7 +1,9 @@
 "use client";
 
 import { useState } from "react";
-import { CheckCircle2, ArrowRight, ArrowLeft, Phone, MessageSquare, Globe, Sparkles } from "lucide-react";
+import { CheckCircle2, ArrowRight, ArrowLeft, Phone, MessageSquare, Globe } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 const WEBHOOK_URL = "https://aiautomation.digicides.com/webhook/namuste-form";
 
@@ -84,7 +86,7 @@ export default function DemoBookingWizard() {
     const err: Record<string, string> = {};
     if (!formData.name.trim()) err.name = "Please enter your name";
     if (!formData.email.trim() || !formData.email.includes("@")) err.email = "Please enter a valid email address";
-    
+
     const cleanMobile = formData.mobile.replace(/\D/g, "");
     if (!cleanMobile) {
       err.mobile = "Please enter your 10-digit mobile number";
@@ -152,373 +154,291 @@ export default function DemoBookingWizard() {
 
   if (status === "success") {
     return (
-      <div
-        className="glass-card"
-        style={{
-          padding: "48px 36px",
-          textAlign: "center",
-          borderRadius: "20px",
-          border: "1px solid rgba(118, 192, 67, 0.3)",
-          background: "rgba(10, 18, 10, 0.95)",
-        }}
-      >
-        <div
-          style={{
-            width: "60px",
-            height: "60px",
-            borderRadius: "50%",
-            background: "rgba(118, 192, 67, 0.15)",
-            display: "inline-flex",
-            alignItems: "center",
-            justifyContent: "center",
-            color: "var(--green-luminous)",
-            marginBottom: "20px",
-          }}
-        >
-          <CheckCircle2 size={32} />
-        </div>
-        <h3 className="serif" style={{ fontSize: "28px", color: "var(--text-ivory)", marginBottom: "12px" }}>
-          Thank You, {formData.name}
-        </h3>
-        <p style={{ color: "var(--text-body)", fontSize: "15px", lineHeight: 1.6, maxWidth: "500px", margin: "0 auto 24px" }}>
-          We have received your requirements for <strong style={{ color: "var(--green)" }}>{formData.industry}</strong>. A Namuste solution architect will reach out within 4 business hours with an interactive tailored walkthrough.
-        </p>
-        <div className="pill" style={{ display: "inline-flex" }}>
-          <span className="pill-dot" /> Tailored Demo In Progress
-        </div>
-      </div>
+      <Card className="dbw-success-card">
+        <CardContent className="flex flex-col items-center text-center">
+          <div className="dbw-success-icon">
+            <CheckCircle2 size={32} />
+          </div>
+          <h3 className="dbw-success-title">Thank You, {formData.name}</h3>
+          <p className="dbw-success-desc">
+            We have received your requirements for <strong style={{ color: "var(--green)" }}>{formData.industry}</strong>. A Namuste solution architect will reach out within 4 business hours with an interactive tailored walkthrough.
+          </p>
+          <Badge className="dbw-success-badge">
+            <span className="dbw-success-badge-dot" /> Tailored Demo In Progress
+          </Badge>
+        </CardContent>
+      </Card>
     );
   }
 
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="glass-card"
-      style={{
-        padding: "36px",
-        borderRadius: "20px",
-        background: "rgba(12, 14, 12, 0.9)",
-        border: "1px solid var(--border)",
-        boxShadow: "0 20px 60px rgba(0,0,0,0.8)",
-      }}
-    >
-      {/* Step Progress Bar */}
-      <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "28px" }}>
-        <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-          <span className="pill">Step {step} of 2</span>
-          <span style={{ fontSize: "13px", color: "var(--text-muted)" }}>
-            {step === 1 ? "Contact & Practice Info" : "Workflows, Channels & Languages"}
-          </span>
-        </div>
-        {step === 2 && (
-          <button
-            type="button"
-            onClick={() => setStep(1)}
-            style={{
-              background: "none",
-              border: "none",
-              color: "var(--text-muted)",
-              fontSize: "13px",
-              cursor: "pointer",
-              display: "flex",
-              alignItems: "center",
-              gap: "4px",
-            }}
-          >
-            <ArrowLeft size={13} /> Back
-          </button>
-        )}
-      </div>
-
-      {step === 1 ? (
-        /* STEP 1: Basic Information */
-        <div style={{ display: "flex", flexDirection: "column", gap: "18px" }}>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "18px" }} className="form-two-col">
-            <div>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "block", marginBottom: "6px" }}>
-                Full Name *
-              </label>
-              <input
-                type="text"
-                value={formData.name}
-                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="Dr. / Mr. / Ms. Full Name"
-                style={{
-                  width: "100%",
-                  padding: "12px 14px",
-                  borderRadius: "10px",
-                  border: `1px solid ${errors.name ? "var(--coral)" : "var(--border)"}`,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  color: "#fff",
-                  fontSize: "14px",
-                  outline: "none",
-                }}
-              />
-              {errors.name && <span style={{ fontSize: "11px", color: "var(--coral)", marginTop: "4px", display: "block" }}>{errors.name}</span>}
+    <form onSubmit={handleSubmit}>
+      <Card className="dbw-card">
+        <CardContent className="flex flex-col gap-0">
+          {/* Step Progress Bar */}
+          <div className="dbw-progress-row">
+            <div className="dbw-progress-left">
+              <Badge variant="secondary" className="dbw-step-badge">Step {step} of 2</Badge>
+              <span className="dbw-progress-label">
+                {step === 1 ? "Contact & Practice Info" : "Workflows, Channels & Languages"}
+              </span>
             </div>
-
-            <div>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "block", marginBottom: "6px" }}>
-                Work Email *
-              </label>
-              <input
-                type="email"
-                value={formData.email}
-                onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                placeholder="you@company.com"
-                style={{
-                  width: "100%",
-                  padding: "12px 14px",
-                  borderRadius: "10px",
-                  border: `1px solid ${errors.email ? "var(--coral)" : "var(--border)"}`,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  color: "#fff",
-                  fontSize: "14px",
-                  outline: "none",
-                }}
-              />
-              {errors.email && <span style={{ fontSize: "11px", color: "var(--coral)", marginTop: "4px", display: "block" }}>{errors.email}</span>}
-            </div>
+            {step === 2 && (
+              <button type="button" onClick={() => setStep(1)} className="dbw-back-btn">
+                <ArrowLeft size={13} /> Back
+              </button>
+            )}
           </div>
 
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "18px" }} className="form-two-col">
-            <div>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "flex", justifyContent: "space-between", marginBottom: "6px" }}>
-                <span>Mobile Number *</span>
-                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 400 }}>10 digits (starts with 6-9)</span>
-              </label>
-              <div style={{ position: "relative", display: "flex", alignItems: "center" }}>
-                <span
-                  style={{
-                    position: "absolute",
-                    left: "14px",
-                    color: "var(--text-muted)",
-                    fontSize: "13.5px",
-                    fontWeight: 600,
-                    pointerEvents: "none",
-                  }}
+          {step === 1 ? (
+            /* STEP 1: Basic Information */
+            <div className="dbw-step-body">
+              <div className="dbw-two-col">
+                <div>
+                  <label className="dbw-label">Full Name *</label>
+                  <input
+                    type="text"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    placeholder="Dr. / Mr. / Ms. Full Name"
+                    className="dbw-input"
+                    style={{ borderColor: errors.name ? "var(--coral)" : undefined }}
+                  />
+                  {errors.name && <span className="dbw-error">{errors.name}</span>}
+                </div>
+
+                <div>
+                  <label className="dbw-label">Work Email *</label>
+                  <input
+                    type="email"
+                    value={formData.email}
+                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                    placeholder="you@company.com"
+                    className="dbw-input"
+                    style={{ borderColor: errors.email ? "var(--coral)" : undefined }}
+                  />
+                  {errors.email && <span className="dbw-error">{errors.email}</span>}
+                </div>
+              </div>
+
+              <div className="dbw-two-col">
+                <div>
+                  <label className="dbw-label dbw-label-row">
+                    <span>Mobile Number *</span>
+                    <span className="dbw-label-hint">10 digits (starts with 6-9)</span>
+                  </label>
+                  <div className="dbw-mobile-wrap">
+                    <span className="dbw-mobile-prefix">+91</span>
+                    <input
+                      type="tel"
+                      inputMode="numeric"
+                      pattern="[6-9][0-9]{9}"
+                      maxLength={10}
+                      value={formData.mobile}
+                      onChange={handleMobileChange}
+                      placeholder="9876543210"
+                      className="dbw-input dbw-input-mobile"
+                      style={{ borderColor: errors.mobile ? "var(--coral)" : undefined }}
+                    />
+                  </div>
+                  {errors.mobile && <span className="dbw-error">{errors.mobile}</span>}
+                </div>
+
+                <div>
+                  <label className="dbw-label">Practice / Clinic / Company Name *</label>
+                  <input
+                    type="text"
+                    value={formData.company}
+                    onChange={(e) => setFormData({ ...formData, company: e.target.value })}
+                    placeholder="e.g. Apex Skin Clinic or Veritas Advisory"
+                    className="dbw-input"
+                    style={{ borderColor: errors.company ? "var(--coral)" : undefined }}
+                  />
+                  {errors.company && <span className="dbw-error">{errors.company}</span>}
+                </div>
+              </div>
+
+              <div>
+                <label className="dbw-label">Primary Industry Vertical</label>
+                <select
+                  value={formData.industry}
+                  onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
+                  className="dbw-input dbw-select"
                 >
-                  +91
-                </span>
-                <input
-                  type="tel"
-                  inputMode="numeric"
-                  pattern="[6-9][0-9]{9}"
-                  maxLength={10}
-                  value={formData.mobile}
-                  onChange={handleMobileChange}
-                  placeholder="9876543210"
-                  style={{
-                    width: "100%",
-                    padding: "12px 14px 12px 48px",
-                    borderRadius: "10px",
-                    border: `1px solid ${errors.mobile ? "var(--coral)" : "var(--border)"}`,
-                    background: "rgba(255, 255, 255, 0.03)",
-                    color: "#fff",
-                    fontSize: "14px",
-                    outline: "none",
-                    letterSpacing: "0.04em",
-                  }}
+                  {industries.map((ind) => (
+                    <option key={ind} value={ind}>{ind}</option>
+                  ))}
+                </select>
+              </div>
+
+              <button type="submit" className="dbw-btn-primary">
+                Continue to Workflow Customization <ArrowRight size={15} />
+              </button>
+            </div>
+          ) : (
+            /* STEP 2: Advanced Customization */
+            <div className="dbw-step-body">
+              {/* Enquiry Volume */}
+              <div>
+                <label className="dbw-label">Expected Daily Enquiry / Call Volume</label>
+                <div className="dbw-two-col">
+                  {volumes.map((v) => (
+                    <button
+                      type="button"
+                      key={v}
+                      onClick={() => setFormData({ ...formData, volume: v })}
+                      className={`dbw-choice-btn ${formData.volume === v ? "is-selected" : ""}`}
+                    >
+                      {v}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Channels Needed */}
+              <div>
+                <label className="dbw-label">Channels Required</label>
+                <div className="dbw-pill-row">
+                  {[
+                    { name: "Voice AI (Inbound/Outbound)", icon: <Phone size={14} /> },
+                    { name: "WhatsApp AI (Official API)", icon: <MessageSquare size={14} /> },
+                    { name: "Web Concierge Widget", icon: <Globe size={14} /> },
+                  ].map((ch) => {
+                    const isSelected = formData.channels.includes(ch.name.split(" ")[0]);
+                    return (
+                      <button
+                        type="button"
+                        key={ch.name}
+                        onClick={() => toggleChannel(ch.name.split(" ")[0])}
+                        className={`dbw-channel-pill ${isSelected ? "is-selected" : ""}`}
+                      >
+                        {ch.icon}
+                        <span>{ch.name}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Multilingual Selection */}
+              <div>
+                <label className="dbw-label">Languages Needed</label>
+                <div className="dbw-pill-row dbw-pill-row-tight">
+                  {languageOptions.map((lang) => {
+                    const isSelected = formData.languages.includes(lang);
+                    return (
+                      <button
+                        type="button"
+                        key={lang}
+                        onClick={() => toggleLanguage(lang)}
+                        className={`dbw-lang-pill ${isSelected ? "is-selected" : ""}`}
+                      >
+                        {lang}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Biggest Challenge / Objective */}
+              <div>
+                <label className="dbw-label">Primary Goal or Current Communication Friction</label>
+                <textarea
+                  rows={3}
+                  value={formData.challenge}
+                  onChange={(e) => setFormData({ ...formData, challenge: e.target.value })}
+                  placeholder="e.g. Front-desk misses calls during peak patient hours; need automated appointment booking and WhatsApp reminders."
+                  className="dbw-input dbw-textarea"
                 />
               </div>
-              {errors.mobile && <span style={{ fontSize: "11px", color: "var(--coral)", marginTop: "4px", display: "block" }}>{errors.mobile}</span>}
+
+              <button type="submit" disabled={status === "submitting"} className="dbw-btn-primary">
+                {status === "submitting" ? "Submitting Customization..." : "Confirm & Schedule Live AI Demo"} <ArrowRight size={15} />
+              </button>
             </div>
-
-            <div>
-              <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "block", marginBottom: "6px" }}>
-                Practice / Clinic / Company Name *
-              </label>
-              <input
-                type="text"
-                value={formData.company}
-                onChange={(e) => setFormData({ ...formData, company: e.target.value })}
-                placeholder="e.g. Apex Skin Clinic or Veritas Advisory"
-                style={{
-                  width: "100%",
-                  padding: "12px 14px",
-                  borderRadius: "10px",
-                  border: `1px solid ${errors.company ? "var(--coral)" : "var(--border)"}`,
-                  background: "rgba(255, 255, 255, 0.03)",
-                  color: "#fff",
-                  fontSize: "14px",
-                  outline: "none",
-                }}
-              />
-              {errors.company && <span style={{ fontSize: "11px", color: "var(--coral)", marginTop: "4px", display: "block" }}>{errors.company}</span>}
-            </div>
-          </div>
-
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "block", marginBottom: "6px" }}>
-              Primary Industry Vertical
-            </label>
-            <select
-              value={formData.industry}
-              onChange={(e) => setFormData({ ...formData, industry: e.target.value })}
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                borderRadius: "10px",
-                border: "1px solid var(--border)",
-                background: "#151515",
-                color: "#fff",
-                fontSize: "14px",
-                outline: "none",
-              }}
-            >
-              {industries.map((ind) => (
-                <option key={ind} value={ind}>{ind}</option>
-              ))}
-            </select>
-          </div>
-
-          <button
-            type="submit"
-            className="btn-primary"
-            style={{ width: "100%", marginTop: "12px", padding: "14px" }}
-          >
-            Continue to Workflow Customization <ArrowRight size={15} />
-          </button>
-        </div>
-      ) : (
-        /* STEP 2: Advanced Customization */
-        <div style={{ display: "flex", flexDirection: "column", gap: "20px" }}>
-          {/* Enquiry Volume */}
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "block", marginBottom: "8px" }}>
-              Expected Daily Enquiry / Call Volume
-            </label>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "10px" }} className="form-two-col">
-              {volumes.map((v) => (
-                <button
-                  type="button"
-                  key={v}
-                  onClick={() => setFormData({ ...formData, volume: v })}
-                  style={{
-                    padding: "10px 14px",
-                    borderRadius: "10px",
-                    border: `1px solid ${formData.volume === v ? "var(--green)" : "var(--border)"}`,
-                    background: formData.volume === v ? "rgba(118, 192, 67, 0.1)" : "rgba(255, 255, 255, 0.02)",
-                    color: formData.volume === v ? "var(--green-luminous)" : "var(--text-body)",
-                    fontSize: "12.5px",
-                    textAlign: "left",
-                    cursor: "pointer",
-                  }}
-                >
-                  {v}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Channels Needed */}
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "block", marginBottom: "8px" }}>
-              Channels Required
-            </label>
-            <div style={{ display: "flex", gap: "10px", flexWrap: "wrap" }}>
-              {[
-                { name: "Voice AI (Inbound/Outbound)", icon: <Phone size={14} /> },
-                { name: "WhatsApp AI (Official API)", icon: <MessageSquare size={14} /> },
-                { name: "Web Concierge Widget", icon: <Globe size={14} /> },
-              ].map((ch) => {
-                const isSelected = formData.channels.includes(ch.name.split(" ")[0]);
-                return (
-                  <button
-                    type="button"
-                    key={ch.name}
-                    onClick={() => toggleChannel(ch.name.split(" ")[0])}
-                    style={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: "6px",
-                      padding: "8px 16px",
-                      borderRadius: "999px",
-                      border: `1px solid ${isSelected ? "var(--green)" : "var(--border)"}`,
-                      background: isSelected ? "rgba(118, 192, 67, 0.12)" : "rgba(255, 255, 255, 0.02)",
-                      color: isSelected ? "var(--green-luminous)" : "var(--text-muted)",
-                      fontSize: "12.5px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {ch.icon}
-                    <span>{ch.name}</span>
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Multilingual Selection */}
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "block", marginBottom: "8px" }}>
-              Languages Needed
-            </label>
-            <div style={{ display: "flex", gap: "6px", flexWrap: "wrap" }}>
-              {languageOptions.map((lang) => {
-                const isSelected = formData.languages.includes(lang);
-                return (
-                  <button
-                    type="button"
-                    key={lang}
-                    onClick={() => toggleLanguage(lang)}
-                    style={{
-                      padding: "5px 12px",
-                      borderRadius: "6px",
-                      border: `1px solid ${isSelected ? "var(--green)" : "var(--border)"}`,
-                      background: isSelected ? "rgba(118, 192, 67, 0.15)" : "transparent",
-                      color: isSelected ? "var(--green-luminous)" : "var(--text-muted)",
-                      fontSize: "12px",
-                      cursor: "pointer",
-                    }}
-                  >
-                    {lang}
-                  </button>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Biggest Challenge / Objective */}
-          <div>
-            <label style={{ fontSize: "12px", fontWeight: 600, color: "var(--text-ivory)", display: "block", marginBottom: "6px" }}>
-              Primary Goal or Current Communication Friction
-            </label>
-            <textarea
-              rows={3}
-              value={formData.challenge}
-              onChange={(e) => setFormData({ ...formData, challenge: e.target.value })}
-              placeholder="e.g. Front-desk misses calls during peak patient hours; need automated appointment booking and WhatsApp reminders."
-              style={{
-                width: "100%",
-                padding: "12px 14px",
-                borderRadius: "10px",
-                border: "1px solid var(--border)",
-                background: "rgba(255, 255, 255, 0.03)",
-                color: "#fff",
-                fontSize: "13.5px",
-                outline: "none",
-                fontFamily: "inherit",
-              }}
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={status === "submitting"}
-            className="btn-primary"
-            style={{ width: "100%", padding: "14px" }}
-          >
-            {status === "submitting" ? "Submitting Customization..." : "Confirm & Schedule Live AI Demo"} <ArrowRight size={15} />
-          </button>
-        </div>
-      )}
+          )}
+        </CardContent>
+      </Card>
 
       <style>{`
-        @media (max-width: 640px) {
-          .form-two-col { grid-template-columns: 1fr !important; }
-        }
-      `}</style>
+          .dbw-card { border-radius: 20px; }
+          .dbw-progress-row { display: flex; align-items: center; justify-content: space-between; margin-bottom: 28px; }
+          .dbw-progress-left { display: flex; align-items: center; gap: 10px; }
+          .dbw-step-badge { background: var(--overlay-1) !important; color: var(--text-muted) !important; border: 1px solid var(--border) !important; }
+          .dbw-progress-label { font-size: 13px; color: var(--text-muted); }
+          .dbw-back-btn { background: none; border: none; color: var(--text-muted); font-size: 13px; cursor: pointer; display: flex; align-items: center; gap: 4px; }
+
+          .dbw-step-body { display: flex; flex-direction: column; gap: 18px; }
+          .dbw-two-col { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+
+          .dbw-label { font-size: 12px; font-weight: 600; color: var(--text-ivory); display: block; margin-bottom: 6px; }
+          .dbw-label-row { display: flex; justify-content: space-between; align-items: baseline; }
+          .dbw-label-hint { font-size: 11px; color: var(--text-muted); font-weight: 400; }
+
+          .dbw-input {
+            width: 100%; box-sizing: border-box;
+            padding: 12px 14px; border-radius: 10px;
+            border: 1px solid var(--border); background: var(--overlay-1);
+            color: var(--text-ivory); font-size: 14px; outline: none;
+          }
+          .dbw-input:focus { border-color: var(--border-green); }
+          .dbw-select { cursor: pointer; }
+          .dbw-textarea { font-family: inherit; font-size: 13.5px; resize: vertical; }
+
+          .dbw-mobile-wrap { position: relative; display: flex; align-items: center; }
+          .dbw-mobile-prefix { position: absolute; left: 14px; color: var(--text-muted); font-size: 13.5px; font-weight: 600; pointer-events: none; }
+          .dbw-input-mobile { padding-left: 48px; letter-spacing: 0.04em; }
+
+          .dbw-error { font-size: 11px; color: var(--coral); margin-top: 4px; display: block; }
+
+          .dbw-choice-btn {
+            padding: 10px 14px; border-radius: 10px; text-align: left; cursor: pointer;
+            border: 1px solid var(--border); background: var(--overlay-1); color: var(--text-muted);
+            font-size: 12.5px; font: inherit;
+          }
+          .dbw-choice-btn.is-selected { border-color: var(--border-green); background: var(--green-glow); color: var(--green); }
+
+          .dbw-pill-row { display: flex; gap: 10px; flex-wrap: wrap; }
+          .dbw-pill-row-tight { gap: 6px; }
+          .dbw-channel-pill {
+            display: inline-flex; align-items: center; gap: 6px;
+            padding: 8px 16px; border-radius: 999px; cursor: pointer;
+            border: 1px solid var(--border); background: var(--overlay-1); color: var(--text-muted);
+            font-size: 12.5px; font: inherit;
+          }
+          .dbw-channel-pill.is-selected { border-color: var(--border-green); background: var(--green-glow); color: var(--green); }
+
+          .dbw-lang-pill {
+            padding: 5px 12px; border-radius: 6px; cursor: pointer;
+            border: 1px solid var(--border); background: transparent; color: var(--text-muted);
+            font-size: 12px; font: inherit;
+          }
+          .dbw-lang-pill.is-selected { border-color: var(--border-green); background: var(--green-glow); color: var(--green); }
+
+          .dbw-btn-primary {
+            width: 100%; box-sizing: border-box; margin-top: 4px;
+            display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+            padding: 14px; border-radius: 999px; border: none; cursor: pointer;
+            background: var(--text-ivory); color: var(--bg);
+            font-size: 14.5px; font-weight: 700;
+          }
+          .dbw-btn-primary:disabled { opacity: 0.6; cursor: default; }
+
+          .dbw-success-card { text-align: center; border-color: var(--border-green); }
+          .dbw-success-icon {
+            width: 60px; height: 60px; border-radius: 50%; margin-bottom: 20px;
+            display: inline-flex; align-items: center; justify-content: center;
+            background: var(--green-glow); color: var(--green);
+          }
+          .dbw-success-title { font-size: 26px; font-weight: 700; color: var(--text-ivory); margin: 0 0 12px; }
+          .dbw-success-desc { color: var(--text-muted); font-size: 15px; line-height: 1.6; max-width: 460px; margin: 0 auto 24px; }
+          .dbw-success-badge { background: var(--green-glow) !important; color: var(--green) !important; border: 1px solid var(--border-green) !important; height: auto !important; padding: 6px 14px !important; }
+          .dbw-success-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); margin-right: 6px; }
+
+          @media (max-width: 640px) {
+            .dbw-two-col { grid-template-columns: 1fr; }
+          }
+        `}</style>
     </form>
   );
 }

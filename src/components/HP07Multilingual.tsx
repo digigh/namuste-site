@@ -12,21 +12,19 @@ export default function HP07Multilingual() {
       className="multilingual-section-pad"
       style={{
         minHeight: "95vh",
-        background: "#000000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+        background: "var(--bg)",
+        borderTop: "1px solid var(--border)",
         position: "relative",
       }}
     >
       <div style={{ maxWidth: "1360px", margin: "0 auto", width: "100%" }}>
-        {/* Eyebrow */}
+        {/* Eyebrow — consistent monospace call-log tag */}
         <div
           style={{
-            fontFamily: "var(--font-sans)",
+            fontFamily: "'SF Mono', 'Menlo', monospace",
             fontSize: "12px",
-            fontWeight: 600,
-            letterSpacing: "0.22em",
-            color: "#8E8E93",
-            textTransform: "uppercase",
+            letterSpacing: "0.1em",
+            color: "var(--text-muted)",
             marginBottom: "20px",
           }}
         >
@@ -36,19 +34,18 @@ export default function HP07Multilingual() {
         {/* Headline */}
         <div style={{ maxWidth: "860px", marginBottom: "36px" }}>
           <h2
-            className="serif"
             style={{
               fontSize: "clamp(36px, 4.2vw, 62px)",
-              fontWeight: 300,
+              fontWeight: 700,
               lineHeight: 1.12,
               letterSpacing: "-0.02em",
-              color: "#F5F5F0",
+              color: "var(--text-ivory)",
               marginBottom: "16px",
             }}
           >
             Your customers will not<br />
             always speak in one language.<br />
-            <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>
+            <span style={{ color: "var(--green)", fontWeight: 600 }}>
               Neither should your receptionist.
             </span>
           </h2>
@@ -56,7 +53,7 @@ export default function HP07Multilingual() {
           <p
             style={{
               fontSize: "clamp(15px, 1.2vw, 18px)",
-              color: "#A1A1AA",
+              color: "var(--text-muted)",
               lineHeight: 1.6,
               maxWidth: "680px",
               margin: 0,
@@ -66,9 +63,14 @@ export default function HP07Multilingual() {
           </p>
         </div>
 
-        {/* Multi-Industry AI Voice Calling & Chatbot Engine */}
-        <div style={{ margin: "32px 0 44px" }}>
-          <AIVoiceChatbotEngine />
+        {/* Multi-Industry AI Voice Calling & Chatbot Engine — framed as a physical
+            kiosk/tablet sitting on the page, not another bordered dashboard card */}
+        <div className="hp07-device-frame" style={{ margin: "32px 0 44px" }}>
+          <div className="hp07-device-notch" />
+          <div className="hp07-device-screen">
+            <AIVoiceChatbotEngine />
+          </div>
+          <div className="hp07-device-home" />
         </div>
 
         {/* Primary CTA & Signature Footnote */}
@@ -79,7 +81,7 @@ export default function HP07Multilingual() {
             alignItems: "center",
             justifyContent: "space-between",
             gap: "20px",
-            borderTop: "1px solid rgba(255, 255, 255, 0.08)",
+            borderTop: "1px solid var(--border)",
             paddingTop: "28px",
           }}
         >
@@ -112,7 +114,7 @@ export default function HP07Multilingual() {
             <ArrowRight size={14} />
           </Link>
 
-          <p className="serif-italic" style={{ fontSize: "15px", color: "#D4D0C7", fontStyle: "italic", margin: 0 }}>
+          <p style={{ fontSize: "15px", color: "var(--text-body)", fontWeight: 600, margin: 0 }}>
             Less &lsquo;press one&rsquo;. More &lsquo;haan, boliye&rsquo;.
           </p>
         </div>
@@ -121,6 +123,31 @@ export default function HP07Multilingual() {
       <style>{`
         .multilingual-section-pad {
           padding: 110px 40px 100px;
+        }
+        .hp07-device-frame {
+          position: relative;
+          background: var(--surface3);
+          border-radius: 32px;
+          padding: 20px 16px 28px;
+          box-shadow: 0 30px 70px -20px rgba(0,0,0,0.25), inset 0 1px 0 rgba(255,255,255,0.06);
+        }
+        .hp07-device-notch {
+          width: 60px; height: 5px; border-radius: 999px;
+          background: var(--border2);
+          margin: 0 auto 16px;
+        }
+        .hp07-device-screen {
+          border-radius: 18px;
+          overflow: hidden;
+          background: var(--bg);
+        }
+        .hp07-device-home {
+          width: 100px; height: 4px; border-radius: 999px;
+          background: var(--border2);
+          margin: 20px auto 0;
+        }
+        @media (max-width: 600px) {
+          .hp07-device-frame { padding: 14px 8px 18px; border-radius: 24px; }
         }
         @media (max-width: 768px) {
           .multilingual-section-pad {

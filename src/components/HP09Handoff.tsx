@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import { User, ArrowRight, Brain, AlertCircle, ShieldAlert } from "lucide-react";
+import AnimatedOrb from "./AnimatedOrb";
 
 export default function HP09Handoff() {
   const [selectedCase, setSelectedCase] = useState<"sensitive" | "approval" | "human">("approval");
@@ -52,8 +53,8 @@ export default function HP09Handoff() {
       className="hp09-section-pad"
       style={{
         minHeight: "95vh",
-        background: "#000000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+        background: "var(--bg)",
+        borderTop: "1px solid var(--border)",
         position: "relative",
       }}
     >
@@ -65,7 +66,7 @@ export default function HP09Handoff() {
             fontSize: "12px",
             fontWeight: 600,
             letterSpacing: "0.22em",
-            color: "#8E8E93",
+            color: "var(--text-muted)",
             textTransform: "uppercase",
             marginBottom: "20px",
           }}
@@ -76,19 +77,18 @@ export default function HP09Handoff() {
         {/* Headline */}
         <div style={{ maxWidth: "860px", marginBottom: "28px" }}>
           <h2
-            className="serif"
             style={{
               fontSize: "clamp(38px, 4.5vw, 66px)",
-              fontWeight: 300,
+              fontWeight: 700,
               lineHeight: 1.12,
               letterSpacing: "-0.02em",
-              color: "#F5F5F0",
+              color: "var(--text-ivory)",
               marginBottom: "18px",
             }}
           >
             Some conversations<br />
             need a person. Namuste<br />
-            <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>
+            <span style={{ color: "var(--green)", fontWeight: 600 }}>
               knows which ones.
             </span>
           </h2>
@@ -96,7 +96,7 @@ export default function HP09Handoff() {
           <p
             style={{
               fontSize: "clamp(16px, 1.3vw, 19px)",
-              color: "#A1A1AA",
+              color: "var(--text-muted)",
               lineHeight: 1.6,
               maxWidth: "680px",
               margin: 0,
@@ -128,9 +128,9 @@ export default function HP09Handoff() {
                   fontWeight: 500,
                   cursor: "pointer",
                   transition: "all 0.2s ease",
-                  background: active ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.04)",
-                  color: active ? "#9BEA16" : "#A1A1AA",
-                  border: `1px solid ${active ? "rgba(155, 234, 22, 0.4)" : "rgba(255, 255, 255, 0.08)"}`,
+                  background: active ? "rgba(155, 234, 22, 0.15)" : "var(--overlay-1)",
+                  color: active ? "#9BEA16" : "var(--text-muted)",
+                  border: `1px solid ${active ? "rgba(155, 234, 22, 0.4)" : "var(--border)"}`,
                 }}
               >
                 <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: active ? "#9BEA16" : "rgba(255,255,255,0.3)" }} />
@@ -202,7 +202,7 @@ export default function HP09Handoff() {
               <circle cx="260" cy="180" r="4.5" fill="#9BEA16" />
 
               {/* Traveling Photon Left -> Center */}
-              <circle r="3.5" fill="#FFFFFF">
+              <circle r="3.5" fill="var(--text-ivory)">
                 <animateMotion path="M 260 180 L 416 180" dur="1.8s" repeatCount="indefinite" />
               </circle>
 
@@ -216,31 +216,18 @@ export default function HP09Handoff() {
                 <animateMotion path="M 504 180 L 610 180" dur="1.5s" begin="0.6s" repeatCount="indefinite" />
               </circle>
 
-              {/* 3. 100% UNIFIED CONCENTRIC BRAIN NODE IN SVG (Anchored at x=460, y=180) */}
-              {/* Outer Ambient Aura */}
+              {/* Ambient aura + radar rings stay in SVG; the solid core becomes a real 3D orb overlay below */}
               <circle cx="460" cy="180" r="76" fill="url(#brainCoreAura)" pointerEvents="none" />
-              {/* Pulsing Concentric Radar Halo */}
               <circle cx="460" cy="180" r="62" fill="none" stroke="rgba(248, 113, 113, 0.35)" strokeWidth="1.2" strokeDasharray="3 4">
                 <animate attributeName="r" values="58;66;58" dur="3s" repeatCount="indefinite" />
               </circle>
-              {/* Concentric Guide Ring */}
-              <circle cx="460" cy="180" r="52" fill="none" stroke="rgba(248, 113, 113, 0.45)" strokeWidth="1" />
-              {/* Core Solid Obsidian Disc */}
-              <circle cx="460" cy="180" r="44" fill="#08080A" stroke="#F87171" strokeWidth="2.2" filter="url(#handoffGlow)" />
-
-              {/* Centered Brain Icon inside SVG */}
-              <foreignObject x="439" y="159" width="42" height="42" style={{ pointerEvents: "none" }}>
-                <div style={{ width: "100%", height: "100%", display: "flex", alignItems: "center", justifyContent: "center" }}>
-                  <Brain size={32} style={{ color: "#9BEA16" }} />
-                </div>
-              </foreignObject>
 
               {/* Center Status Headline in SVG */}
               <text
                 x="460"
                 y="246"
                 textAnchor="middle"
-                fill="#F5F5F0"
+                fill="var(--text-ivory)"
                 fontSize="11.5"
                 fontFamily="var(--font-sans), sans-serif"
                 fontWeight="800"
@@ -254,7 +241,7 @@ export default function HP09Handoff() {
                 x="460"
                 y="262"
                 textAnchor="middle"
-                fill="#8E8E93"
+                fill="var(--text-muted)"
                 fontSize="10.5"
                 fontFamily="var(--font-sans), sans-serif"
                 fontWeight="500"
@@ -262,6 +249,14 @@ export default function HP09Handoff() {
                 {current.centerSub}
               </text>
             </svg>
+
+            {/* Genuine 3D animated orb hub, replacing the flat SVG disc — warm alert palette for escalation */}
+            <div style={{ position: "absolute", left: "50%", top: "50%", transform: "translate(-50%,-50%)", width: "88px", height: "88px", zIndex: 5, boxShadow: "0 20px 40px -8px rgba(248,113,113,0.4)", borderRadius: "50%" }}>
+              <AnimatedOrb size={88} colors={["#F87171", "#F59E0B", "#EF4444"]} />
+              <div style={{ position: "absolute", inset: 0, display: "flex", alignItems: "center", justifyContent: "center", pointerEvents: "none" }}>
+                <Brain size={32} style={{ color: "#fff", filter: "drop-shadow(0 2px 6px rgba(0,0,0,0.5))" }} />
+              </div>
+            </div>
 
             {/* 1. Left Card: Customer Input (Centered vertically at y=180) */}
             <motion.div
@@ -277,20 +272,20 @@ export default function HP09Handoff() {
                 width: "250px",
                 padding: "20px",
                 borderRadius: "18px",
-                background: "rgba(14, 14, 16, 0.94)",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
+                background: "var(--glass-bg)",
+                border: "1px solid var(--border2)",
                 backdropFilter: "blur(20px)",
                 boxShadow: "0 15px 40px rgba(0,0,0,0.9)",
               }}
             >
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "10px" }}>
-                <span style={{ fontSize: "11px", color: "#8E8E93", fontWeight: 700, textTransform: "uppercase", display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.06em" }}>
+                <span style={{ fontSize: "11px", color: "var(--text-muted)", fontWeight: 700, textTransform: "uppercase", display: "flex", alignItems: "center", gap: "6px", letterSpacing: "0.06em" }}>
                   <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#9BEA16", boxShadow: "0 0 8px #9BEA16" }} />
                   Customer
                 </span>
-                <span style={{ fontSize: "11px", fontFamily: "monospace", color: "#8E8E93" }}>{current.customerTime}</span>
+                <span style={{ fontSize: "11px", fontFamily: "monospace", color: "var(--text-muted)" }}>{current.customerTime}</span>
               </div>
-              <p style={{ fontSize: "13px", color: "#F5F5F0", margin: 0, lineHeight: 1.55 }}>
+              <p style={{ fontSize: "13px", color: "var(--text-ivory)", margin: 0, lineHeight: 1.55 }}>
                 &ldquo;{current.customerQuery}&rdquo;
               </p>
             </motion.div>
@@ -324,14 +319,14 @@ export default function HP09Handoff() {
                 width: "300px",
                 padding: "24px",
                 borderRadius: "20px",
-                background: "rgba(16, 14, 10, 0.95)",
+                background: "var(--glass-bg)",
                 border: "1px solid rgba(245, 158, 11, 0.45)",
                 boxShadow: "0 20px 50px rgba(0, 0, 0, 0.95), 0 0 35px rgba(245, 158, 11, 0.15)",
                 backdropFilter: "blur(20px)",
               }}
             >
               <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "16px" }}>
-                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "#F5F5F0" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", fontSize: "11px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--text-ivory)" }}>
                   <span style={{ width: "7px", height: "7px", borderRadius: "50%", background: "#F59E0B", boxShadow: "0 0 8px #F59E0B" }} />
                   Handoff Ready
                 </div>
@@ -347,24 +342,24 @@ export default function HP09Handoff() {
               </div>
 
               {/* Officer Profile */}
-              <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingBottom: "14px", marginBottom: "14px", borderBottom: "1px solid rgba(255, 255, 255, 0.08)" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: "10px", paddingBottom: "14px", marginBottom: "14px", borderBottom: "1px solid var(--border)" }}>
                 <div style={{ width: "36px", height: "36px", borderRadius: "50%", background: "rgba(245, 158, 11, 0.12)", border: "1px solid rgba(245, 158, 11, 0.3)", display: "flex", alignItems: "center", justifyContent: "center", color: "#F59E0B" }}>
                   <User size={18} />
                 </div>
-                <div style={{ fontSize: "13.5px", fontWeight: 600, color: "#F5F5F0" }}>
+                <div style={{ fontSize: "13.5px", fontWeight: 600, color: "var(--text-ivory)" }}>
                   {current.leadName}
                 </div>
               </div>
 
               {/* Context Telemetry Details */}
               <div style={{ display: "flex", flexDirection: "column", gap: "6px", fontSize: "12px" }}>
-                <div><span style={{ color: "#8E8E93" }}>Customer: </span><strong style={{ color: "#F5F5F0" }}>Arjun Mehta</strong></div>
-                <div><span style={{ color: "#8E8E93" }}>Topic: </span><strong style={{ color: "#F5F5F0" }}>{current.topic}</strong></div>
-                <div><span style={{ color: "#8E8E93" }}>History: </span><span style={{ color: "#D4D0C7" }}>{current.history}</span></div>
-                <div style={{ paddingTop: "6px" }}><span style={{ color: "#8E8E93" }}>Suggested next step: </span><span style={{ color: "#9BEA16", fontWeight: 600 }}>{current.nextStep}</span></div>
+                <div><span style={{ color: "var(--text-muted)" }}>Customer: </span><strong style={{ color: "var(--text-ivory)" }}>Arjun Mehta</strong></div>
+                <div><span style={{ color: "var(--text-muted)" }}>Topic: </span><strong style={{ color: "var(--text-ivory)" }}>{current.topic}</strong></div>
+                <div><span style={{ color: "var(--text-muted)" }}>History: </span><span style={{ color: "var(--text-body)" }}>{current.history}</span></div>
+                <div style={{ paddingTop: "6px" }}><span style={{ color: "var(--text-muted)" }}>Suggested next step: </span><span style={{ color: "#9BEA16", fontWeight: 600 }}>{current.nextStep}</span></div>
               </div>
 
-              <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid rgba(255, 255, 255, 0.06)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", color: "#8E8E93", textTransform: "uppercase" }}>
+              <div style={{ marginTop: "16px", paddingTop: "12px", borderTop: "1px solid var(--border)", fontSize: "10px", fontWeight: 700, letterSpacing: "0.08em", color: "var(--text-muted)", textTransform: "uppercase" }}>
                 No Repeating. No Restarting.
               </div>
             </motion.div>
@@ -402,7 +397,7 @@ export default function HP09Handoff() {
             <ArrowRight size={14} />
           </Link>
 
-          <p className="serif-italic" style={{ fontSize: "15px", color: "#D4D0C7", fontStyle: "italic", margin: 0 }}>
+          <p style={{ fontSize: "15px", color: "var(--text-body)", fontWeight: 600, margin: 0 }}>
             Helpful enough to act. Sensible enough to ask.
           </p>
         </div>

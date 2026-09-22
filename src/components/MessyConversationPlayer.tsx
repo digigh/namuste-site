@@ -1,77 +1,104 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, Volume2, ShieldCheck, Sparkles, Zap, MessageSquare, CheckCircle } from "lucide-react";
+import { Caveat } from "next/font/google";
+import {
+  Play,
+  Pause,
+  RotateCcw,
+  Phone,
+  Zap,
+  MessageCircle,
+  Signal,
+  Wifi,
+  BatteryFull,
+  MoreHorizontal,
+  Plus,
+  Mic,
+  CheckCheck,
+  Sparkles,
+} from "lucide-react";
+
+const caveat = Caveat({ subsets: ["latin"], weight: ["600", "700"] });
+
+const WAVE_BARS = 48;
+
+const PILLS = [
+  { icon: Phone, title: "Understands", sub: "natural speech" },
+  { icon: Zap, title: "Adapts", sub: "in real time" },
+  { icon: MessageCircle, title: "Feels human,", sub: "not robotic" },
+];
 
 export default function MessyConversationPlayer() {
   const [isPlaying, setIsPlaying] = useState<boolean>(false);
   const [currentStepIndex, setCurrentStepIndex] = useState<number>(0);
   const [playbackProgress, setPlaybackProgress] = useState<number>(0);
-  const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+  // Deterministic bar heights (same integer-hash technique as the hero
+  // waveform) — never Math.random, which would mismatch between server and
+  // client render and break hydration.
+  const bars = useMemo(
+    () =>
+      Array.from({ length: WAVE_BARS }, (_, i) => {
+        let x = (i + 1) * 2654435761;
+        x = (x ^ (x >>> 13)) >>> 0;
+        x = (x * 2246822519) >>> 0;
+        x = (x ^ (x >>> 15)) >>> 0;
+        return 0.15 + (x / 4294967295) * 0.85;
+      }),
+    []
+  );
 
   const steps = [
     {
       time: "0:02",
       speaker: "Caller",
-      role: "Inbound Customer",
       type: "caller",
       text: "Yeah hi... uh, I wanted to check if Dr. Mehta is available on Wednesday afternoon... wait, no, actually my mom said Thursday is better, around 5?",
       annotation: "Mid-sentence self-correction: Wednesday → Thursday 5:00 PM",
-      badge: "Correction Handled",
-      badgeColor: "#F59E0B",
+      tag: "Correction Handled",
     },
     {
       time: "0:07",
       speaker: "Namuste",
-      role: "Digital Receptionist",
       type: "assistant",
       text: "Namuste. Thursday at 5:00 PM is open. Dr. Mehta has both 5:00 PM and 5:45 PM available. Which works best for her?",
       annotation: "Grasped corrected intent without confusion or repeating discarded date",
-      badge: "Intent Understood",
-      badgeColor: "#9BEA16",
+      tag: "Intent Understood",
     },
     {
       time: "0:12",
       speaker: "Caller",
-      role: "Inbound Customer",
       type: "caller",
       text: "Wait, sorry—can you also check if her cardiac echo reports need to be brought along, or can we send them online?",
       annotation: "Mid-flow interruption & secondary clinical query parsed seamlessly",
-      badge: "Interruption Parsed",
-      badgeColor: "#F87171",
+      tag: "Interruption Parsed",
     },
     {
       time: "0:18",
       speaker: "Namuste",
-      role: "Digital Receptionist",
       type: "assistant",
       text: "You can easily upload her echo reports to our secure WhatsApp link before the visit, or bring physical copies. I have locked Thursday, 5:00 PM for her. I am texting the upload link now.",
       annotation: "Resolved booking + document requirements in a single fluid turn",
-      badge: "Multi-Intent Resolved",
-      badgeColor: "#9BEA16",
+      tag: "Multi-Intent Resolved",
     },
   ];
 
-  // Auto-advancing playback simulation
   useEffect(() => {
-    if (isPlaying) {
-      const interval = setInterval(() => {
-        setPlaybackProgress((prev) => {
-          if (prev >= 100) {
-            setIsPlaying(false);
-            return 100;
-          }
-          const next = prev + 1.25;
-          if (next < 25) setCurrentStepIndex(0);
-          else if (next < 50) setCurrentStepIndex(1);
-          else if (next < 75) setCurrentStepIndex(2);
-          else setCurrentStepIndex(3);
-          return next;
-        });
-      }, 100);
-      return () => clearInterval(interval);
-    }
+    if (!isPlaying) return;
+    const interval = setInterval(() => {
+      setPlaybackProgress((prev) => {
+        if (prev >= 100) {
+          setIsPlaying(false);
+          return 100;
+        }
+        const next = prev + 1.25;
+        setCurrentStepIndex(next < 25 ? 0 : next < 50 ? 1 : next < 75 ? 2 : 3);
+        return next;
+      });
+    }, 100);
+    return () => clearInterval(interval);
   }, [isPlaying]);
 
   const handleReset = () => {
@@ -88,322 +115,337 @@ export default function MessyConversationPlayer() {
     setIsPlaying(!isPlaying);
   };
 
+  const activeStep = steps[currentStepIndex];
+
   return (
-    <div
-      style={{
-        maxWidth: "860px",
-        margin: "0 auto",
-        width: "100%",
-      }}
-    >
-      <div
-        className="messy-player-card"
-        style={{
-          width: "100%",
-          borderRadius: "20px",
-          background: "rgba(10, 12, 11, 0.92)",
-          border: "1px solid rgba(255, 255, 255, 0.1)",
-          boxShadow: "0 20px 50px rgba(0, 0, 0, 0.85), 0 0 30px rgba(155, 234, 22, 0.04)",
-          backdropFilter: "blur(20px)",
-          position: "relative",
-          overflow: "hidden",
-        }}
-      >
-        {/* Subtle Ambient Top Glow */}
-        <div
-          style={{
-            position: "absolute",
-            top: "-40px",
-            left: "50%",
-            transform: "translateX(-50%)",
-            width: "400px",
-            height: "80px",
-            background: "radial-gradient(ellipse, rgba(155, 234, 22, 0.12) 0%, transparent 70%)",
-            pointerEvents: "none",
-          }}
-        />
-
-        {/* Compact Header with Live Playback Controls */}
-        <div
-          style={{
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "14px",
-            paddingBottom: "18px",
-            marginBottom: "20px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.07)",
-            position: "relative",
-            zIndex: 10,
-          }}
+    <div className="mcp-layout">
+      {/* Left — headline, transport controls, waveform, live tag, pills */}
+      <div className="mcp-left">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.7 }}
         >
-          <div>
-            <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-              <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: "#9BEA16", boxShadow: "0 0 6px #9BEA16" }} />
-              <span style={{ fontSize: "10.5px", textTransform: "uppercase", fontWeight: 700, letterSpacing: "0.12em", color: "#9BEA16" }}>
-                Acoustic Intelligence • Live Transcript
-              </span>
-            </div>
-            <h4 className="serif" style={{ fontSize: "clamp(18px, 1.8vw, 22px)", color: "#F5F5F0", margin: 0, fontWeight: 300, letterSpacing: "-0.01em" }}>
-              People pause. Interrupt. Change their mind.{" "}
-              <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>
-                Namuste keeps up.
-              </span>
-            </h4>
+          <div className="mcp-eyebrow">
+            <span className="mcp-eyebrow-dot" />
+            ACOUSTIC INTELLIGENCE
+            <span className="mcp-eyebrow-rule" />
           </div>
+          <h2 className="mcp-headline">
+            Real conversations do not read scripts.{" "}
+            <span style={{ color: "var(--green)" }}>Namuste simply keeps up.</span>
+          </h2>
+          <p className="mcp-desc">
+            Handles human pauses, interruptions, and mid-sentence intent changes with sub-200ms acoustic responsiveness.
+          </p>
+        </motion.div>
 
-          {/* Compact Audio Controls & Equalizer */}
-          <div style={{ display: "flex", alignItems: "center", gap: "10px" }}>
-            {/* Animated Equalizer */}
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: "2.5px",
-                height: "26px",
-                padding: "0 10px",
-                borderRadius: "999px",
-                background: "rgba(255, 255, 255, 0.04)",
-                border: "1px solid rgba(255, 255, 255, 0.08)",
-              }}
-            >
-              <Volume2 size={12} style={{ color: isPlaying ? "#9BEA16" : "#71717A", marginRight: "2px" }} />
-              {[12, 18, 9, 22, 14, 16, 10, 20].map((h, i) => (
-                <motion.span
-                  key={i}
-                  animate={
-                    isPlaying
-                      ? { height: [h * 0.35, h, h * 0.25], opacity: [0.6, 1, 0.6] }
-                      : { height: 3, opacity: 0.3 }
-                  }
-                  transition={{
-                    repeat: Infinity,
-                    duration: 0.7 + (i % 4) * 0.15,
-                    ease: "easeInOut",
-                  }}
-                  style={{
-                    width: "2px",
-                    borderRadius: "1px",
-                    background: isPlaying ? "#9BEA16" : "#71717A",
-                    display: "inline-block",
-                  }}
-                />
-              ))}
-            </div>
-
-            {/* Play/Pause Button */}
-            <button
-              onClick={handlePlayToggle}
-              style={{
-                cursor: "pointer",
-                fontSize: "12px",
-                fontWeight: 700,
-                padding: "7px 15px",
-                borderRadius: "8px",
-                background: isPlaying ? "#F5F5F0" : "#9BEA16",
-                color: "#000000",
-                border: "none",
-                display: "flex",
-                alignItems: "center",
-                gap: "6px",
-                boxShadow: "0 0 20px rgba(155, 234, 22, 0.25)",
-                transition: "all 0.2s ease",
-              }}
-            >
-              {isPlaying ? <Pause size={13} /> : <Play size={13} />}
-              <span>{isPlaying ? "Pause" : "Play Conversation"}</span>
-            </button>
-
-            {/* Reset Button */}
-            <button
-              onClick={handleReset}
-              style={{
-                cursor: "pointer",
-                fontSize: "12px",
-                padding: "7px 10px",
-                borderRadius: "8px",
-                background: "rgba(255, 255, 255, 0.05)",
-                color: "#D4D0C7",
-                border: "1px solid rgba(255, 255, 255, 0.1)",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "all 0.2s ease",
-              }}
-              title="Reset playback"
-            >
-              <RotateCcw size={13} />
-            </button>
-          </div>
+        <div className="mcp-controls">
+          <button onClick={handlePlayToggle} className="mcp-play-btn">
+            {isPlaying ? <Pause size={13} /> : <Play size={13} fill="currentColor" />}
+            <span>{isPlaying ? "Pause" : "Play the conversation"}</span>
+          </button>
+          <button onClick={handleReset} className="mcp-reset-btn" title="Reset">
+            <RotateCcw size={13} />
+            <span>Replay</span>
+          </button>
         </div>
 
-        {/* Progress Line */}
-        <div
-          style={{
-            width: "100%",
-            height: "2px",
-            background: "rgba(255, 255, 255, 0.06)",
-            borderRadius: "999px",
-            marginBottom: "20px",
-            overflow: "hidden",
-          }}
-        >
-          <motion.div
-            style={{
-              height: "100%",
-              width: `${playbackProgress}%`,
-              background: "linear-gradient(90deg, #9BEA16 0%, #F59E0B 100%)",
-              boxShadow: "0 0 8px #9BEA16",
-            }}
-          />
-        </div>
-
-        {/* Transcript Timeline: Sleek, Aesthetic Compact Bubbles */}
-        <div style={{ display: "flex", flexDirection: "column", gap: "12px", position: "relative", zIndex: 10 }}>
-          {steps.map((step, idx) => {
-            const isAssistant = step.type === "assistant";
-            const isActive = isPlaying && currentStepIndex === idx;
-
+        {/* A real waveform illustration standing in for the audio itself — bars
+            lit up as playback crosses them, animating while playing. */}
+        <div className="mcp-waveform" aria-hidden>
+          {bars.map((h, i) => {
+            const isLit = (i / WAVE_BARS) * 100 <= playbackProgress;
             return (
-              <motion.div
-                key={idx}
-                animate={{
-                  scale: isActive ? 1.01 : 1,
-                  borderColor: isActive
-                    ? isAssistant
-                      ? "rgba(155, 234, 22, 0.7)"
-                      : "rgba(245, 158, 11, 0.7)"
-                    : isAssistant
-                    ? "rgba(155, 234, 22, 0.22)"
-                    : "rgba(255, 255, 255, 0.08)",
-                }}
+              <span
+                key={i}
+                className={`mcp-wave-bar ${isPlaying ? "is-live" : ""}`}
                 style={{
-                  padding: "14px 18px",
-                  borderRadius: isAssistant ? "14px 14px 4px 14px" : "14px 14px 14px 4px",
-                  border: isAssistant
-                    ? "1px solid rgba(155, 234, 22, 0.2)"
-                    : "1px solid rgba(255, 255, 255, 0.08)",
-                  background: isAssistant
-                    ? "rgba(155, 234, 22, 0.04)"
-                    : "rgba(18, 18, 22, 0.7)",
-                  boxShadow: isActive
-                    ? isAssistant
-                      ? "0 0 25px rgba(155, 234, 22, 0.15)"
-                      : "0 0 25px rgba(245, 158, 11, 0.15)"
-                    : "0 4px 16px rgba(0,0,0,0.4)",
-                  marginLeft: isAssistant ? "36px" : "0",
-                  marginRight: isAssistant ? "0" : "36px",
-                  transition: "all 0.2s ease",
+                  height: `${h * 100}%`,
+                  background: isLit ? "var(--green-luminous)" : "var(--border2)",
+                  animationDuration: `${0.6 + h}s`,
+                  animationDelay: `${i * 0.02}s`,
                 }}
-              >
-                {/* Speaker Header */}
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: "8px" }}>
-                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                    <div
-                      style={{
-                        width: "22px",
-                        height: "22px",
-                        borderRadius: "50%",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        fontSize: "10px",
-                        fontWeight: 800,
-                        background: isAssistant ? "#9BEA16" : "rgba(255, 255, 255, 0.12)",
-                        color: isAssistant ? "#000000" : "#F5F5F0",
-                      }}
-                    >
-                      {isAssistant ? "N" : "C"}
-                    </div>
-                    <span style={{ fontSize: "12.5px", fontWeight: 700, color: "#F5F5F0" }}>{step.speaker}</span>
-                    <span style={{ fontSize: "10.5px", fontFamily: "monospace", color: "#8E8E93" }}>
-                      {step.time}
-                    </span>
-                  </div>
-
-                  {/* Badge */}
-                  <span
-                    style={{
-                      fontSize: "10px",
-                      fontWeight: 700,
-                      padding: "2px 8px",
-                      borderRadius: "999px",
-                      background: `${step.badgeColor}15`,
-                      color: step.badgeColor,
-                      border: `1px solid ${step.badgeColor}35`,
-                    }}
-                  >
-                    {step.badge}
-                  </span>
-                </div>
-
-                {/* Main Dialogue Text */}
-                <p
-                  style={{
-                    fontSize: "13.5px",
-                    color: "#F5F5F0",
-                    lineHeight: 1.55,
-                    margin: "0 0 8px 0",
-                    fontFamily: "var(--font-sans), sans-serif",
-                  }}
-                >
-                  &ldquo;{step.text}&rdquo;
-                </p>
-
-                {/* Acoustic Annotation */}
-                <div
-                  style={{
-                    fontSize: "11px",
-                    color: "#A1A1AA",
-                    display: "flex",
-                    alignItems: "center",
-                    gap: "6px",
-                    paddingTop: "6px",
-                    borderTop: "1px solid rgba(255, 255, 255, 0.05)",
-                  }}
-                >
-                  <Zap size={11} style={{ color: step.badgeColor, flexShrink: 0 }} />
-                  <span>{step.annotation}</span>
-                </div>
-              </motion.div>
+              />
             );
           })}
         </div>
+        <div className="mcp-time-row">
+          <span>00:00</span>
+          <span>01:12</span>
+        </div>
 
-        {/* Compact Footnote */}
-        <div
-          style={{
-            marginTop: "18px",
-            paddingTop: "14px",
-            borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-            display: "flex",
-            flexWrap: "wrap",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "10px",
-            fontSize: "11.5px",
-            color: "#8E8E93",
-            position: "relative",
-            zIndex: 10,
-          }}
-        >
-          <div style={{ display: "flex", alignItems: "center", gap: "6px", color: "#9BEA16" }}>
-            <CheckCircle size={14} />
-            <span style={{ fontWeight: 600 }}>Acoustic cancellation • Natural barge-in • 180ms latency</span>
-          </div>
-          <span style={{ fontFamily: "monospace", fontSize: "11px", color: "#71717A" }}>Sub-200ms Response</span>
+        <div className="mcp-live-tag-slot">
+          <AnimatePresence mode="wait">
+            {isPlaying && activeStep && (
+              <motion.div
+                key={currentStepIndex}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+                className="mcp-live-tag"
+              >
+                <span className="mcp-live-tag-badge">{activeStep.tag}</span>
+                <span className="mcp-live-tag-text">{activeStep.annotation}</span>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="mcp-pills">
+          {PILLS.map((p, i) => {
+            const Icon = p.icon;
+            return (
+              <div className="mcp-pill" key={i}>
+                <span className="mcp-pill-icon">
+                  <Icon size={15} />
+                </span>
+                <span className="mcp-pill-text">
+                  <strong>{p.title}</strong>
+                  <br />
+                  {p.sub}
+                </span>
+              </div>
+            );
+          })}
         </div>
       </div>
 
+      {/* Right — a real phone mockup carrying the same transcript as chat bubbles */}
+      <div className="mcp-right">
+        <div className="mcp-phone-glow mcp-phone-glow-a" aria-hidden />
+        <div className="mcp-phone-glow mcp-phone-glow-b" aria-hidden />
+
+        <motion.div
+          initial={{ opacity: 0, y: 24 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+          className="mcp-phone"
+        >
+          <div className="mcp-phone-notch" />
+          <div className="mcp-phone-status">
+            <span>9:41</span>
+            <span className="mcp-phone-status-icons">
+              <Signal size={12} />
+              <Wifi size={12} />
+              <BatteryFull size={15} />
+            </span>
+          </div>
+
+          <div className="mcp-phone-header">
+            <span className="mcp-phone-avatar">
+              <Sparkles size={14} />
+            </span>
+            <div className="mcp-phone-header-text">
+              <div className="mcp-phone-name">Sunrise Clinic</div>
+              <div className="mcp-phone-sub">AI Receptionist</div>
+            </div>
+            <span className="mcp-phone-icon-btn"><Phone size={13} /></span>
+            <span className="mcp-phone-icon-btn"><MoreHorizontal size={13} /></span>
+          </div>
+
+          <div className="mcp-phone-body">
+            <div className="mcp-phone-date">Today</div>
+            {steps.map((step, idx) => {
+              const isAssistant = step.type === "assistant";
+              const isActive = isPlaying && currentStepIndex === idx;
+              return (
+                <motion.div
+                  key={idx}
+                  animate={{ opacity: isPlaying && !isActive ? 0.5 : 1 }}
+                  transition={{ duration: 0.3 }}
+                  className={`mcp-phone-msg ${isAssistant ? "is-ai" : ""}`}
+                >
+                  <div className="mcp-phone-bubble">
+                    <p>{step.text}</p>
+                    <span className="mcp-phone-time">
+                      {step.time}
+                      {isAssistant && <CheckCheck size={12} className="mcp-phone-check" />}
+                    </span>
+                  </div>
+                </motion.div>
+              );
+            })}
+          </div>
+
+          <div className="mcp-phone-input">
+            <span className="mcp-phone-plus"><Plus size={15} /></span>
+            <span className="mcp-phone-placeholder">Type a message...</span>
+            <span className="mcp-phone-mic"><Mic size={14} /></span>
+          </div>
+        </motion.div>
+
+        <motion.div
+          initial={{ opacity: 0 }}
+          whileInView={{ opacity: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.5, delay: 0.5 }}
+          className={`mcp-annotation ${caveat.className}`}
+        >
+          A real conversation.<br />On your terms.
+          <svg width="60" height="14" viewBox="0 0 60 14" className="mcp-annotation-underline" aria-hidden>
+            <motion.path
+              d="M2 8 C 16 2, 34 2, 58 9"
+              fill="none" stroke="var(--green)" strokeWidth="2.2" strokeLinecap="round"
+              initial={{ pathLength: 0 }}
+              whileInView={{ pathLength: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.9 }}
+            />
+          </svg>
+        </motion.div>
+      </div>
+
       <style>{`
-        .messy-player-card {
-          padding: 26px 30px;
+        .mcp-layout {
+          display: grid;
+          grid-template-columns: 0.95fr 1.05fr;
+          gap: 56px;
+          align-items: center;
         }
-        @media (max-width: 768px) {
-          .messy-player-card {
-            padding: 18px 14px !important;
-          }
+
+        .mcp-eyebrow {
+          display: flex; align-items: center; gap: 10px;
+          font-family: 'SF Mono', 'Menlo', monospace; font-size: 12px;
+          letter-spacing: 0.1em; color: var(--text-muted); margin-bottom: 18px;
+        }
+        .mcp-eyebrow-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--green); flex-shrink: 0; }
+        .mcp-eyebrow-rule { flex: 1; max-width: 60px; height: 1px; background: var(--border2); }
+        .mcp-headline {
+          font-family: var(--font-sans); font-weight: 800; font-size: clamp(32px, 3.8vw, 50px);
+          line-height: 1.08; letter-spacing: -0.02em; color: var(--text-ivory); margin: 0 0 16px;
+        }
+        .mcp-desc { color: var(--text-muted); font-size: 15.5px; line-height: 1.65; margin: 0 0 36px; max-width: 480px; }
+
+        .mcp-controls { display: flex; align-items: center; gap: 14px; margin-bottom: 28px; }
+        .mcp-play-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          background: var(--text-ivory); color: var(--bg);
+          border: none; border-radius: 999px; padding: 13px 24px;
+          font-size: 13.5px; font-weight: 700; cursor: pointer;
+          box-shadow: 0 12px 24px -10px rgba(11, 15, 13, 0.4);
+          transition: transform 0.15s ease;
+        }
+        .mcp-play-btn:hover { transform: translateY(-1px); }
+        .mcp-reset-btn {
+          display: inline-flex; align-items: center; gap: 7px;
+          background: none; border: none; padding: 6px 4px;
+          color: var(--text-muted); font-size: 13px; font-weight: 600; cursor: pointer;
+        }
+        .mcp-reset-btn svg { width: 32px; height: 32px; padding: 8px; border-radius: 50%; background: var(--overlay-1); border: 1px solid var(--border); box-sizing: border-box; }
+
+        .mcp-waveform { display: flex; align-items: center; gap: 2px; height: 56px; }
+        .mcp-wave-bar { flex: 1; min-width: 2px; border-radius: 2px; transform-origin: center; transition: background 0.3s ease; }
+        .mcp-wave-bar.is-live { animation-name: mcpWaveBreathe; animation-timing-function: ease-in-out; animation-iteration-count: infinite; }
+        @keyframes mcpWaveBreathe { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.5); } }
+        .mcp-time-row { display: flex; justify-content: space-between; font-family: 'SF Mono', 'Menlo', monospace; font-size: 11px; color: var(--text-dim); margin-top: 8px; }
+
+        .mcp-live-tag-slot { min-height: 46px; margin-top: 18px; }
+        .mcp-live-tag {
+          display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap;
+          padding: 10px 14px; border-radius: 10px;
+          background: var(--green-glow); border: 1px solid var(--border-green);
+        }
+        .mcp-live-tag-badge { font-size: 10.5px; font-weight: 700; color: var(--green); white-space: nowrap; }
+        .mcp-live-tag-text { font-size: 12px; color: var(--text-muted); }
+
+        .mcp-pills { display: flex; gap: 22px; margin-top: 22px; flex-wrap: wrap; }
+        .mcp-pill { display: flex; align-items: center; gap: 10px; }
+        .mcp-pill-icon {
+          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--green-glow); color: var(--green);
+        }
+        .mcp-pill-text { font-size: 12.5px; color: var(--text-muted); line-height: 1.4; }
+        .mcp-pill-text strong { color: var(--text-ivory); font-weight: 700; }
+
+        /* Phone mockup */
+        .mcp-right { position: relative; display: flex; align-items: center; justify-content: center; padding: 20px 0; }
+        .mcp-phone-glow { position: absolute; border-radius: 50%; pointer-events: none; background: radial-gradient(circle, var(--green-glow) 0%, transparent 70%); }
+        .mcp-phone-glow-a { top: -10%; right: 5%; width: 320px; height: 320px; }
+        .mcp-phone-glow-b { bottom: -5%; left: 0%; width: 260px; height: 260px; opacity: 0.7; }
+
+        .mcp-phone {
+          position: relative; z-index: 1;
+          width: 300px; background: #0B0F0D; border-radius: 40px;
+          padding: 14px 10px 10px; box-shadow: 0 40px 80px -30px rgba(11, 15, 13, 0.5), 0 0 0 2px rgba(255,255,255,0.04) inset;
+          display: flex; flex-direction: column;
+        }
+        .mcp-phone-notch {
+          position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+          width: 90px; height: 22px; border-radius: 999px; background: #000; z-index: 2;
+        }
+        .mcp-phone-status {
+          display: flex; align-items: center; justify-content: space-between;
+          padding: 4px 14px 10px; color: #fff; font-size: 12px; font-weight: 600;
+        }
+        .mcp-phone-status-icons { display: flex; align-items: center; gap: 4px; }
+        .mcp-phone-header {
+          display: flex; align-items: center; gap: 9px;
+          background: var(--surface); border-radius: 16px 16px 0 0;
+          padding: 10px 12px;
+        }
+        .mcp-phone-avatar {
+          width: 30px; height: 30px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--green-glow); color: var(--green);
+        }
+        .mcp-phone-header-text { flex: 1; min-width: 0; }
+        .mcp-phone-name { font-size: 13px; font-weight: 700; color: var(--text-ivory); }
+        .mcp-phone-sub { font-size: 10.5px; color: var(--text-muted); }
+        .mcp-phone-icon-btn {
+          width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          color: var(--text-muted);
+        }
+        .mcp-phone-body {
+          background: var(--bg2); padding: 14px 10px; min-height: 340px; max-height: 420px; overflow-y: auto;
+          display: flex; flex-direction: column; gap: 10px;
+        }
+        .mcp-phone-date {
+          text-align: center; font-size: 10px; color: var(--text-dim);
+          background: var(--overlay-1); border-radius: 999px; padding: 3px 10px;
+          align-self: center; margin-bottom: 4px;
+        }
+        .mcp-phone-msg { display: flex; }
+        .mcp-phone-msg.is-ai { justify-content: flex-end; }
+        .mcp-phone-bubble {
+          max-width: 82%; padding: 8px 11px; border-radius: 3px 14px 14px 14px;
+          background: var(--surface); box-shadow: 0 1px 0.5px rgba(0,0,0,0.1);
+        }
+        .mcp-phone-msg.is-ai .mcp-phone-bubble { border-radius: 14px 3px 14px 14px; background: var(--green-glow); }
+        .mcp-phone-bubble p { margin: 0; font-size: 12.5px; line-height: 1.42; color: var(--text-ivory); }
+        .mcp-phone-time { display: flex; align-items: center; gap: 3px; justify-content: flex-end; margin-top: 4px; font-family: 'SF Mono', 'Menlo', monospace; font-size: 9px; color: var(--text-dim); }
+        .mcp-phone-check { color: #53BDEB; }
+        .mcp-phone-input {
+          display: flex; align-items: center; gap: 8px;
+          background: var(--surface); border-radius: 0 0 16px 16px;
+          padding: 10px 12px;
+        }
+        .mcp-phone-plus, .mcp-phone-mic {
+          width: 28px; height: 28px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          color: var(--text-muted);
+        }
+        .mcp-phone-mic { background: var(--green); color: #fff; }
+        .mcp-phone-placeholder { flex: 1; font-size: 12px; color: var(--text-dim); background: var(--bg2); border-radius: 999px; padding: 7px 12px; }
+
+        .mcp-annotation {
+          position: absolute; right: -14px; bottom: 6%;
+          font-size: 20px; line-height: 1.2; color: var(--text-muted); text-align: right;
+          transform: rotate(-2deg); display: none;
+        }
+        .mcp-annotation-underline { display: block; margin-top: 4px; margin-left: auto; }
+
+        @media (min-width: 1180px) {
+          .mcp-annotation { display: block; right: -40px; }
+        }
+
+        @media (max-width: 980px) {
+          .mcp-layout { grid-template-columns: 1fr; gap: 48px; }
         }
       `}</style>
     </div>

@@ -42,12 +42,17 @@ export function isBookingGenuinelyComplete(
   if (industryId === "doctors-clinics") {
     const resolved = resolveDayAndHour(slot, nowIST);
     if (resolved) {
-      const clinicOk = CLINIC_OPEN_DAYS.includes(resolved.dayOfWeek) && resolved.hour >= CLINIC_OPEN_HOUR && resolved.hour < CLINIC_CLOSE_HOUR;
-      if (!clinicOk) return false;
+      // A department's own roster entry (when one exists) is the authoritative
+      // hours window — e.g. the diagnostic lab opens at 7 AM for fasting tests,
+      // narrower than that would wrongly reject a legitimate early booking.
+      // General clinic hours are only the fallback for a department with no
+      // roster entry, which shouldn't happen now that every real department
+      // is rostered, but is kept as a defensive default.
       const doctorEntry = DOCTOR_ROSTER[department];
-      if (doctorEntry && !(doctorEntry.days.includes(resolved.dayOfWeek) && resolved.hour >= doctorEntry.startHour && resolved.hour < doctorEntry.endHour)) {
-        return false;
-      }
+      const withinHours = doctorEntry
+        ? doctorEntry.days.includes(resolved.dayOfWeek) && resolved.hour >= doctorEntry.startHour && resolved.hour < doctorEntry.endHour
+        : CLINIC_OPEN_DAYS.includes(resolved.dayOfWeek) && resolved.hour >= CLINIC_OPEN_HOUR && resolved.hour < CLINIC_CLOSE_HOUR;
+      if (!withinHours) return false;
     }
     // resolved === null: an absolute date GPT already wrote out (e.g.
     // "Wednesday, 27 August 2026, 10:30 AM") isn't in a shape this parser

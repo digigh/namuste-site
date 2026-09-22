@@ -114,8 +114,8 @@ export default function HP05Enterprises() {
       className="hp05-section-pad"
       style={{
         minHeight: "95vh",
-        background: "#000000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+        background: "var(--bg)",
+        borderTop: "1px solid var(--border)",
         position: "relative",
       }}
     >
@@ -127,7 +127,7 @@ export default function HP05Enterprises() {
             fontSize: "12px",
             fontWeight: 600,
             letterSpacing: "0.22em",
-            color: "#8E8E93",
+            color: "var(--text-muted)",
             textTransform: "uppercase",
             marginBottom: "20px",
           }}
@@ -138,24 +138,23 @@ export default function HP05Enterprises() {
         {/* Headline */}
         <div style={{ maxWidth: "880px", marginBottom: "28px" }}>
           <h2
-            className="serif"
             style={{
               fontSize: "clamp(38px, 4.5vw, 66px)",
-              fontWeight: 300,
+              fontWeight: 700,
               lineHeight: 1.12,
               letterSpacing: "-0.02em",
-              color: "#F5F5F0",
+              color: "var(--text-ivory)",
               marginBottom: "16px",
             }}
           >
             Different enterprises.<br />
-            The same need to <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>never lose a conversation.</span>
+            The same need to <span style={{ color: "var(--green)", fontWeight: 600 }}>never lose a conversation.</span>
           </h2>
 
           <p
             style={{
               fontSize: "clamp(16px, 1.3vw, 19px)",
-              color: "#A1A1AA",
+              color: "var(--text-muted)",
               lineHeight: 1.6,
               maxWidth: "680px",
               margin: 0,
@@ -172,7 +171,7 @@ export default function HP05Enterprises() {
             display: "flex",
             alignItems: "center",
             gap: "28px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+            borderBottom: "1px solid var(--border)",
             paddingBottom: "16px",
             marginBottom: "20px",
             overflowX: "auto",
@@ -193,7 +192,7 @@ export default function HP05Enterprises() {
                   padding: "6px 0",
                   fontSize: "14.5px",
                   fontWeight: isSelected ? 600 : 400,
-                  color: isSelected ? "#9BEA16" : "#8E8E93",
+                  color: isSelected ? "#9BEA16" : "var(--text-muted)",
                   cursor: "pointer",
                   display: "inline-flex",
                   alignItems: "center",
@@ -228,7 +227,7 @@ export default function HP05Enterprises() {
 
         {/* 2. Channel Selector Row */}
         <div style={{ display: "flex", alignItems: "center", gap: "12px", marginBottom: "40px", flexWrap: "wrap" }}>
-          <span style={{ fontSize: "12px", color: "#8E8E93", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>
+          <span style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>
             Choose a channel:
           </span>
           <div style={{ display: "flex", gap: "8px" }}>
@@ -253,9 +252,9 @@ export default function HP05Enterprises() {
                     fontWeight: 600,
                     cursor: "pointer",
                     transition: "all 0.2s ease",
-                    background: active ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.04)",
-                    color: active ? "#9BEA16" : "#A1A1AA",
-                    border: `1px solid ${active ? "rgba(155, 234, 22, 0.4)" : "rgba(255, 255, 255, 0.08)"}`,
+                    background: active ? "rgba(155, 234, 22, 0.15)" : "var(--overlay-1)",
+                    color: active ? "#9BEA16" : "var(--text-muted)",
+                    border: `1px solid ${active ? "rgba(155, 234, 22, 0.4)" : "var(--border)"}`,
                   }}
                 >
                   <Icon size={12} />
@@ -273,7 +272,7 @@ export default function HP05Enterprises() {
             borderRadius: "24px",
             overflow: "hidden",
             background: "#080808",
-            border: "1px solid rgba(255, 255, 255, 0.08)",
+            border: "1px solid var(--border)",
             boxShadow: "0 24px 60px rgba(0, 0, 0, 0.9)",
             minHeight: "500px",
             display: "grid",
@@ -303,7 +302,7 @@ export default function HP05Enterprises() {
             </div>
             <div className="hp05-depts-list" style={{ display: "flex", flexDirection: "column", gap: "8px" }}>
               {current.departments.map((dept, i) => (
-                <div key={i} style={{ display: "inline-flex", alignItems: "center", padding: "8px 16px", borderRadius: "8px", background: "rgba(10, 10, 10, 0.75)", backdropFilter: "blur(12px)", border: "1px solid rgba(255, 255, 255, 0.12)", color: "#D4D0C7", fontSize: "12.5px", fontFamily: "monospace", fontWeight: 600, width: "fit-content" }}>
+                <div key={i} style={{ display: "inline-flex", alignItems: "center", padding: "8px 16px", borderRadius: "8px", background: "rgba(10, 10, 10, 0.75)", backdropFilter: "blur(12px)", border: "1px solid var(--border2)", color: "var(--text-body)", fontSize: "12.5px", fontFamily: "monospace", fontWeight: 600, width: "fit-content" }}>
                   {dept}
                 </div>
               ))}
@@ -317,9 +316,9 @@ export default function HP05Enterprises() {
               Live Conversation • {selectedChannel.toUpperCase()}
             </div>
             {/* Bubble 1 */}
-            <div style={{ padding: "16px 20px", borderRadius: "14px", background: "rgba(15, 15, 15, 0.85)", backdropFilter: "blur(16px)", border: "1px solid rgba(255, 255, 255, 0.1)" }}>
+            <div style={{ padding: "16px 20px", borderRadius: "14px", background: "rgba(15, 15, 15, 0.85)", backdropFilter: "blur(16px)", border: "1px solid var(--border2)" }}>
               <div style={{ fontSize: "11px", color: "#9BEA16", fontWeight: 600, marginBottom: "4px", display: "flex", alignItems: "center", gap: "4px" }}><User size={12} /> Caller</div>
-              <p style={{ fontSize: "13.5px", color: "#F5F5F0", margin: 0, lineHeight: 1.5 }}>&ldquo;{current.patientText}&rdquo;</p>
+              <p style={{ fontSize: "13.5px", color: "var(--text-ivory)", margin: 0, lineHeight: 1.5 }}>&ldquo;{current.patientText}&rdquo;</p>
             </div>
             {/* Thread */}
             <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: "1px", height: "16px", background: "#9BEA16", opacity: 0.6 }} /></div>
@@ -329,7 +328,7 @@ export default function HP05Enterprises() {
                 <div style={{ fontSize: "11px", color: "#9BEA16", fontWeight: 700 }}>Namuste Digital Receptionist</div>
                 <img src="/logo.png" alt="Namuste" style={{ height: "13px", width: "auto", objectFit: "contain" }} />
               </div>
-              <p style={{ fontSize: "13.5px", color: "#F5F5F0", margin: 0, lineHeight: 1.5 }}>&ldquo;{current.namusteText}&rdquo;</p>
+              <p style={{ fontSize: "13.5px", color: "var(--text-ivory)", margin: 0, lineHeight: 1.5 }}>&ldquo;{current.namusteText}&rdquo;</p>
             </div>
             {/* Thread */}
             <div style={{ display: "flex", justifyContent: "center" }}><div style={{ width: "1px", height: "16px", background: "#9BEA16", opacity: 0.6 }} /></div>
@@ -338,7 +337,7 @@ export default function HP05Enterprises() {
               <div style={{ width: "20px", height: "20px", borderRadius: "50%", border: "1.5px solid #9BEA16", display: "flex", alignItems: "center", justifyContent: "center", color: "#9BEA16", flexShrink: 0 }}><Check size={12} strokeWidth={3} /></div>
               <div>
                 <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#9BEA16" }}>Outcome</div>
-                <div style={{ fontSize: "13px", color: "#F5F5F0", fontWeight: 600 }}>{current.outcomeText}</div>
+                <div style={{ fontSize: "13px", color: "var(--text-ivory)", fontWeight: 600 }}>{current.outcomeText}</div>
               </div>
             </div>
           </div>
@@ -346,7 +345,7 @@ export default function HP05Enterprises() {
 
         {/* 4. Footer Note & Primary CTA */}
         <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "20px" }}>
-          <p className="serif-italic" style={{ fontSize: "16px", color: "#D4D0C7", margin: 0, fontStyle: "italic" }}>{current.footerNote}</p>
+          <p style={{ fontSize: "16px", color: "var(--text-body)", margin: 0, fontWeight: 600 }}>{current.footerNote}</p>
           <Link href={current.link} style={{ display: "inline-flex", alignItems: "center", gap: "8px", padding: "12px 24px", borderRadius: "999px", border: "1px solid rgba(155, 234, 22, 0.5)", color: "#9BEA16", fontSize: "14px", fontWeight: 600, textDecoration: "none" }}>
             <span>Give Namuste an enterprise</span>
             <ArrowRight size={14} />

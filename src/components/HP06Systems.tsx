@@ -3,503 +3,375 @@
 import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
+import AnimatedOrb from "./AnimatedOrb";
 import {
   PhoneCall,
-  MessageSquare,
   Globe,
   Calendar,
   Users,
   Headphones,
   CreditCard,
-  GitFork,
   Check,
   ArrowRight,
+  Sparkles,
 } from "lucide-react";
+import {
+  SiWhatsapp,
+  SiGooglecalendar,
+  SiZoho,
+  SiHubspot,
+  SiZendesk,
+  SiStripe,
+  SiRazorpay,
+  SiZapier,
+} from "react-icons/si";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+
+const CHANNELS = [
+  { id: "voice", icon: PhoneCall, label: "Voice" },
+  { id: "whatsapp", icon: SiWhatsapp, label: "WhatsApp" },
+  { id: "web", icon: Globe, label: "Web" },
+];
+
+const SYSTEMS = [
+  { id: "calendar", icon: Calendar, title: "Calendar", sub: "Google, Outlook, Practo" },
+  { id: "crm", icon: Users, title: "Customer records", sub: "Salesforce, Zoho, HubSpot" },
+  { id: "helpdesk", icon: Headphones, title: "Helpdesk", sub: "Zendesk, Freshdesk" },
+  { id: "payments", icon: CreditCard, title: "Payments", sub: "Razorpay, UPI, Stripe" },
+];
+
+const CHECKLIST = ["Finds the right data", "Routes to the right tool", "Creates actions automatically"];
+
+const INTEGRATION_CHIPS = [
+  { name: "Google Calendar", icon: SiGooglecalendar, color: "#4285F4" },
+  { name: "WhatsApp", icon: SiWhatsapp, color: "#25D366" },
+  { name: "Zoho", icon: SiZoho, color: "#C8202F" },
+  { name: "HubSpot", icon: SiHubspot, color: "#FF7A59" },
+  { name: "Zendesk", icon: SiZendesk, color: "#03363D" },
+  { name: "Stripe", icon: SiStripe, color: "#635BFF" },
+  { name: "Razorpay", icon: SiRazorpay, color: "#3395FF" },
+  { name: "Zapier", icon: SiZapier, color: "#FF4A00" },
+];
 
 export default function HP06Systems() {
   return (
     <section
       id="hp-06"
       className="hp06-section-pad"
-      style={{
-        minHeight: "95vh",
-        background: "#000000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
-        position: "relative",
-      }}
+      style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", position: "relative" }}
     >
       <div style={{ maxWidth: "1360px", margin: "0 auto", width: "100%" }}>
-        {/* Eyebrow */}
-        <div
-          style={{
-            fontFamily: "var(--font-sans)",
-            fontSize: "12px",
-            fontWeight: 600,
-            letterSpacing: "0.22em",
-            color: "#8E8E93",
-            textTransform: "uppercase",
-            marginBottom: "20px",
-          }}
-        >
-          Built to Fit In.
+        <div style={{ fontFamily: "'SF Mono', 'Menlo', monospace", fontSize: "12px", letterSpacing: "0.1em", color: "var(--text-muted)", marginBottom: "20px" }}>
+          <span style={{ color: "var(--green)" }}>●</span> &nbsp;INTEGRATIONS
         </div>
 
-        {/* Headline */}
-        <div style={{ maxWidth: "860px", marginBottom: "28px" }}>
-          <h2
-            className="serif"
-            style={{
-              fontSize: "clamp(38px, 4.5vw, 66px)",
-              fontWeight: 300,
-              lineHeight: 1.12,
-              letterSpacing: "-0.02em",
-              color: "#F5F5F0",
-              marginBottom: "18px",
-            }}
-          >
-            Your business already has systems.<br />
-            Namuste makes conversations<br />
-            <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>
-              work with them.
-            </span>
-          </h2>
-
-          <p
-            style={{
-              fontSize: "clamp(16px, 1.3vw, 19px)",
-              color: "#A1A1AA",
-              lineHeight: 1.6,
-              maxWidth: "680px",
-              margin: 0,
-            }}
-          >
-            Calendars, customer records, support queues, payments and internal workflows — Namuste connects each conversation to the place where work actually happens.
-          </p>
-        </div>
-
-        {/* Central Visual Architecture Diagram (Proportionally Scaled on Mobile) */}
-        <div
-          className="hp06-canvas hp06-scaler-wrapper"
-          style={{
-            position: "relative",
-            width: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            margin: "24px 0 34px",
-          }}
-        >
-          <div
-            className="hp06-diagram-scaler"
-            style={{
-              position: "relative",
-              width: "1020px",
-              minHeight: "440px",
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "space-between",
-              padding: "20px 0",
-              flexShrink: 0,
-            }}
-          >
-            {/* SVG Connecting Radiating Flow Lines & Traveling Photons */}
-            <svg
-              viewBox="0 0 1020 440"
-              style={{
-                position: "absolute",
-                inset: 0,
-                width: "100%",
-                height: "100%",
-                overflow: "visible",
-                pointerEvents: "none",
-              }}
-            >
-              <defs>
-                <linearGradient id="sysFlowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#9BEA16" stopOpacity="0.4" />
-                  <stop offset="50%" stopColor="#9BEA16" stopOpacity="1" />
-                  <stop offset="100%" stopColor="#8FD813" stopOpacity="0.6" />
-                </linearGradient>
-
-                <filter id="sysGlow" x="-30%" y="-30%" width="160%" height="160%">
-                  <feGaussianBlur stdDeviation="8" result="blur1" />
-                  <feGaussianBlur stdDeviation="2" result="blur2" />
-                  <feMerge>
-                    <feMergeNode in="blur1" />
-                    <feMergeNode in="blur2" />
-                    <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-                </filter>
-
-                <radialGradient id="coreAura" cx="50%" cy="50%" r="50%">
-                  <stop offset="0%" stopColor="rgba(155, 234, 22, 0.35)" />
-                  <stop offset="70%" stopColor="rgba(155, 234, 22, 0.08)" />
-                  <stop offset="100%" stopColor="transparent" />
-                </radialGradient>
-              </defs>
-
-              {/* 1. Left 3 Input Lines (Inbound Channels -> Center Node x=510, y=220) */}
-              {/* Voice (y=130 -> 220) */}
-              <path d="M 220 130 C 350 130, 410 220, 438 220" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="10" strokeOpacity="0.14" filter="url(#sysGlow)" />
-              <path d="M 220 130 C 350 130, 410 220, 438 220" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="2.2" filter="url(#sysGlow)" />
-              <circle r="3.5" fill="#FFFFFF">
-                <animateMotion path="M 220 130 C 350 130, 410 220, 438 220" dur="2.2s" repeatCount="indefinite" />
-              </circle>
-
-              {/* WhatsApp (y=220 -> 220) */}
-              <path d="M 220 220 L 438 220" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="10" strokeOpacity="0.14" filter="url(#sysGlow)" />
-              <path d="M 220 220 L 438 220" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="2.4" filter="url(#sysGlow)" />
-              <circle r="3.5" fill="#9BEA16">
-                <animateMotion path="M 220 220 L 438 220" dur="2s" begin="0.7s" repeatCount="indefinite" />
-              </circle>
-
-              {/* Web (y=310 -> 220) */}
-              <path d="M 220 310 C 350 310, 410 220, 438 220" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="10" strokeOpacity="0.14" filter="url(#sysGlow)" />
-              <path d="M 220 310 C 350 310, 410 220, 438 220" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="2.2" filter="url(#sysGlow)" />
-              <circle r="3.5" fill="#FFFFFF">
-                <animateMotion path="M 220 310 C 350 310, 410 220, 438 220" dur="2.4s" begin="1.2s" repeatCount="indefinite" />
-              </circle>
-
-              {/* 2. Right 5 Output Lines (Center Node x=582, y=220 -> 5 Destination Systems) */}
-              {/* Calendar (y=220 -> 65) */}
-              <path d="M 582 220 C 640 220, 700 65, 780 65" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="10" strokeOpacity="0.14" filter="url(#sysGlow)" />
-              <path d="M 582 220 C 640 220, 700 65, 780 65" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="2.2" filter="url(#sysGlow)" />
-              <circle r="3.5" fill="#FFFFFF">
-                <animateMotion path="M 582 220 C 640 220, 700 65, 780 65" dur="2.4s" repeatCount="indefinite" />
-              </circle>
-
-              {/* Customer records (y=220 -> 145) */}
-              <path d="M 582 220 C 640 220, 700 145, 780 145" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="10" strokeOpacity="0.14" filter="url(#sysGlow)" />
-              <path d="M 582 220 C 640 220, 700 145, 780 145" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="2.2" filter="url(#sysGlow)" />
-              <circle r="3.5" fill="#9BEA16">
-                <animateMotion path="M 582 220 C 640 220, 700 145, 780 145" dur="2.2s" begin="0.5s" repeatCount="indefinite" />
-              </circle>
-
-              {/* Helpdesk (y=220 -> 220) */}
-              <path d="M 582 220 L 780 220" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="10" strokeOpacity="0.14" filter="url(#sysGlow)" />
-              <path d="M 582 220 L 780 220" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="2.4" filter="url(#sysGlow)" />
-              <circle r="3.5" fill="#FFFFFF">
-                <animateMotion path="M 582 220 L 780 220" dur="1.8s" begin="0.9s" repeatCount="indefinite" />
-              </circle>
-
-              {/* Payments (y=220 -> 295) */}
-              <path d="M 582 220 C 640 220, 700 295, 780 295" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="10" strokeOpacity="0.14" filter="url(#sysGlow)" />
-              <path d="M 582 220 C 640 220, 700 295, 780 295" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="2.2" filter="url(#sysGlow)" />
-              <circle r="3.5" fill="#9BEA16">
-                <animateMotion path="M 582 220 C 640 220, 700 295, 780 295" dur="2.3s" begin="1.3s" repeatCount="indefinite" />
-              </circle>
-
-              {/* Internal workflows (y=220 -> 375) */}
-              <path d="M 582 220 C 640 220, 700 375, 780 375" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="10" strokeOpacity="0.14" filter="url(#sysGlow)" />
-              <path d="M 582 220 C 640 220, 700 375, 780 375" fill="none" stroke="url(#sysFlowGrad)" strokeWidth="2.2" filter="url(#sysGlow)" />
-              <circle r="3.5" fill="#FFFFFF">
-                <animateMotion path="M 582 220 C 640 220, 700 375, 780 375" dur="2.6s" begin="0.4s" repeatCount="indefinite" />
-              </circle>
-
-              {/* 3. CENTER ROUTING ORB: 100% CONCENTRIC ANCHORED INSIDE SVG */}
-              {/* Concentric Ambient Glowing Aura */}
-              <circle cx="510" cy="220" r="105" fill="url(#coreAura)" pointerEvents="none" />
-              {/* Concentric Outer Radar Halo */}
-              <circle cx="510" cy="220" r="94" fill="none" stroke="rgba(155, 234, 22, 0.25)" strokeWidth="1" strokeDasharray="3 4">
-                <animate attributeName="r" values="88;98;88" dur="4s" repeatCount="indefinite" />
-              </circle>
-              {/* Concentric Middle Guide Ring */}
-              <circle cx="510" cy="220" r="82" fill="none" stroke="rgba(155, 234, 22, 0.45)" strokeWidth="1.2" />
-              {/* Concentric Core Solid Obsidian Disc */}
-              <circle cx="510" cy="220" r="72" fill="#08080A" stroke="#9BEA16" strokeWidth="2.5" filter="url(#sysGlow)" />
-
-              {/* Centered Namuste Logo Image in SVG */}
-              <image
-                href="/logo.png"
-                x="462"
-                y="188"
-                width="96"
-                height="20"
-                preserveAspectRatio="xMidYMid meet"
-              />
-
-              {/* DIGITAL RECEPTIONIST Label in SVG */}
-              <text
-                x="510"
-                y="226"
-                textAnchor="middle"
-                fill="#9BEA16"
-                fontSize="9"
-                fontFamily="var(--font-sans), sans-serif"
-                fontWeight="700"
-                letterSpacing="1.2"
-              >
-                DIGITAL RECEPTIONIST
-              </text>
-
-              {/* Live Routing Hub Subtitle in SVG */}
-              <text
-                x="510"
-                y="240"
-                textAnchor="middle"
-                fill="#8E8E93"
-                fontSize="8.5"
-                fontFamily="var(--font-sans), sans-serif"
-                fontWeight="500"
-              >
-                Live Routing Hub
-              </text>
-            </svg>
-
-            {/* Left: 3 Input Channels */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "18px", zIndex: 10, width: "210px" }}>
-              {[
-                { label: "Voice", sub: "Inbound Telephony", icon: PhoneCall },
-                { label: "WhatsApp", sub: "Cloud Business API", icon: MessageSquare },
-                { label: "Web", sub: "Live Concierge", icon: Globe },
-              ].map((ch, i) => {
-                const Icon = ch.icon;
-                return (
-                  <motion.div
-                    key={i}
-                    whileHover={{ scale: 1.03, x: 4 }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "12px",
-                      padding: "12px 18px",
-                      borderRadius: "16px",
-                      background: "rgba(14, 14, 16, 0.92)",
-                      border: "1px solid rgba(255, 255, 255, 0.12)",
-                      backdropFilter: "blur(20px)",
-                      boxShadow: "0 12px 35px rgba(0,0,0,0.85), 0 0 20px rgba(155, 234, 22, 0.06)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "32px",
-                        height: "32px",
-                        borderRadius: "10px",
-                        background: "rgba(155, 234, 22, 0.12)",
-                        border: "1px solid rgba(155, 234, 22, 0.3)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#9BEA16",
-                      }}
-                    >
-                      <Icon size={16} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "14px", color: "#F5F5F0", fontWeight: 600 }}>{ch.label}</div>
-                      <div style={{ fontSize: "10.5px", color: "#8E8E93" }}>{ch.sub}</div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-
-            {/* Right: 5 Systems */}
-            <div style={{ display: "flex", flexDirection: "column", gap: "10px", zIndex: 10, width: "230px", marginLeft: "auto" }}>
-              {[
-                { label: "Calendar", sub: "Google, Outlook, Practo", icon: Calendar },
-                { label: "Customer records", sub: "Salesforce, Zoho, HubSpot", icon: Users },
-                { label: "Helpdesk", sub: "Zendesk, Freshdesk", icon: Headphones },
-                { label: "Payments", sub: "Razorpay, UPI, Stripe", icon: CreditCard },
-                { label: "Internal workflows", sub: "Webhooks, Slack, ERP", icon: GitFork },
-              ].map((sys, i) => {
-                const Icon = sys.icon;
-                return (
-                  <motion.div
-                    key={i}
-                    whileHover={{ scale: 1.03, x: -4 }}
-                    style={{
-                      display: "flex",
-                      alignItems: "center",
-                      gap: "10px",
-                      padding: "9px 15px",
-                      borderRadius: "14px",
-                      background: "rgba(14, 14, 16, 0.92)",
-                      border: "1px solid rgba(255, 255, 255, 0.12)",
-                      backdropFilter: "blur(20px)",
-                      boxShadow: "0 10px 30px rgba(0,0,0,0.85), 0 0 20px rgba(155, 234, 22, 0.05)",
-                    }}
-                  >
-                    <div
-                      style={{
-                        width: "28px",
-                        height: "28px",
-                        borderRadius: "8px",
-                        background: "rgba(155, 234, 22, 0.1)",
-                        border: "1px solid rgba(155, 234, 22, 0.25)",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                        color: "#9BEA16",
-                        flexShrink: 0,
-                      }}
-                    >
-                      <Icon size={14} />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: "13px", color: "#F5F5F0", fontWeight: 600 }}>{sys.label}</div>
-                      <div style={{ fontSize: "10px", color: "#8E8E93" }}>{sys.sub}</div>
-                    </div>
-                  </motion.div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-
-        {/* Floating Outcome Badges underneath diagram */}
-        <div style={{ display: "flex", gap: "20px", justifyContent: "center", flexWrap: "wrap", marginBottom: "40px" }}>
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              padding: "12px 20px",
-              borderRadius: "14px",
-              background: "rgba(15, 15, 15, 0.9)",
-              border: "1px solid rgba(155, 234, 22, 0.3)",
-              backdropFilter: "blur(16px)",
-            }}
-          >
-            <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#9BEA16", display: "flex", alignItems: "center", justifyContent: "center", color: "#000000" }}>
-              <Check size={11} strokeWidth={3} />
-            </div>
-            <div>
-              <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#A1A1AA" }}>
-                Appointment Created
-              </div>
-              <div style={{ fontSize: "12.5px", color: "#F5F5F0", fontWeight: 600 }}>
-                Tue, 10:30 AM (Google Calendar & Practo)
-              </div>
-            </div>
-          </div>
-
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              gap: "10px",
-              padding: "12px 20px",
-              borderRadius: "14px",
-              background: "rgba(15, 15, 15, 0.9)",
-              border: "1px solid rgba(155, 234, 22, 0.3)",
-              backdropFilter: "blur(16px)",
-            }}
-          >
-            <div style={{ width: "18px", height: "18px", borderRadius: "50%", background: "#9BEA16", display: "flex", alignItems: "center", justifyContent: "center", color: "#000000" }}>
-              <Check size={11} strokeWidth={3} />
-            </div>
-            <div>
-              <div style={{ fontSize: "10px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.06em", color: "#A1A1AA" }}>
-                CRM Record Synced
-              </div>
-              <div style={{ fontSize: "12.5px", color: "#F5F5F0", fontWeight: 600 }}>
-                Lead Intent Scored & Owner Notified
-              </div>
-            </div>
-          </div>
-        </div>
-
-        {/* Footer Text & Primary CTA */}
-        <div>
-          <p style={{ fontSize: "14.5px", color: "#A1A1AA", margin: "0 0 16px 0" }}>
-            Works with your setup. Adapts to your process.
-          </p>
-
-          <div style={{ display: "flex", flexWrap: "wrap", alignItems: "center", justifyContent: "space-between", gap: "20px" }}>
-            <Link
-              href="/platform"
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "8px",
-                padding: "12px 24px",
-                borderRadius: "999px",
-                background: "transparent",
-                border: "1px solid rgba(155, 234, 22, 0.5)",
-                color: "#9BEA16",
-                fontSize: "14px",
-                fontWeight: 600,
-                textDecoration: "none",
-                transition: "all 0.2s ease",
-              }}
-              onMouseEnter={(e) => {
-                e.currentTarget.style.background = "#8FD813";
-                e.currentTarget.style.color = "#000000";
-              }}
-              onMouseLeave={(e) => {
-                e.currentTarget.style.background = "transparent";
-                e.currentTarget.style.color = "#9BEA16";
-              }}
-            >
-              <span>Explore Integrations</span>
-              <ArrowRight size={14} />
-            </Link>
-
-            <p className="serif-italic" style={{ fontSize: "15px", color: "#A1A1AA", fontStyle: "italic", margin: 0 }}>
-              Connects to the place where work actually happens.
+        <div className="hp06-layout">
+          {/* Left — copy + at-a-glance benefits + CTA */}
+          <div className="hp06-copy">
+            <h2 style={{ fontSize: "clamp(34px, 3.6vw, 50px)", fontWeight: 700, lineHeight: 1.1, letterSpacing: "-0.02em", color: "var(--text-ivory)", marginBottom: "18px" }}>
+              Your business already has systems.<br />
+              Namuste makes conversations <span style={{ color: "var(--green)" }}>work with them.</span>
+            </h2>
+            <p style={{ fontSize: "16px", color: "var(--text-muted)", lineHeight: 1.65, maxWidth: "480px", marginBottom: "32px" }}>
+              Calendars, customer records, support queues, payments and internal workflows — Namuste connects each conversation to the place where work actually happens.
             </p>
+
+            <div className="hp06-benefits">
+              {[
+                { icon: Sparkles, title: "No context switching", sub: "Everything in sync." },
+                { icon: Check, title: "Save hours every week", sub: "Automate updates." },
+                { icon: Headphones, title: "More productive teams", sub: "All data in one place." },
+                { icon: Users, title: "Happier customers", sub: "Faster, consistent service." },
+              ].map((b) => {
+                const Icon = b.icon;
+                return (
+                  <div key={b.title} className="hp06-benefit">
+                    <span className="hp06-benefit-icon"><Icon size={16} /></span>
+                    <div className="hp06-benefit-title">{b.title}</div>
+                    <div className="hp06-benefit-sub">{b.sub}</div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div className="hp06-cta-row">
+              <Link href="/platform" className="hp06-cta-btn">
+                Explore integrations <ArrowRight size={15} />
+              </Link>
+              <div className="hp06-watch">
+                <span className="hp06-watch-play">▶</span>
+                <div>
+                  <div className="hp06-watch-title">See how it works</div>
+                  <div className="hp06-watch-sub">2 min walkthrough</div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Right — a single unified panel, not a scatter of small cards */}
+          <div className="hp06-map">
+            <div className="hp06-map-head">
+              <span className="hp06-map-head-label">HOW IT CONNECTS</span>
+              <Badge variant="secondary">Works with your existing tools</Badge>
+            </div>
+
+            <Card className="hp06-panel">
+              <div className="hp06-panel-grid">
+                <motion.div
+                  className="hp06-panel-col"
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4 }}
+                >
+                  <div className="hp06-col-eyebrow">FROM</div>
+                  <div className="hp06-channel-row">
+                    {CHANNELS.map((c) => {
+                      const Icon = c.icon;
+                      return (
+                        <span key={c.id} className="hp06-channel-pill">
+                          <Icon size={13} />
+                          {c.label}
+                        </span>
+                      );
+                    })}
+                  </div>
+                  <div className="hp06-sample-msg">
+                    <div className="hp06-sample-msg-tag">Incoming</div>
+                    &ldquo;Hi, I&apos;d like to book an appointment with a dermatologist.&rdquo;
+                  </div>
+                </motion.div>
+
+                <motion.div
+                  className="hp06-panel-col hp06-panel-col-center"
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.1 }}
+                >
+                  <div className="hp06-center-orb"><AnimatedOrb size={48} /></div>
+                  <div className="hp06-center-title">Namuste</div>
+                  <div className="hp06-center-caption">CONNECTS · SYNCS · ACTS</div>
+                  <ul className="hp06-checklist">
+                    {CHECKLIST.map((c) => (
+                      <li key={c}>
+                        <Check size={12} strokeWidth={3} />
+                        {c}
+                      </li>
+                    ))}
+                  </ul>
+                </motion.div>
+
+                <motion.div
+                  className="hp06-panel-col"
+                  initial={{ opacity: 0, y: 12 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.4, delay: 0.2 }}
+                >
+                  <div className="hp06-col-eyebrow">TO</div>
+                  <ul className="hp06-systems-list">
+                    {SYSTEMS.map((s) => {
+                      const Icon = s.icon;
+                      return (
+                        <li key={s.id}>
+                          <span className="hp06-systems-icon"><Icon size={14} /></span>
+                          <div>
+                            <div className="hp06-systems-title">{s.title}</div>
+                            <div className="hp06-systems-sub">{s.sub}</div>
+                          </div>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                </motion.div>
+              </div>
+
+              <div className="hp06-panel-footer">
+                <span className="hp06-panel-footer-icon"><Check size={13} strokeWidth={3} /></span>
+                <div>
+                  <strong>Work happens.</strong> No manual follow-ups. No lost context. Just progress.
+                </div>
+              </div>
+            </Card>
+
+            <div className="hp06-tools-section">
+              <div className="hp06-tools-caption">INTEGRATES WITH</div>
+              <div className="hp06-tools-chips">
+                {INTEGRATION_CHIPS.map((t, i) => {
+                  const BrandIcon = t.icon;
+                  return (
+                    <motion.div
+                      key={t.name}
+                      initial={{ opacity: 0, y: 8 }}
+                      whileInView={{ opacity: 1, y: 0 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.3, delay: i * 0.04 }}
+                      className="hp06-tool-chip"
+                    >
+                      <BrandIcon size={15} color={t.color} />
+                      <span>{t.name}</span>
+                    </motion.div>
+                  );
+                })}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Outcome footnotes */}
+        <div className="hp06-outcomes">
+          <div className="hp06-outcome">
+            <Check size={13} strokeWidth={3} className="hp06-outcome-check" />
+            <span><strong>Appointment created</strong> — Tue, 10:30 AM (Google Calendar &amp; Practo)</span>
+          </div>
+          <div className="hp06-outcome">
+            <Check size={13} strokeWidth={3} className="hp06-outcome-check" />
+            <span><strong>CRM record synced</strong> — Lead intent scored &amp; owner notified</span>
           </div>
         </div>
       </div>
 
       <style>{`
-        .hp06-section-pad {
-          padding: 130px 40px 110px;
+        .hp06-section-pad { padding: 130px 40px 110px; }
+
+        .hp06-layout {
+          display: grid;
+          grid-template-columns: 0.8fr 1.2fr;
+          gap: 56px;
+          align-items: start;
+          margin-bottom: 48px;
         }
-        .hp06-scaler-wrapper {
-          position: relative;
-          width: 100%;
-          display: flex;
-          align-items: center;
-          justifyContent: center;
+
+        .hp06-benefits { display: grid; grid-template-columns: repeat(2, 1fr); gap: 20px 24px; margin-bottom: 32px; }
+        .hp06-benefit-icon {
+          width: 34px; height: 34px; border-radius: 10px; margin-bottom: 10px;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--green-glow); color: var(--green);
         }
-        .hp06-diagram-scaler {
-          transform-origin: center center;
+        .hp06-benefit-title { font-size: 14px; font-weight: 700; color: var(--text-ivory); }
+        .hp06-benefit-sub { font-size: 12.5px; color: var(--text-muted); margin-top: 2px; }
+
+        .hp06-cta-row { display: flex; align-items: center; gap: 22px; flex-wrap: wrap; }
+        .hp06-cta-btn {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 13px 22px; border-radius: 999px;
+          background: var(--text-ivory); color: var(--bg);
+          font-size: 13.5px; font-weight: 700; text-decoration: none;
+          box-shadow: 0 12px 24px -10px rgba(11, 15, 13, 0.4);
+          transition: transform 0.2s ease;
         }
-        @media (max-width: 1100px) {
-          .hp06-scaler-wrapper {
-            height: 340px !important;
-            overflow: hidden !important;
-          }
-          .hp06-diagram-scaler {
-            transform: scale(0.78) !important;
-          }
+        .hp06-cta-btn:hover { transform: translateY(-2px); }
+        .hp06-watch { display: flex; align-items: center; gap: 12px; }
+        .hp06-watch-play {
+          width: 34px; height: 34px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          border: 1px solid var(--border2); color: var(--text-ivory); font-size: 11px;
         }
-        @media (max-width: 768px) {
-          .hp06-section-pad {
-            padding: 56px 16px 40px !important;
-          }
-          .hp06-scaler-wrapper {
-            height: 250px !important;
-            min-height: 250px !important;
-            overflow: hidden !important;
-            display: block !important;
-          }
-          .hp06-diagram-scaler {
-            position: absolute !important;
-            left: 50% !important;
-            top: 50% !important;
-            transform: translate(-50%, -50%) scale(0.52) !important;
-          }
+        .hp06-watch-title { font-size: 13.5px; font-weight: 700; color: var(--text-ivory); }
+        .hp06-watch-sub { font-size: 12px; color: var(--text-dim); margin-top: 1px; }
+
+        /* Map */
+        .hp06-map-head { display: flex; align-items: center; justify-content: space-between; gap: 16px; margin-bottom: 16px; }
+        .hp06-map-head-label { font-family: 'SF Mono', 'Menlo', monospace; font-size: 11px; letter-spacing: 0.1em; color: var(--text-dim); }
+
+        .hp06-panel { padding: 0; overflow: hidden; }
+        .hp06-panel-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; }
+        .hp06-panel-col { padding: 28px 24px; border-left: 1px solid var(--border); }
+        .hp06-panel-col:first-child { border-left: none; }
+        .hp06-panel-col-center { text-align: center; background: var(--overlay-1); }
+
+        .hp06-col-eyebrow {
+          font-family: 'SF Mono', 'Menlo', monospace; font-size: 10.5px; letter-spacing: 0.1em;
+          color: var(--text-dim); margin-bottom: 14px;
         }
-        @media (max-width: 440px) {
-          .hp06-scaler-wrapper {
-            height: 210px !important;
-            min-height: 210px !important;
-          }
-          .hp06-diagram-scaler {
-            transform: translate(-50%, -50%) scale(0.42) !important;
-          }
+        .hp06-channel-row { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 18px; }
+        .hp06-channel-pill {
+          display: inline-flex; align-items: center; gap: 6px;
+          padding: 6px 12px; border-radius: 999px;
+          background: var(--green-glow); color: var(--green);
+          font-size: 12px; font-weight: 600;
         }
-        @media (max-width: 375px) {
-          .hp06-scaler-wrapper {
-            height: 185px !important;
-            min-height: 185px !important;
-          }
-          .hp06-diagram-scaler {
-            transform: translate(-50%, -50%) scale(0.36) !important;
-          }
+        .hp06-sample-msg {
+          font-size: 13px; color: var(--text-muted); line-height: 1.5;
+          background: var(--surface2); border-radius: 12px; padding: 14px 16px;
+        }
+        .hp06-sample-msg-tag {
+          font-family: 'SF Mono', 'Menlo', monospace; font-size: 9.5px; letter-spacing: 0.08em;
+          color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase;
+        }
+
+        .hp06-center-orb { width: 48px; height: 48px; margin: 0 auto 10px; }
+        .hp06-center-title { font-size: 15px; font-weight: 700; color: var(--text-ivory); }
+        .hp06-center-caption { font-family: 'SF Mono', 'Menlo', monospace; font-size: 9.5px; letter-spacing: 0.08em; color: var(--text-dim); margin-top: 2px; margin-bottom: 18px; }
+        .hp06-checklist { display: flex; flex-direction: column; gap: 10px; text-align: left; }
+        .hp06-checklist li { display: flex; align-items: center; gap: 8px; font-size: 12.5px; color: var(--text-muted); }
+        .hp06-checklist li svg { color: var(--green); flex-shrink: 0; }
+
+        .hp06-systems-list { display: flex; flex-direction: column; gap: 16px; }
+        .hp06-systems-list li { display: flex; align-items: flex-start; gap: 10px; }
+        .hp06-systems-icon {
+          width: 28px; height: 28px; border-radius: 8px; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--green-glow); color: var(--green);
+        }
+        .hp06-systems-title { font-size: 13px; font-weight: 700; color: var(--text-ivory); }
+        .hp06-systems-sub { font-size: 11.5px; color: var(--text-muted); margin-top: 1px; }
+
+        .hp06-panel-footer {
+          display: flex; align-items: center; gap: 10px;
+          padding: 18px 24px;
+          border-top: 1px solid var(--border);
+          background: var(--green-glow);
+          font-size: 13px; color: var(--text-muted);
+        }
+        .hp06-panel-footer strong { color: var(--text-ivory); }
+        .hp06-panel-footer-icon {
+          width: 26px; height: 26px; border-radius: 50%; flex-shrink: 0;
+          display: flex; align-items: center; justify-content: center;
+          background: var(--green); color: #fff;
+        }
+
+        .hp06-tools-section { margin-top: 28px; }
+        .hp06-tools-caption {
+          font-family: 'SF Mono', 'Menlo', monospace; font-size: 11px; letter-spacing: 0.1em;
+          color: var(--text-dim); margin-bottom: 14px;
+        }
+        .hp06-tools-chips { display: flex; flex-wrap: wrap; gap: 10px; }
+        .hp06-tool-chip {
+          display: inline-flex; align-items: center; gap: 8px;
+          padding: 9px 16px; border-radius: 999px;
+          background: var(--surface); border: 1px solid var(--border);
+          font-size: 12.5px; font-weight: 600; color: var(--text-ivory);
+          box-shadow: 0 1px 0 rgba(255,255,255,0.04) inset, 0 12px 20px -18px rgba(11, 15, 13, 0.3);
+        }
+
+        .hp06-outcomes {
+          display: flex; flex-direction: column; gap: 10px;
+          font-size: 13.5px; color: var(--text-muted);
+          border-top: 1px solid var(--border); padding-top: 28px;
+        }
+        .hp06-outcome { display: flex; align-items: center; gap: 10px; }
+        .hp06-outcome strong { color: var(--text-ivory); }
+        .hp06-outcome-check {
+          width: 20px; height: 20px; border-radius: 50%; flex-shrink: 0;
+          background: var(--green); color: #052015; padding: 3px; box-sizing: border-box;
+        }
+
+        @media (max-width: 980px) {
+          .hp06-layout { grid-template-columns: 1fr; gap: 40px; }
+          .hp06-panel-grid { grid-template-columns: 1fr; }
+          .hp06-panel-col { border-left: none; border-top: 1px solid var(--border); }
+          .hp06-panel-col:first-child { border-top: none; }
+        }
+
+        @media (max-width: 700px) {
+          .hp06-section-pad { padding: 56px 20px 40px !important; }
+          .hp06-benefits { grid-template-columns: 1fr 1fr; }
+          .hp06-cta-row { flex-direction: column; align-items: stretch; }
+          .hp06-cta-btn { justify-content: center; }
+          .hp06-map-head { flex-direction: column; align-items: flex-start; gap: 10px; }
         }
       `}</style>
     </section>

@@ -243,8 +243,8 @@ export default function HP04Professions() {
       className="hp04-section-pad"
       style={{
         minHeight: "95vh",
-        background: "#000000",
-        borderTop: "1px solid rgba(255, 255, 255, 0.06)",
+        background: "var(--bg)",
+        borderTop: "1px solid var(--border)",
         position: "relative",
       }}
     >
@@ -255,7 +255,7 @@ export default function HP04Professions() {
             fontSize: "12px",
             fontWeight: 600,
             letterSpacing: "0.22em",
-            color: "#8E8E93",
+            color: "var(--text-muted)",
             textTransform: "uppercase",
             marginBottom: "20px",
           }}
@@ -265,18 +265,18 @@ export default function HP04Professions() {
 
         <div style={{ maxWidth: "840px", marginBottom: "36px" }}>
           <h2
-            className="serif"
             style={{
-              fontSize: "clamp(38px, 4.5vw, 66px)",
-              fontWeight: 300,
+              fontFamily: "var(--font-sans)",
+              fontSize: "clamp(38px, 4.5vw, 58px)",
+              fontWeight: 700,
               lineHeight: 1.12,
               letterSpacing: "-0.02em",
-              color: "#F5F5F0",
+              color: "var(--text-ivory)",
               marginBottom: "16px",
             }}
           >
             Different professions.<br />
-            The same need for a <span className="serif-italic" style={{ color: "#9BEA16", fontWeight: 400 }}>next step.</span>
+            The same need for a <span style={{ color: "var(--green)" }}>next step.</span>
           </h2>
         </div>
 
@@ -286,7 +286,7 @@ export default function HP04Professions() {
             display: "flex",
             alignItems: "center",
             gap: "28px",
-            borderBottom: "1px solid rgba(255, 255, 255, 0.08)",
+            borderBottom: "1px solid var(--border)",
             paddingBottom: "16px",
             marginBottom: "20px",
             overflowX: "auto",
@@ -307,7 +307,7 @@ export default function HP04Professions() {
                   padding: "6px 0",
                   fontSize: "14.5px",
                   fontWeight: isSelected ? 600 : 400,
-                  color: isSelected ? "#9BEA16" : "#8E8E93",
+                  color: isSelected ? "#9BEA16" : "var(--text-muted)",
                   cursor: "pointer",
                   display: "inline-flex",
                   alignItems: "center",
@@ -352,7 +352,7 @@ export default function HP04Professions() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "12px", flexWrap: "wrap" }}>
-            <span style={{ fontSize: "12px", color: "#8E8E93", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>
+            <span style={{ fontSize: "12px", color: "var(--text-muted)", textTransform: "uppercase", fontWeight: 600, letterSpacing: "0.05em" }}>
               Choose a channel:
             </span>
             <div style={{ display: "flex", gap: "8px" }}>
@@ -377,9 +377,9 @@ export default function HP04Professions() {
                       fontWeight: 600,
                       cursor: "pointer",
                       transition: "all 0.2s ease",
-                      background: active ? "rgba(155, 234, 22, 0.15)" : "rgba(255, 255, 255, 0.04)",
-                      color: active ? "#9BEA16" : "#A1A1AA",
-                      border: `1px solid ${active ? "rgba(155, 234, 22, 0.4)" : "rgba(255, 255, 255, 0.08)"}`,
+                      background: active ? "rgba(155, 234, 22, 0.15)" : "var(--overlay-1)",
+                      color: active ? "#9BEA16" : "var(--text-muted)",
+                      border: `1px solid ${active ? "rgba(155, 234, 22, 0.4)" : "var(--border)"}`,
                     }}
                   >
                     <Icon size={12} />
@@ -399,9 +399,9 @@ export default function HP04Professions() {
                 width: "36px",
                 height: "36px",
                 borderRadius: "50%",
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                color: "#F5F5F0",
+                background: "var(--overlay-2)",
+                border: "1px solid var(--border2)",
+                color: "var(--text-ivory)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -418,9 +418,9 @@ export default function HP04Professions() {
                 width: "36px",
                 height: "36px",
                 borderRadius: "50%",
-                background: "rgba(255, 255, 255, 0.05)",
-                border: "1px solid rgba(255, 255, 255, 0.12)",
-                color: "#F5F5F0",
+                background: "var(--overlay-2)",
+                border: "1px solid var(--border2)",
+                color: "var(--text-ivory)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
