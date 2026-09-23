@@ -8,7 +8,7 @@ import { getCurrentStep, generateActionId } from "@/lib/flowSteps";
 import { isBookingGenuinelyComplete } from "@/lib/bookingGuard";
 import { hasUnsupportedScript, isSttLanguageClaimPlausible, establishedLanguageFromHistory, detectLanguage, detectExplicitLanguageSwitchRequest } from "@/lib/language";
 import { extractEntities, isValidIndianMobile } from "@/lib/entities";
-import { callOpenAI, callOpenAIStreaming, sanitizeLlmField } from "@/lib/openaiClient";
+import { callOpenAI, callOpenAIStreaming, callGroq, sanitizeLlmField } from "@/lib/openaiClient";
 import { checkFarewell, checkClinicEmergency, runClinicFastPath } from "@/lib/clinicEngine";
 
 // Splits a reply into sentence-like chunks so TTS can be generated and
@@ -360,14 +360,43 @@ CRITICAL: every field above is EMPTY ("") because these are field NAMES, not exa
         }
 
         let parsed: Record<string, any>;
+        // Tracks whether Groq answered this turn (only the fast-path fallback
+        // below — callOpenAI's own deeper Groq fallback is still logged
+        // server-side via "[Groq fallback warn]" but isn't threaded back
+        // through its return value). Surfaced in responseSource so a real
+        // demo session's degradation is visible without digging through
+        // function logs for every turn.
+        let usedGroqFastPath = false;
         if (onEarlyReplyText) {
           try {
             parsed = await callOpenAIStreaming(systemPrompt, openaiMessages, openaiKey, (replyText) => {
               onEarlyReplyText(replyText, detectedLang);
             });
           } catch (streamErr: any) {
-            console.warn("[OpenAI streaming warn — falling back to non-streaming]:", streamErr?.message || streamErr);
-            parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
+            console.warn("[OpenAI streaming warn — falling back]:", streamErr?.message || streamErr);
+            // A live voice call can't afford to pay for a second full OpenAI
+            // retry chain (callOpenAI's own 5s+3s attempts) on top of the 8s
+            // the streaming attempt just spent — that stacks up to ~16s+
+            // before Groq is even tried, which risks the platform's own
+            // function timeout killing the request before ANY fallback gets
+            // a chance to answer, dropping the caller straight to the rigid
+            // deterministic state machine with no real warning. Try Groq
+            // directly first (a single ~6s attempt, a different provider so
+            // an OpenAI-side outage doesn't just repeat) — only falling back
+            // to the full OpenAI retry chain if Groq isn't configured or
+            // also fails.
+            const groqKey = process.env.GROQ_API_KEY?.trim() || "";
+            if (groqKey) {
+              try {
+                parsed = await callGroq(systemPrompt, openaiMessages, groqKey);
+                usedGroqFastPath = true;
+              } catch (groqErr: any) {
+                console.warn("[Groq fallback warn — falling back to OpenAI retry]:", groqErr?.message || groqErr);
+                parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
+              }
+            } else {
+              parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
+            }
           }
         } else {
           parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
@@ -384,7 +413,7 @@ CRITICAL: every field above is EMPTY ("") because these are field NAMES, not exa
         finalStep = parsed.step || "intake_name_mobile";
         finalIsComplete = parsed.isComplete || false;
         finalIsOffTopic = parsed.isOffTopic || false;
-        responseSource = "openai-gpt4o-mini";
+        responseSource = usedGroqFastPath ? "groq-fallback" : "openai-gpt4o-mini";
         if (finalIsComplete || finalStep === "confirmation_complete") toneHint = "confirmed";
 
         // Only carry forward fields that are ACTUALLY provided — no hardcoded
@@ -694,23 +723,30 @@ export async function POST(req: Request) {
           };
           controller.enqueue(encoder.encode(JSON.stringify(textEvent) + "\n"));
 
-          for (let i = 0; i < sentences.length; i++) {
-            try {
-              // Reuse the pre-warmed first-sentence clip only if it was
-              // started for this EXACT sentence text — if the early-streamed
-              // reply ended up differing at all from the final validated one
-              // (rare, but possible), fall back to generating fresh rather
-              // than risk playing mismatched audio.
-              const ttsResult = i === 0 && earlyTtsPromise && earlyTtsSentenceText === sentences[0]
-                ? await earlyTtsPromise
-                : await generateSarvamTTS(sentences[i], speaker, finalLangCode, toneHint);
-              if (ttsResult.audioBase64) {
-                controller.enqueue(
-                  encoder.encode(JSON.stringify({ type: "audio_chunk", index: i, audioBase64: ttsResult.audioBase64 }) + "\n")
-                );
-              }
-            } catch (ttsErr) {
+          // Kick off every sentence's TTS generation concurrently instead of
+          // one at a time — a multi-sentence reply (very common here, since
+          // a confirmed booking's reply always has a reference-ID sentence
+          // appended) used to pay each clip's synthesis latency back-to-back,
+          // compounding real-world round-trip delay into a multi-second wait
+          // per turn. Order is still preserved on the wire: each promise is
+          // awaited in its original sentence order before its chunk is
+          // emitted, even though a later sentence may finish generating first.
+          const ttsPromises = sentences.map((sentence, i) =>
+            (i === 0 && earlyTtsPromise && earlyTtsSentenceText === sentences[0]
+              ? earlyTtsPromise
+              : generateSarvamTTS(sentence, speaker, finalLangCode, toneHint)
+            ).catch((ttsErr) => {
               console.warn("[Streamed TTS chunk warn]:", ttsErr);
+              return { audioBase64: null };
+            })
+          );
+
+          for (let i = 0; i < ttsPromises.length; i++) {
+            const ttsResult = await ttsPromises[i];
+            if (ttsResult.audioBase64) {
+              controller.enqueue(
+                encoder.encode(JSON.stringify({ type: "audio_chunk", index: i, audioBase64: ttsResult.audioBase64 }) + "\n")
+              );
             }
           }
 

@@ -39,6 +39,7 @@ import {
   Languages,
   Loader2,
   Lightbulb,
+  Cake,
 } from "lucide-react";
 import { INDUSTRY_FLOWS, IndustryFlow, IndustryMessage } from "@/data/industryFlows";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
@@ -1513,6 +1514,8 @@ export default function AIVoiceChatbotEngine({
   const liveActionRows: { icon: React.ReactNode; label: string; value: string }[] = [
     { icon: <Tag size={14} />, label: "Intent", value: extractedData.intent || "—" },
     { icon: <User size={14} />, label: "Customer", value: extractedData.name || "New patient" },
+    { icon: <Phone size={14} />, label: "Mobile", value: extractedData.mobile || "—" },
+    { icon: <Cake size={14} />, label: "Age / DOB", value: extractedData.dob || "—" },
     { icon: <Building2 size={14} />, label: "Department", value: extractedData.department || "—" },
     { icon: <Calendar size={14} />, label: "Date", value: extractedDate },
     { icon: <Clock size={14} />, label: "Time", value: extractedTime },
