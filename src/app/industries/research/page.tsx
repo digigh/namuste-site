@@ -1,13 +1,13 @@
 import type { Metadata } from "next";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import IndustryComingSoon from "@/components/IndustryComingSoon";
-import { BarChart3 } from "lucide-react";
+import IndustryOverview from "@/components/IndustryOverview";
+import { Mic, MessageSquare, ShieldCheck, BarChart3 } from "lucide-react";
 
 export const metadata: Metadata = {
-  title: "Multilingual Voice & Chat Survey Agent — Coming Soon | Namuste",
+  title: "Multilingual Voice & Chat Survey Agent — Namuste",
   description:
-    "Structured multilingual voice and chat surveys at scale with verified data capture — coming soon to Namuste.",
+    "Structured multilingual voice and chat surveys at scale with verified data capture — for market research, field studies, and large-scale polling.",
 };
 
 export default function ResearchPage() {
@@ -15,13 +15,34 @@ export default function ResearchPage() {
     <>
       <Navbar />
       <main style={{ background: "var(--bg)", minHeight: "100vh", overflowX: "hidden" }}>
-        <IndustryComingSoon
+        <IndustryOverview
           breadcrumbLabel="Research & Surveys"
-          headline="The data"
-          headlineAccent="is on its way."
-          description="Structured multilingual voice and chat surveys at scale — coming soon."
-          icon={<BarChart3 size={26} />}
-          chips={["Voice Surveys", "WhatsApp Polls", "Multilingual", "Verified Capture"]}
+          eyebrow="RESEARCH & SURVEYS"
+          headline="Multilingual surveys,"
+          headlineAccent="run at scale."
+          description="Namuste conducts structured voice and chat surveys across Indian languages, capturing verified, consistent responses without an army of field callers."
+          capabilities={[
+            {
+              icon: <Mic size={20} />,
+              title: "Multilingual Voice Surveys",
+              desc: "Runs structured question-and-answer surveys naturally in the respondent's own language.",
+            },
+            {
+              icon: <MessageSquare size={20} />,
+              title: "WhatsApp Poll Distribution",
+              desc: "Sends and collects poll responses directly over WhatsApp for higher completion rates.",
+            },
+            {
+              icon: <ShieldCheck size={20} />,
+              title: "Verified Response Capture",
+              desc: "Flags inconsistent, duplicate, or low-confidence responses instead of accepting every answer blindly.",
+            },
+            {
+              icon: <BarChart3 size={20} />,
+              title: "Structured Data Output",
+              desc: "Delivers responses in a clean, structured format ready for analysis, not raw transcripts to sift through.",
+            },
+          ]}
         />
       </main>
       <Footer />
