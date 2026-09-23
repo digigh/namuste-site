@@ -29,11 +29,18 @@ export async function callOpenAI(
   messages: { role: "user" | "assistant"; content: string }[],
   apiKey: string
 ) {
-  const attempt = async (timeoutMs: number): Promise<Response> => {
+  // Each attempt's abort timer stays alive until ITS response's body has
+  // actually been read (or is discarded unread on a retry) — clearing it
+  // right after fetch() resolves only protects receiving headers. If the
+  // body then stalls mid-delivery, the .json() call further down would hang
+  // indefinitely with no timeout covering it at all (the same bug class
+  // found and fixed in the TTS/STT layer — there it stalled a voice clip;
+  // here it would silently freeze the entire conversation turn).
+  const attempt = async (timeoutMs: number): Promise<{ res: Response; clearAbortTimer: () => void }> => {
     const controller = new AbortController();
-    const timeout = setTimeout(() => controller.abort(), timeoutMs);
+    const timeoutHandle = setTimeout(() => controller.abort(), timeoutMs);
     try {
-      return await fetch("https://api.openai.com/v1/chat/completions", {
+      const res = await fetch("https://api.openai.com/v1/chat/completions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -51,8 +58,10 @@ export async function callOpenAI(
           max_tokens: 350,
         }),
       });
-    } finally {
-      clearTimeout(timeout);
+      return { res, clearAbortTimer: () => clearTimeout(timeoutHandle) };
+    } catch (e) {
+      clearTimeout(timeoutHandle);
+      throw e;
     }
   };
 
@@ -63,13 +72,19 @@ export async function callOpenAI(
   // just fail identically again. Total worst case ~9s, still bounded for a
   // live voice call, and this fallback already has its own fallback behind it.
   let res: Response | null = null;
+  let clearAbortTimer: () => void = () => {};
   try {
-    res = await attempt(5000);
+    ({ res, clearAbortTimer } = await attempt(5000));
     if (!res.ok && (res.status >= 500 || res.status === 429)) {
-      res = await attempt(3000);
+      clearAbortTimer(); // discarding this response unread — retrying fresh
+      ({ res, clearAbortTimer } = await attempt(3000));
     }
   } catch {
-    res = await attempt(3000).catch(() => null);
+    try {
+      ({ res, clearAbortTimer } = await attempt(3000));
+    } catch {
+      res = null;
+    }
   }
 
   const groqKey = process.env.GROQ_API_KEY?.trim() || "";
@@ -85,14 +100,22 @@ export async function callOpenAI(
         return await callGroq(systemPrompt, messages, groqKey);
       } catch (groqErr: any) {
         console.warn("[Groq fallback warn]:", groqErr?.message || groqErr);
+      } finally {
+        clearAbortTimer();
       }
     }
     const errText = res ? await res.text().catch(() => "") : "network error";
+    clearAbortTimer();
     throw new Error(`OpenAI ${res ? res.status : "failed"}: ${errText}`);
   }
 
-  const data = await res.json();
-  const raw = data.choices?.[0]?.message?.content;
+  let raw: string | undefined;
+  try {
+    const data = await res.json();
+    raw = data.choices?.[0]?.message?.content;
+  } finally {
+    clearAbortTimer();
+  }
   if (!raw) {
     if (groqKey) {
       return await callGroq(systemPrompt, messages, groqKey);
@@ -176,10 +199,16 @@ export async function callOpenAIStreaming(
   onReplyReady?: (replyText: string) => void
 ): Promise<Record<string, any>> {
   const controller = new AbortController();
+  // Kept alive for the ENTIRE streaming read below, not just until fetch()
+  // resolves with headers — an SSE stream that stalls mid-delivery (headers
+  // arrive, chunks stop) would otherwise hang the reader.read() loop
+  // forever with no timeout covering it at all (the same bug class found
+  // and fixed in the TTS/STT layer and in callOpenAI's non-streaming path
+  // above). This also now doubles as an 8s hard ceiling on the whole
+  // streamed exchange, not just the initial connection.
   const timeout = setTimeout(() => controller.abort(), 8000);
-  let res: Response;
   try {
-    res = await fetch("https://api.openai.com/v1/chat/completions", {
+    const res = await fetch("https://api.openai.com/v1/chat/completions", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -198,62 +227,62 @@ export async function callOpenAIStreaming(
         stream: true,
       }),
     });
+
+    if (!res.ok || !res.body) {
+      const errText = await res.text().catch(() => "");
+      throw new Error(`OpenAI streaming ${res.status}: ${errText}`);
+    }
+
+    const reader = res.body.getReader();
+    const decoder = new TextDecoder();
+    let sseBuffer = "";
+    let contentBuffer = "";
+    let replyFired = false;
+
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      sseBuffer += decoder.decode(value, { stream: true });
+
+      let newlineIdx;
+      while ((newlineIdx = sseBuffer.indexOf("\n")) >= 0) {
+        const line = sseBuffer.slice(0, newlineIdx).trim();
+        sseBuffer = sseBuffer.slice(newlineIdx + 1);
+        if (!line.startsWith("data:")) continue;
+        const payload = line.slice(5).trim();
+        if (!payload || payload === "[DONE]") continue;
+        try {
+          const evt = JSON.parse(payload);
+          const delta = evt.choices?.[0]?.delta?.content;
+          if (typeof delta === "string") {
+            contentBuffer += delta;
+            if (!replyFired && onReplyReady) {
+              const reply = extractCompletedJsonStringField(contentBuffer, "reply");
+              if (reply !== null) {
+                replyFired = true;
+                onReplyReady(reply);
+              }
+            }
+          }
+        } catch {
+          // Partial/malformed SSE chunk boundary — the next chunk completes it.
+        }
+      }
+    }
+
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(contentBuffer);
+    } catch {
+      throw new Error("OpenAI streaming returned malformed JSON");
+    }
+    if (typeof parsed !== "object" || parsed === null || typeof (parsed as { reply?: unknown }).reply !== "string") {
+      throw new Error("OpenAI streaming response missing required 'reply' field");
+    }
+    return parsed as Record<string, any>;
   } finally {
     clearTimeout(timeout);
   }
-
-  if (!res.ok || !res.body) {
-    const errText = await res.text().catch(() => "");
-    throw new Error(`OpenAI streaming ${res.status}: ${errText}`);
-  }
-
-  const reader = res.body.getReader();
-  const decoder = new TextDecoder();
-  let sseBuffer = "";
-  let contentBuffer = "";
-  let replyFired = false;
-
-  for (;;) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    sseBuffer += decoder.decode(value, { stream: true });
-
-    let newlineIdx;
-    while ((newlineIdx = sseBuffer.indexOf("\n")) >= 0) {
-      const line = sseBuffer.slice(0, newlineIdx).trim();
-      sseBuffer = sseBuffer.slice(newlineIdx + 1);
-      if (!line.startsWith("data:")) continue;
-      const payload = line.slice(5).trim();
-      if (!payload || payload === "[DONE]") continue;
-      try {
-        const evt = JSON.parse(payload);
-        const delta = evt.choices?.[0]?.delta?.content;
-        if (typeof delta === "string") {
-          contentBuffer += delta;
-          if (!replyFired && onReplyReady) {
-            const reply = extractCompletedJsonStringField(contentBuffer, "reply");
-            if (reply !== null) {
-              replyFired = true;
-              onReplyReady(reply);
-            }
-          }
-        }
-      } catch {
-        // Partial/malformed SSE chunk boundary — the next chunk completes it.
-      }
-    }
-  }
-
-  let parsed: unknown;
-  try {
-    parsed = JSON.parse(contentBuffer);
-  } catch {
-    throw new Error("OpenAI streaming returned malformed JSON");
-  }
-  if (typeof parsed !== "object" || parsed === null || typeof (parsed as { reply?: unknown }).reply !== "string") {
-    throw new Error("OpenAI streaming response missing required 'reply' field");
-  }
-  return parsed as Record<string, any>;
 }
 
 // Groq's API is OpenAI-compatible (same chat-completions request/response

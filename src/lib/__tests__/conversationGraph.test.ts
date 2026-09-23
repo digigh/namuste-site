@@ -169,6 +169,65 @@ describe("conversationGraph — full happy path", () => {
   });
 });
 
+describe("conversationGraph — post-confirmation 'thank you'", () => {
+  it("ends the call warmly instead of repeating the reference-ID reminder", async () => {
+    const result = await runConversationTurn({
+      industryId: "doctors-clinics",
+      messages: [],
+      userMessage: "thank you",
+      currentExtracted: {
+        ...CLINIC_EXTRACTED_BASE,
+        dob: "28",
+        slot: "Thursday, 25 September 2026, 11:00 am",
+        confirmed: true,
+        appointment_id: "SUN-12345",
+      },
+    });
+
+    expect(result.finalCallEnded).toBe(true);
+    // Must not repeat the "already confirmed — reference ID X" reminder —
+    // a plain "you're welcome"-style sign-off instead.
+    expect(result.finalReply).not.toContain("SUN-12345");
+  });
+
+  it("does not end the call for a compound message that merely starts with thanks", async () => {
+    // No LLM mock: with no OPENAI_API_KEY stubbed as empty here (default from
+    // beforeEach), the fast path/graph should simply not short-circuit via
+    // the farewell interceptor for this — proving the match requires the
+    // ENTIRE message to be a bare thank-you, not a substring.
+    const result = await runConversationTurn({
+      industryId: "doctors-clinics",
+      messages: [],
+      userMessage: "thanks, and also my name is Ankush",
+      currentExtracted: {
+        ...CLINIC_EXTRACTED_BASE,
+        dob: "28",
+        slot: "Thursday, 25 September 2026, 11:00 am",
+        confirmed: true,
+        appointment_id: "SUN-12345",
+      },
+    });
+
+    expect(result.finalCallEnded).toBe(false);
+  });
+
+  it("does not end the call for a mid-flow 'thank you' before the booking is confirmed", async () => {
+    // Forces a straight, network-free drop to the deterministic fallback FSM
+    // (mirrors the "no API key configured" test above) — this test only
+    // needs to prove the farewell interceptor doesn't fire, not exercise the
+    // LLM path.
+    vi.stubEnv("OPENAI_API_KEY", "");
+    const result = await runConversationTurn({
+      industryId: "doctors-clinics",
+      messages: [],
+      userMessage: "thank you",
+      currentExtracted: { ...CLINIC_EXTRACTED_BASE, dob: "" }, // not yet confirmed
+    });
+
+    expect(result.finalCallEnded).toBe(false);
+  });
+});
+
 describe("conversationGraph — LLM unavailable → deterministic fallback", () => {
   it("falls through cleanly to the fallback FSM when every provider fails", async () => {
     mockOpenAIFailure();

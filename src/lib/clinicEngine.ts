@@ -42,6 +42,16 @@ export interface ChatTurnResult {
 // during intake or FAQ answers. Not clinic-only — every industry gets a
 // generic sign-off; only the clinic case sources its line from
 // CLINIC_TEMPLATES for the exact wording tested this session.
+//
+// A standalone "thank you" (nothing else in the message) is treated the same
+// way, but ONLY once a booking is already confirmed — at that point it's the
+// natural way a caller signals they're done, and without this the turn fell
+// through to the fast path's "already confirmed" branch, which repeats the
+// full reference-ID reminder every time instead of just saying goodbye
+// (reported as the AI "not ending the call properly" / repeating itself).
+// Matched only when the ENTIRE trimmed message is a gratitude phrase — never
+// a substring match — so "thanks, and also my name is Ankush" mid-intake
+// still flows through normally instead of ending the call early.
 export function checkFarewell(params: {
   userMessage: string;
   industryId: string;
@@ -52,7 +62,9 @@ export function checkFarewell(params: {
   const { userMessage, industryId, detectedLang, isHindi, currentExtracted } = params;
 
   const isFarewell = /\b(bye+|good\s*bye|hang\s*up|end\s*(the\s*)?call|alvida)\b/i.test(userMessage);
-  if (!isFarewell) return null;
+  const isPureGratitude = /^\s*(thanks?(\s+you)?|thank\s*you|thnx|ty|shukriya|dhanya\s*v?ā?a?d)(\s+(so|very)\s+much)?\s*[.!,]*\s*$/i.test(userMessage);
+  const isConfirmedThanks = !isFarewell && isPureGratitude && !!currentExtracted?.confirmed;
+  if (!isFarewell && !isConfirmedThanks) return null;
 
   const finalReply =
     industryId === "doctors-clinics" && CLINIC_SUPPORTED_LANGS.includes(detectedLang as ClinicLang)
