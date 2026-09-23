@@ -45,6 +45,7 @@ import { ICON_MAP, VOICE_PERSONAS, LANGUAGE_OPTIONS } from "@/data/voiceWidgetCo
 import { readNdjsonLines, stampTime, formatDuration, getQuickPrompts, splitSlot } from "@/lib/voiceWidgetHelpers";
 import { useAudioPlayback } from "@/hooks/use-audio-playback";
 import { useMicCapture } from "@/hooks/use-mic-capture";
+import { logVoiceEvent, resetVoiceTrace } from "@/lib/voiceWidgetTelemetry";
 
 interface AIVoiceChatbotEngineProps {
   initialIndustryId?: string;
@@ -363,6 +364,7 @@ export default function AIVoiceChatbotEngine({
     let failureReason = "";
 
     try {
+      logVoiceEvent("reasoning", "chat:request-start", { userTextLength: userText.length, isVoiceTurn });
       const res = await fetch("/api/ai-demo/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -377,6 +379,7 @@ export default function AIVoiceChatbotEngine({
           sttLanguageProbability, // Sarvam STT's confidence in that language claim — drives language stickiness server-side
         }),
       });
+      logVoiceEvent("reasoning", "chat:response-headers-received", { status: res.status, ok: res.ok });
 
       if (!res.ok) {
         failureReason = res.status === 429
@@ -560,6 +563,7 @@ export default function AIVoiceChatbotEngine({
         }
       }
     } catch (e) {
+      logVoiceEvent("reasoning", "chat:request-failed", { error: String(e) });
       console.warn("Turn processing error fallback:", e);
       failureReason = "Connection error — please try again.";
     }
@@ -568,6 +572,7 @@ export default function AIVoiceChatbotEngine({
     // no visible error, and critically no resumption of listening, so a live
     // call would just go dead with zero feedback. Surface the failure and
     // keep the conversation loop alive instead.
+    if (failureReason) logVoiceEvent("reasoning", "chat:turn-failed", { failureReason });
     setIsProcessing(false);
     setSpeechStatusText(`Error: ${failureReason || "Something went wrong. Please try again."}`);
     if (isVoiceTurn && isCallActiveRef.current && !isMutedRef.current) {
@@ -578,6 +583,8 @@ export default function AIVoiceChatbotEngine({
 
 
   const handleStartCall = async () => {
+    resetVoiceTrace();
+    logVoiceEvent("capture", "call:start-requested");
     setIsConnecting(true);
     setSpeechStatusText("Connecting to AI Receptionist...");
     setCallDuration(0);

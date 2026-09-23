@@ -1,6 +1,7 @@
 "use client";
 
 import { useRef, useState, useCallback } from "react";
+import { logVoiceEvent } from "@/lib/voiceWidgetTelemetry";
 
 export interface UseAudioPlaybackParams {
   isSpeakerOn: boolean;
@@ -166,6 +167,7 @@ export function useAudioPlayback({
     stopLiveListening();
     setIsAiSpeaking(true);
     setSpeechStatusText("AI speaking...");
+    logVoiceEvent("synthesis", "tts:request-start", { textLength: text.length, langCode, tone });
 
     try {
       const res = await fetch("/api/ai-demo/speech", {
@@ -183,10 +185,12 @@ export function useAudioPlayback({
       if (res.ok) {
         const data = await res.json();
         if (data.success && data.audioBase64) {
+          logVoiceEvent("synthesis", "tts:response-success", { source: data.source, audioBase64Length: data.audioBase64.length });
           const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
           attachAiAnalyser(audio);
           currentAudioRef.current = audio;
           const resumeAfterAudio = () => {
+            logVoiceEvent("playback", "audio:ended");
             stopCurrentAudio();
             setIsAiSpeaking(false);
             setSpeechStatusText("Listening to you...");
@@ -194,6 +198,7 @@ export function useAudioPlayback({
           };
           audio.onended = () => resolveAiSpeech(resumeAfterAudio);
           audio.onerror = () => {
+            logVoiceEvent("playback", "audio:decode-error-falling-back-to-browser-tts");
             resolveAiSpeech(() => fallbackBrowserSpeech(text, langCode, onEndedCallback));
           };
           audio.onloadedmetadata = () => {
@@ -204,12 +209,20 @@ export function useAudioPlayback({
               armAiSpeechWatchdog(resumeAfterAudio, audio.duration * 1000 + 800);
             }
           };
-          armAiSpeechWatchdog(resumeAfterAudio); // coarse ceiling until duration is known
+          armAiSpeechWatchdog(() => {
+            logVoiceEvent("playback", "audio:watchdog-fired-stall-detected");
+            resumeAfterAudio();
+          }); // coarse ceiling until duration is known
+          logVoiceEvent("playback", "audio:play-start");
           await audio.play();
           return;
         }
+        logVoiceEvent("synthesis", "tts:response-no-audio", { source: data.source, message: data.message });
+      } else {
+        logVoiceEvent("synthesis", "tts:response-not-ok", { status: res.status });
       }
     } catch (e) {
+      logVoiceEvent("synthesis", "tts:request-failed", { error: String(e) });
       console.warn("Sarvam TTS error fallback:", e);
     }
 

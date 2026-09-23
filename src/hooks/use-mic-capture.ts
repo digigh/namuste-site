@@ -3,6 +3,7 @@
 import { useRef, useState, useCallback } from "react";
 import { blobToBase64 } from "@/lib/voiceWidgetHelpers";
 import { evaluateVadFrame, SILENCE_MS, MAX_RECORDING_MS } from "@/lib/voiceWidgetVad";
+import { logVoiceEvent } from "@/lib/voiceWidgetTelemetry";
 
 export interface UseMicCaptureParams {
   isCallActiveRef: React.RefObject<boolean>;
@@ -103,6 +104,7 @@ export function useMicCapture({
 
     // Discard any stale in-progress capture before starting a fresh one.
     stopLiveListening();
+    logVoiceEvent("capture", "getUserMedia:start");
 
     try {
       // getUserMedia can hang indefinitely — neither resolving nor rejecting —
@@ -123,6 +125,7 @@ export function useMicCapture({
         ),
       ]);
       mediaStreamRef.current = stream;
+      logVoiceEvent("capture", "getUserMedia:success");
 
       const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext;
       const audioContext: AudioContext = new AudioContextCtor();
@@ -160,11 +163,16 @@ export function useMicCapture({
           audioContextRef.current = null;
         }
 
-        if (!shouldFinalize || chunks.length === 0) return;
+        if (!shouldFinalize || chunks.length === 0) {
+          logVoiceEvent("capture", "recorder:stop-discarded", { shouldFinalize, chunkCount: chunks.length });
+          return;
+        }
 
         const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
+        logVoiceEvent("capture", "recorder:stop-finalized", { blobSizeBytes: blob.size });
         if (blob.size < 2000) {
           // Too short to be meaningful speech (VAD false-positive on noise) — just resume listening
+          logVoiceEvent("capture", "recorder:too-short-discarded", { blobSizeBytes: blob.size });
           if (isCallActiveRef.current && !isMutedRef.current) startLiveListening();
           return;
         }
@@ -172,6 +180,7 @@ export function useMicCapture({
         setSpeechStatusText("Transcribing...");
         try {
           const base64Audio = await blobToBase64(blob);
+          logVoiceEvent("transcription", "stt:request-start", { blobSizeBytes: blob.size });
           const res = await fetch("/api/ai-demo/speech", {
             method: "POST",
             headers: { "Content-Type": "application/json" },
@@ -189,6 +198,11 @@ export function useMicCapture({
           if (res.ok) {
             const data = await res.json();
             if (data.success && data.transcript && data.transcript.trim()) {
+              logVoiceEvent("transcription", "stt:response-success", {
+                transcriptLength: data.transcript.trim().length,
+                detectedLanguageCode: data.detectedLanguageCode,
+                source: data.source,
+              });
               setLiveUserTranscript(data.transcript.trim());
               onTranscriptReady(
                 data.transcript.trim(),
@@ -197,8 +211,12 @@ export function useMicCapture({
               );
               return;
             }
+            logVoiceEvent("transcription", "stt:response-no-transcript", { message: data.message, source: data.source });
+          } else {
+            logVoiceEvent("transcription", "stt:response-not-ok", { status: res.status });
           }
         } catch (err) {
+          logVoiceEvent("transcription", "stt:request-failed", { error: String(err) });
           console.warn("STT request failed:", err);
         }
 
@@ -239,6 +257,7 @@ export function useMicCapture({
         if (result.justStarted) {
           speechDetectedRef.current = true;
           setIsUserSpeaking(true);
+          logVoiceEvent("capture", "vad:speech-started", { rms: Number(rms.toFixed(4)) });
           // Caller is speaking again after a confirmed booking — they get
           // to finish, not get cut off by the auto-hangup timer.
           if (onSpeechResumed) onSpeechResumed();
@@ -250,6 +269,7 @@ export function useMicCapture({
 
         if (result.isSilentNow && speechDetectedRef.current && !silenceTimeoutRef.current) {
           silenceTimeoutRef.current = setTimeout(() => {
+            logVoiceEvent("capture", "vad:silence-finalize", { silenceMs: SILENCE_MS });
             pendingFinalizeRef.current = true;
             setIsUserSpeaking(false);
             if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
@@ -259,6 +279,7 @@ export function useMicCapture({
         }
 
         if (Date.now() - startedAt > MAX_RECORDING_MS) {
+          logVoiceEvent("capture", "vad:max-recording-hit", { maxRecordingMs: MAX_RECORDING_MS });
           pendingFinalizeRef.current = speechDetectedRef.current;
           if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
             try { mediaRecorderRef.current.stop(); } catch (_) {}
@@ -270,6 +291,7 @@ export function useMicCapture({
       };
       vadRafRef.current = requestAnimationFrame(vadTick);
     } catch (err: any) {
+      logVoiceEvent("capture", "getUserMedia:failed", { name: err?.name, message: err?.message });
       console.warn("Could not start microphone capture:", err);
       // Surface the ACTUAL error instead of a hardcoded guess — a previous
       // version always said "permission denied" here even when the real cause
