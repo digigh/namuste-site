@@ -43,6 +43,7 @@ import { SpeechWaveform } from "./SpeechWaveform";
 import { ComingSoonPanel } from "./ComingSoonPanel";
 import { ICON_MAP, VOICE_PERSONAS, LANGUAGE_OPTIONS } from "@/data/voiceWidgetConstants";
 import { blobToBase64, readNdjsonLines, stampTime, formatDuration, getQuickPrompts, splitSlot } from "@/lib/voiceWidgetHelpers";
+import { evaluateVadFrame, SILENCE_MS, MAX_RECORDING_MS } from "@/lib/voiceWidgetVad";
 
 interface AIVoiceChatbotEngineProps {
   initialIndustryId?: string;
@@ -958,24 +959,6 @@ export default function AIVoiceChatbotEngine({
       setSpeechStatusText("Listening to you... (Speak naturally)");
 
       const dataArray = new Uint8Array(analyser.fftSize);
-      // Raised from 0.02, and now paired with a sustained-frames requirement
-      // below — a single loud frame (a door, a cough, distant noise) used to
-      // be enough to start capturing a "turn" and send it to STT as if the
-      // caller had spoken, which is exactly what was corrupting the
-      // conversation with background noise.
-      const SPEECH_RMS_THRESHOLD = 0.028;
-      // Require ~150ms of continuous energy above threshold before treating
-      // it as the caller actually starting to talk, not just a brief blip.
-      const REQUIRED_CONSECUTIVE_SPEECH_FRAMES = 9;
-      // Raised from 700ms — that was cutting people off during completely
-      // normal mid-sentence pauses (recalling a number, a breath, an "umm").
-      // The timer already correctly cancels and lets recording continue the
-      // instant speech resumes (see the rms > threshold branch above), so
-      // this only controls how long a genuine pause has to last before it's
-      // treated as "done talking" — 1100ms gives real breathing room while
-      // still being far snappier than the original fixed 2200ms wait.
-      const SILENCE_MS = 1100;
-      const MAX_RECORDING_MS = 20000;
       const startedAt = Date.now();
       let consecutiveSpeechFrames = 0;
 
@@ -990,29 +973,29 @@ export default function AIVoiceChatbotEngine({
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
 
-        if (rms > SPEECH_RMS_THRESHOLD) {
-          consecutiveSpeechFrames++;
-          if (!speechDetectedRef.current && consecutiveSpeechFrames >= REQUIRED_CONSECUTIVE_SPEECH_FRAMES) {
-            speechDetectedRef.current = true;
-            setIsUserSpeaking(true);
-            // Caller is speaking again after a confirmed booking — they get
-            // to finish, not get cut off by the auto-hangup timer.
-            if (autoEndCallTimeoutRef.current) {
-              clearTimeout(autoEndCallTimeoutRef.current);
-              autoEndCallTimeoutRef.current = null;
-            }
+        const result = evaluateVadFrame({
+          rms,
+          consecutiveSpeechFrames,
+          speechAlreadyDetected: speechDetectedRef.current,
+        });
+        consecutiveSpeechFrames = result.consecutiveSpeechFrames;
+
+        if (result.justStarted) {
+          speechDetectedRef.current = true;
+          setIsUserSpeaking(true);
+          // Caller is speaking again after a confirmed booking — they get
+          // to finish, not get cut off by the auto-hangup timer.
+          if (autoEndCallTimeoutRef.current) {
+            clearTimeout(autoEndCallTimeoutRef.current);
+            autoEndCallTimeoutRef.current = null;
           }
-          if (silenceTimeoutRef.current) {
-            clearTimeout(silenceTimeoutRef.current);
-            silenceTimeoutRef.current = null;
-          }
-        } else {
-          // Energy dropped — a blip that didn't sustain long enough resets
-          // the counter instead of slowly accumulating across noise gaps.
-          consecutiveSpeechFrames = 0;
+        }
+        if (!result.isSilentNow && silenceTimeoutRef.current) {
+          clearTimeout(silenceTimeoutRef.current);
+          silenceTimeoutRef.current = null;
         }
 
-        if (!(rms > SPEECH_RMS_THRESHOLD) && speechDetectedRef.current && !silenceTimeoutRef.current) {
+        if (result.isSilentNow && speechDetectedRef.current && !silenceTimeoutRef.current) {
           silenceTimeoutRef.current = setTimeout(() => {
             pendingFinalizeRef.current = true;
             setIsUserSpeaking(false);
