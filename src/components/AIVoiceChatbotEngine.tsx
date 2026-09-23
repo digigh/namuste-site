@@ -42,8 +42,9 @@ import AnimatedOrb from "./AnimatedOrb";
 import { SpeechWaveform } from "./SpeechWaveform";
 import { ComingSoonPanel } from "./ComingSoonPanel";
 import { ICON_MAP, VOICE_PERSONAS, LANGUAGE_OPTIONS } from "@/data/voiceWidgetConstants";
-import { blobToBase64, readNdjsonLines, stampTime, formatDuration, getQuickPrompts, splitSlot } from "@/lib/voiceWidgetHelpers";
-import { evaluateVadFrame, SILENCE_MS, MAX_RECORDING_MS } from "@/lib/voiceWidgetVad";
+import { readNdjsonLines, stampTime, formatDuration, getQuickPrompts, splitSlot } from "@/lib/voiceWidgetHelpers";
+import { useAudioPlayback } from "@/hooks/use-audio-playback";
+import { useMicCapture } from "@/hooks/use-mic-capture";
 
 interface AIVoiceChatbotEngineProps {
   initialIndustryId?: string;
@@ -65,11 +66,8 @@ export default function AIVoiceChatbotEngine({
   const [callDuration, setCallDuration] = useState<number>(0);
   const [isMuted, setIsMuted] = useState<boolean>(false);
   const [isSpeakerOn, setIsSpeakerOn] = useState<boolean>(true);
-  const [isAiSpeaking, setIsAiSpeaking] = useState<boolean>(false);
-  const [isUserSpeaking, setIsUserSpeaking] = useState<boolean>(false);
   const [isConnecting, setIsConnecting] = useState<boolean>(false);
   const [speechStatusText, setSpeechStatusText] = useState<string>("Click to start voice call");
-  const [liveUserTranscript, setLiveUserTranscript] = useState<string>("");
   const [currentLanguageCode, setCurrentLanguageCode] = useState<string>("en-IN");
   const [speechLanguageMode, setSpeechLanguageMode] = useState<string>("auto");
   const [selectedSpeaker, setSelectedSpeaker] = useState<string>("ritu");
@@ -126,32 +124,12 @@ export default function AIVoiceChatbotEngine({
   const webhookSentRef = useRef<boolean>(false);
 
   // References for live async callbacks
-  const currentAudioRef = useRef<HTMLAudioElement | null>(null);
-  // Real-time frequency analysis of whichever AI audio clip is currently
-  // playing, feeding the waveform visualizer with the ACTUAL audio instead
-  // of a synthetic animation. One AudioContext is created lazily and reused
-  // for every clip; each new <audio> element gets its own source node (the
-  // Web Audio API only allows one per element) wired through an analyser and
-  // back out to the speakers — skipping the reconnect-to-destination step
-  // would silently mute playback, so every attach site must do both.
-  const aiAudioCtxRef = useRef<AudioContext | null>(null);
-  const aiAnalyserRef = useRef<AnalyserNode | null>(null);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
-  const silenceTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const conversationHistoryRef = useRef<IndustryMessage[]>([]);
   const extractedDataRef = useRef<any>({});
   const selectedSpeakerRef = useRef<string>("ritu");
   const chatBottomRef = useRef<HTMLDivElement | null>(null);
 
-  // MediaRecorder + amplitude-VAD mic capture (replaces browser SpeechRecognition)
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
-  const audioContextRef = useRef<AudioContext | null>(null);
-  const analyserRef = useRef<AnalyserNode | null>(null);
-  const vadRafRef = useRef<number | null>(null);
-  const recordedChunksRef = useRef<Blob[]>([]);
-  const speechDetectedRef = useRef<boolean>(false);
-  const pendingFinalizeRef = useRef<boolean>(false);
   // "" = auto-detect language every turn; "hi-IN"/"en-IN" = user manually forced it via the language toggle
   const manualLanguageHintRef = useRef<string>("");
   // Mirrors currentLanguageCode for the same stale-closure reason as the refs
@@ -257,289 +235,58 @@ export default function AIVoiceChatbotEngine({
     }
   }, [conversationHistory, channel]);
 
-  const stopCurrentAudio = useCallback(() => {
-    if (currentAudioRef.current) {
-      currentAudioRef.current.pause();
-      currentAudioRef.current.currentTime = 0;
-      currentAudioRef.current = null;
-    }
-    if (typeof window !== "undefined" && window.speechSynthesis) {
-      window.speechSynthesis.cancel();
-    }
-    setIsAiSpeaking(false);
-  }, []);
+  // ─── Mic capture + AI audio playback ─────────────────────────────────────
+  // Split into their own hooks (see src/hooks/use-mic-capture.ts and
+  // use-audio-playback.ts) — destructured here under their original names
+  // so every other call site below (processConversationTurn,
+  // handleStartCall/handleEndCall, the mute toggle, the JSX waveform) needs
+  // zero changes. useMicCapture must be called first: useAudioPlayback needs
+  // its stopLiveListening (playing AI speech and listening are mutually
+  // exclusive). onTranscriptReady/onSpeechResumed reference
+  // processConversationTurn/cancelAutoEndCall, both declared further down
+  // this same component — safe because neither runs until actually invoked,
+  // well after the whole component body (and thus those consts) has
+  // finished evaluating this render, exactly like this file's existing
+  // forward-references (e.g. processConversationTurn calling
+  // startLiveListening below).
+  const {
+    isUserSpeaking,
+    liveUserTranscript,
+    setLiveUserTranscript,
+    analyserRef,
+    startLiveListening,
+    stopLiveListening,
+  } = useMicCapture({
+    isCallActiveRef,
+    isMutedRef,
+    manualLanguageHintRef,
+    currentLanguageCodeRef,
+    onSpeechResumed: () => cancelAutoEndCall(),
+    onTranscriptReady: (transcript, detectedLanguageCode, languageProbability) =>
+      processConversationTurn(transcript, detectedLanguageCode, languageProbability),
+    setSpeechStatusText,
+  });
 
-  // Wires a freshly-created AI speech <audio> element through a Web Audio
-  // analyser so the waveform can visualize the REAL clip instead of a
-  // canned animation — called once per new Audio() at every playback site.
-  // createMediaElementSource() only works once per element (a second call on
-  // the same element throws), which is fine here since each TTS response
-  // creates a brand-new element anyway. Must reconnect the analyser to the
-  // context's destination, or the element's audio is silently captured into
-  // the graph and never reaches the speakers.
-  const attachAiAnalyser = useCallback((audioEl: HTMLAudioElement) => {
-    try {
-      if (!aiAudioCtxRef.current) {
-        const Ctx = window.AudioContext || (window as any).webkitAudioContext;
-        aiAudioCtxRef.current = new Ctx();
-      }
-      const ctx = aiAudioCtxRef.current;
-      if (ctx.state === "suspended") ctx.resume().catch(() => {});
-      const source = ctx.createMediaElementSource(audioEl);
-      const analyser = ctx.createAnalyser();
-      analyser.fftSize = 256;
-      analyser.smoothingTimeConstant = 0.5;
-      source.connect(analyser);
-      analyser.connect(ctx.destination);
-      aiAnalyserRef.current = analyser;
-    } catch (e) {
-      // Visualization-only failure — playback itself doesn't depend on this,
-      // so the waveform just falls back to its idle animation for this turn.
-      console.warn("AI audio analyser attach failed:", e);
-    }
-  }, []);
-
-  // Stops any in-progress capture and DISCARDS it (does not transcribe/send).
-  // Used whenever we need to cut the mic immediately — e.g. before the AI
-  // starts speaking, or when the call ends. The VAD-triggered finalize path
-  // (see startLiveListening) sets pendingFinalizeRef itself before calling
-  // recorder.stop(), so a plain stopLiveListening() here never accidentally
-  // sends a still-buffering recording.
-  const stopLiveListening = useCallback(() => {
-    if (silenceTimeoutRef.current) {
-      clearTimeout(silenceTimeoutRef.current);
-      silenceTimeoutRef.current = null;
-    }
-    if (vadRafRef.current) {
-      cancelAnimationFrame(vadRafRef.current);
-      vadRafRef.current = null;
-    }
-    pendingFinalizeRef.current = false;
-    if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-      try { mediaRecorderRef.current.stop(); } catch (_) {}
-    }
-    mediaRecorderRef.current = null;
-    if (mediaStreamRef.current) {
-      mediaStreamRef.current.getTracks().forEach((t) => t.stop());
-      mediaStreamRef.current = null;
-    }
-    if (audioContextRef.current) {
-      try { audioContextRef.current.close(); } catch (_) {}
-      audioContextRef.current = null;
-    }
-    analyserRef.current = null;
-    recordedChunksRef.current = [];
-    speechDetectedRef.current = false;
-    setIsUserSpeaking(false);
-  }, []);
-
-  // ─── AI-speech watchdog ──────────────────────────────────────────────────
-  // The mic is meant to auto-resume the instant AI audio finishes (via the
-  // audio/utterance "ended" event). In practice that event occasionally never
-  // fires — a decode hiccup, a browser TTS voice-loading quirk, etc. — which
-  // silently strands the call: no error, just a mic that never comes back on
-  // until the user manually hits the "Speak" button. This watchdog guarantees
-  // the resume callback fires exactly once no matter what the audio/browser
-  // does, closing that gap without needing to diagnose every possible failure
-  // mode individually.
-  const aiSpeechWatchdogRef = useRef<NodeJS.Timeout | null>(null);
-  const aiSpeechResolvedRef = useRef<boolean>(true);
-
-  const armAiSpeechWatchdog = useCallback((onDone: () => void, ms = 12000) => {
-    aiSpeechResolvedRef.current = false;
-    if (aiSpeechWatchdogRef.current) clearTimeout(aiSpeechWatchdogRef.current);
-    aiSpeechWatchdogRef.current = setTimeout(() => {
-      if (!aiSpeechResolvedRef.current) {
-        aiSpeechResolvedRef.current = true;
-        console.warn("AI speech watchdog fired — 'ended' event never arrived, forcing mic resume.");
-        onDone();
-      }
-    }, ms);
-  }, []);
-
-  const resolveAiSpeech = useCallback((onDone: () => void) => {
-    if (aiSpeechResolvedRef.current) return; // already resolved (watchdog or a duplicate event) — don't double-fire
-    aiSpeechResolvedRef.current = true;
-    if (aiSpeechWatchdogRef.current) {
-      clearTimeout(aiSpeechWatchdogRef.current);
-      aiSpeechWatchdogRef.current = null;
-    }
-    onDone();
-  }, []);
-
-  // Web Speech Fallback
-  const fallbackBrowserSpeech = useCallback((text: string, langCode = "en-IN", onEndedCallback?: () => void) => {
-    if (typeof window === "undefined" || !("speechSynthesis" in window)) {
-      if (onEndedCallback) onEndedCallback();
-      return;
-    }
-    window.speechSynthesis.cancel();
-    const cleanText = text.replace(/[*#_~`[\]()•]/g, " ").replace(/\s+/g, " ").trim();
-    const utterance = new SpeechSynthesisUtterance(cleanText);
-    utterance.lang = langCode || "en-IN";
-    utterance.rate = 1.0;
-    utterance.pitch = 1.0;
-
-    utterance.onstart = () => {
-      setIsAiSpeaking(true);
-      setSpeechStatusText("AI speaking...");
-      armAiSpeechWatchdog(() => {
-        if (typeof window !== "undefined" && window.speechSynthesis) window.speechSynthesis.cancel();
-        setIsAiSpeaking(false);
-        setSpeechStatusText("Listening to you...");
-        if (onEndedCallback) onEndedCallback();
-      });
-    };
-    utterance.onend = () => {
-      resolveAiSpeech(() => {
-        setIsAiSpeaking(false);
-        setSpeechStatusText("Listening to you...");
-        if (onEndedCallback) onEndedCallback();
-      });
-    };
-    utterance.onerror = () => {
-      resolveAiSpeech(() => {
-        setIsAiSpeaking(false);
-        if (onEndedCallback) onEndedCallback();
-      });
-    };
-    window.speechSynthesis.speak(utterance);
-  }, [armAiSpeechWatchdog, resolveAiSpeech]);
-
-  // Audible Speech Engine (Sarvam bulbul:v3 with fallback)
-  const speakTextAudible = useCallback(async (text: string, langCode = "en-IN", onEndedCallback?: () => void, tone: string = "neutral") => {
-    if (!isSpeakerOn) {
-      if (onEndedCallback) onEndedCallback();
-      return;
-    }
-
-    stopCurrentAudio();
-    stopLiveListening();
-    setIsAiSpeaking(true);
-    setSpeechStatusText("AI speaking...");
-
-    try {
-      const res = await fetch("/api/ai-demo/speech", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "tts",
-          text,
-          languageCode: langCode || "en-IN",
-          speaker: selectedSpeakerRef.current || selectedSpeaker || "ritu",
-          tone,
-        }),
-      });
-
-      if (res.ok) {
-        const data = await res.json();
-        if (data.success && data.audioBase64) {
-          const audio = new Audio(`data:audio/wav;base64,${data.audioBase64}`);
-          attachAiAnalyser(audio);
-          currentAudioRef.current = audio;
-          const resumeAfterAudio = () => {
-            stopCurrentAudio();
-            setIsAiSpeaking(false);
-            setSpeechStatusText("Listening to you...");
-            if (onEndedCallback) onEndedCallback();
-          };
-          audio.onended = () => resolveAiSpeech(resumeAfterAudio);
-          audio.onerror = () => {
-            resolveAiSpeech(() => fallbackBrowserSpeech(text, langCode, onEndedCallback));
-          };
-          audio.onloadedmetadata = () => {
-            // Once the real duration is known, stop guessing — the watchdog
-            // only needs to outlive actual playback by a small buffer, not a
-            // blind worst-case timeout.
-            if (isFinite(audio.duration) && audio.duration > 0) {
-              armAiSpeechWatchdog(resumeAfterAudio, audio.duration * 1000 + 800);
-            }
-          };
-          armAiSpeechWatchdog(resumeAfterAudio); // coarse ceiling until duration is known
-          await audio.play();
-          return;
-        }
-      }
-    } catch (e) {
-      console.warn("Sarvam TTS error fallback:", e);
-    }
-
-    fallbackBrowserSpeech(text, langCode, onEndedCallback);
-  }, [armAiSpeechWatchdog, attachAiAnalyser, fallbackBrowserSpeech, isSpeakerOn, resolveAiSpeech, selectedSpeaker, stopCurrentAudio, stopLiveListening]);
-
-  // ─── Streamed reply audio: sequential chunk player ──────────────────────
-  // The streaming chat response (doctors-clinics voice turns) delivers TTS
-  // audio as a queue of per-sentence clips instead of one complete blob, so
-  // the first sentence can start playing while later ones are still being
-  // synthesized. This plays them back-to-back in order, reusing the same
-  // watchdog/resolve pattern as the single-clip player above so a dropped
-  // "ended" event still can't strand the mic.
-  const audioChunkQueueRef = useRef<string[]>([]);
-  const audioChunkStreamDoneRef = useRef<boolean>(false);
-  const isChunkPlayingRef = useRef<boolean>(false);
-  const onAllAudioChunksDoneRef = useRef<(() => void) | null>(null);
-
-  const resetAudioStreamState = useCallback(() => {
-    audioChunkQueueRef.current = [];
-    audioChunkStreamDoneRef.current = false;
-    onAllAudioChunksDoneRef.current = null;
-    isChunkPlayingRef.current = false;
-  }, []);
-
-  const playNextQueuedChunk = useCallback(() => {
-    if (isChunkPlayingRef.current) return;
-    const next = audioChunkQueueRef.current.shift();
-    if (!next) {
-      if (audioChunkStreamDoneRef.current) {
-        const cb = onAllAudioChunksDoneRef.current;
-        onAllAudioChunksDoneRef.current = null;
-        if (cb) cb();
-      }
-      return;
-    }
-    isChunkPlayingRef.current = true;
-    stopCurrentAudio();
-    setIsAiSpeaking(true);
-    setSpeechStatusText("AI speaking...");
-    try {
-      const audio = new Audio(`data:audio/wav;base64,${next}`);
-      attachAiAnalyser(audio);
-      currentAudioRef.current = audio;
-      const advance = () => {
-        isChunkPlayingRef.current = false;
-        playNextQueuedChunk();
-      };
-      audio.onended = () => resolveAiSpeech(advance);
-      audio.onerror = () => resolveAiSpeech(advance); // skip a bad chunk, keep the sequence going
-      audio.onloadedmetadata = () => {
-        if (isFinite(audio.duration) && audio.duration > 0) {
-          armAiSpeechWatchdog(advance, audio.duration * 1000 + 800);
-        }
-      };
-      armAiSpeechWatchdog(advance);
-      audio.play().catch(() => resolveAiSpeech(advance));
-    } catch {
-      isChunkPlayingRef.current = false;
-      playNextQueuedChunk();
-    }
-  }, [armAiSpeechWatchdog, attachAiAnalyser, resolveAiSpeech, stopCurrentAudio]);
-
-  const enqueueAudioChunk = useCallback((audioBase64: string) => {
-    audioChunkQueueRef.current.push(audioBase64);
-    playNextQueuedChunk();
-  }, [playNextQueuedChunk]);
-
-  // Call once the "done" event arrives — runs onAllDone immediately if every
-  // queued chunk has already finished playing, otherwise defers it until the
-  // last one does.
-  const finishAudioStream = useCallback((onAllDone: () => void) => {
-    audioChunkStreamDoneRef.current = true;
-    if (audioChunkQueueRef.current.length === 0 && !isChunkPlayingRef.current) {
-      onAllDone();
-    } else {
-      onAllAudioChunksDoneRef.current = onAllDone;
-    }
-  }, []);
+  const {
+    isAiSpeaking,
+    setIsAiSpeaking,
+    aiAnalyserRef,
+    currentAudioRef,
+    stopCurrentAudio,
+    attachAiAnalyser,
+    armAiSpeechWatchdog,
+    resolveAiSpeech,
+    speakTextAudible,
+    resetAudioStreamState,
+    enqueueAudioChunk,
+    finishAudioStream,
+  } = useAudioPlayback({
+    isSpeakerOn,
+    selectedSpeaker,
+    selectedSpeakerRef,
+    stopLiveListening,
+    setSpeechStatusText,
+  });
 
   // Dispatch Webhook
   const triggerWebhookDispatch = useCallback(async (payloadExtracted: any, history: IndustryMessage[]) => {
@@ -828,219 +575,6 @@ export default function AIVoiceChatbotEngine({
     }
   }, [armAiSpeechWatchdog, attachAiAnalyser, channel, enqueueAudioChunk, finishAudioStream, isCallActive, isMuted, isProcessing, isSpeakerOn, resetAudioStreamState, resolveAiSpeech, selectedIndustryId, selectedSpeaker, speakTextAudible, stopCurrentAudio, stopLiveListening, triggerWebhookDispatch]);
 
-
-  // Mic capture via MediaRecorder + amplitude-based voice activity detection (VAD).
-  // Replaces the browser's native SpeechRecognition, which (a) only supports
-  // whatever language/dialect quality the OS engine ships with — poor for
-  // Hindi/regional languages — and (b) locked recognition.lang to *last
-  // turn's* detected language, so a mid-call language switch was always one
-  // turn late. Recording is sent to /api/ai-demo/speech (Whisper STT) once
-  // the VAD detects ~700ms of silence after speech, and Whisper's own
-  // detected language becomes the authoritative signal passed into
-  // processConversationTurn — closing both gaps at once.
-  const startLiveListening = useCallback(async () => {
-    if (typeof window === "undefined") return;
-    if (!navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === "undefined") {
-      setSpeechStatusText("Error: Microphone capture not supported in this browser. Use chat mode.");
-      return;
-    }
-
-    // Discard any stale in-progress capture before starting a fresh one.
-    stopLiveListening();
-
-    try {
-      // getUserMedia can hang indefinitely — neither resolving nor rejecting —
-      // if the OS mic device hasn't fully released from a just-ended recording
-      // session. Without a hard timeout, that hang is completely invisible:
-      // no error, mic just never comes back. Race it against a timeout so a
-      // stuck acquisition always surfaces as a real, catchable error instead.
-      const stream = await Promise.race([
-        navigator.mediaDevices.getUserMedia({
-          // Browser/OS-level noise suppression, echo cancellation, and gain
-          // normalization — these are standard, well-supported constraints
-          // that meaningfully cut background noise before it ever reaches
-          // the VAD or STT, rather than trying to filter it after the fact.
-          audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true },
-        }),
-        new Promise<never>((_, reject) =>
-          setTimeout(() => reject(new Error("getUserMedia timed out after 6s — mic device may be stuck busy from the previous turn")), 6000)
-        ),
-      ]);
-      mediaStreamRef.current = stream;
-
-      const AudioContextCtor = (window as any).AudioContext || (window as any).webkitAudioContext;
-      const audioContext: AudioContext = new AudioContextCtor();
-      audioContextRef.current = audioContext;
-      if (audioContext.state === "suspended") {
-        try { await audioContext.resume(); } catch (_) {}
-      }
-      const source = audioContext.createMediaStreamSource(stream);
-      const analyser = audioContext.createAnalyser();
-      analyser.fftSize = 512;
-      source.connect(analyser);
-      analyserRef.current = analyser;
-
-      const mimeType = MediaRecorder.isTypeSupported("audio/webm") ? "audio/webm" : "";
-      const recorder = new MediaRecorder(stream, mimeType ? { mimeType } : undefined);
-      mediaRecorderRef.current = recorder;
-      recordedChunksRef.current = [];
-      speechDetectedRef.current = false;
-      pendingFinalizeRef.current = false;
-
-      recorder.ondataavailable = (e: BlobEvent) => {
-        if (e.data && e.data.size > 0) recordedChunksRef.current.push(e.data);
-      };
-
-      recorder.onstop = async () => {
-        const shouldFinalize = pendingFinalizeRef.current;
-        pendingFinalizeRef.current = false;
-        const chunks = recordedChunksRef.current;
-        recordedChunksRef.current = [];
-
-        stream.getTracks().forEach((t) => t.stop());
-        if (mediaStreamRef.current === stream) mediaStreamRef.current = null;
-        if (audioContextRef.current === audioContext) {
-          try { await audioContext.close(); } catch (_) {}
-          audioContextRef.current = null;
-        }
-
-        if (!shouldFinalize || chunks.length === 0) return;
-
-        const blob = new Blob(chunks, { type: mimeType || "audio/webm" });
-        if (blob.size < 2000) {
-          // Too short to be meaningful speech (VAD false-positive on noise) — just resume listening
-          if (isCallActiveRef.current && !isMutedRef.current) startLiveListening();
-          return;
-        }
-
-        setSpeechStatusText("Transcribing...");
-        try {
-          const base64Audio = await blobToBase64(blob);
-          const res = await fetch("/api/ai-demo/speech", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              action: "stt",
-              audioBase64: base64Audio,
-              // In Auto mode (no manual override), hint Sarvam with whatever
-              // language is already established rather than "unknown" —
-              // narrows what it's listening for instead of blind-guessing
-              // fresh on every single turn.
-              languageCode: manualLanguageHintRef.current || currentLanguageCodeRef.current,
-            }),
-          });
-
-          if (res.ok) {
-            const data = await res.json();
-            if (data.success && data.transcript && data.transcript.trim()) {
-              setLiveUserTranscript(data.transcript.trim());
-              processConversationTurn(
-                data.transcript.trim(),
-                data.detectedLanguageCode || "",
-                typeof data.languageProbability === "number" ? data.languageProbability : null
-              );
-              return;
-            }
-          }
-        } catch (err) {
-          console.warn("STT request failed:", err);
-        }
-
-        // No usable transcript came back — resume listening rather than hanging silently
-        if (isCallActiveRef.current && !isMutedRef.current) {
-          setSpeechStatusText("Didn't catch that — listening again...");
-          startLiveListening();
-        }
-      };
-
-      recorder.start(250); // flush chunks every 250ms so short utterances still have data on stop()
-
-      setIsUserSpeaking(false);
-      setSpeechStatusText("Listening to you... (Speak naturally)");
-
-      const dataArray = new Uint8Array(analyser.fftSize);
-      const startedAt = Date.now();
-      let consecutiveSpeechFrames = 0;
-
-      const vadTick = () => {
-        if (!analyserRef.current) return;
-        analyserRef.current.getByteTimeDomainData(dataArray);
-
-        let sumSquares = 0;
-        for (let i = 0; i < dataArray.length; i++) {
-          const normalized = (dataArray[i] - 128) / 128;
-          sumSquares += normalized * normalized;
-        }
-        const rms = Math.sqrt(sumSquares / dataArray.length);
-
-        const result = evaluateVadFrame({
-          rms,
-          consecutiveSpeechFrames,
-          speechAlreadyDetected: speechDetectedRef.current,
-        });
-        consecutiveSpeechFrames = result.consecutiveSpeechFrames;
-
-        if (result.justStarted) {
-          speechDetectedRef.current = true;
-          setIsUserSpeaking(true);
-          // Caller is speaking again after a confirmed booking — they get
-          // to finish, not get cut off by the auto-hangup timer.
-          if (autoEndCallTimeoutRef.current) {
-            clearTimeout(autoEndCallTimeoutRef.current);
-            autoEndCallTimeoutRef.current = null;
-          }
-        }
-        if (!result.isSilentNow && silenceTimeoutRef.current) {
-          clearTimeout(silenceTimeoutRef.current);
-          silenceTimeoutRef.current = null;
-        }
-
-        if (result.isSilentNow && speechDetectedRef.current && !silenceTimeoutRef.current) {
-          silenceTimeoutRef.current = setTimeout(() => {
-            pendingFinalizeRef.current = true;
-            setIsUserSpeaking(false);
-            if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-              try { mediaRecorderRef.current.stop(); } catch (_) {}
-            }
-          }, SILENCE_MS);
-        }
-
-        if (Date.now() - startedAt > MAX_RECORDING_MS) {
-          pendingFinalizeRef.current = speechDetectedRef.current;
-          if (mediaRecorderRef.current && mediaRecorderRef.current.state !== "inactive") {
-            try { mediaRecorderRef.current.stop(); } catch (_) {}
-          }
-          return;
-        }
-
-        vadRafRef.current = requestAnimationFrame(vadTick);
-      };
-      vadRafRef.current = requestAnimationFrame(vadTick);
-    } catch (err: any) {
-      console.warn("Could not start microphone capture:", err);
-      // Surface the ACTUAL error instead of a hardcoded guess — a previous
-      // version always said "permission denied" here even when the real cause
-      // was something else entirely (e.g. a stuck device, or the new 6s
-      // timeout above), which actively hid what was really happening.
-      const name = err?.name || "";
-      const friendly =
-        name === "NotAllowedError" ? "Microphone permission denied. Use chat mode instead."
-        : name === "NotFoundError" ? "No microphone found on this device."
-        : name === "NotReadableError" ? "Microphone is busy or unavailable (may be in use by another app/tab)."
-        : err?.message?.includes("timed out") ? "Microphone didn't respond in time — device may still be busy from the previous turn. Retrying..."
-        : `Microphone error: ${err?.message || name || "unknown"}.`;
-      setSpeechStatusText(`Error: ${friendly}`);
-      setIsUserSpeaking(false);
-
-      // A stuck/busy device is often transient — retry once automatically
-      // instead of leaving the call permanently dead on a timeout.
-      if (err?.message?.includes("timed out") && isCallActiveRef.current && !isMutedRef.current) {
-        setTimeout(() => {
-          if (isCallActiveRef.current && !isMutedRef.current) startLiveListening();
-        }, 1000);
-      }
-    }
-  }, [processConversationTurn, stopLiveListening]);
 
 
   const handleStartCall = async () => {
