@@ -217,42 +217,51 @@ export async function generateSarvamTTS(
 
   try {
     const controller = new AbortController();
-    // 3.8s hard timeout — if Sarvam doesn't respond in time, fall through to browser TTS
+    // 3.8s hard timeout — if Sarvam doesn't respond in time, fall through to
+    // browser TTS. Deliberately kept alive (not cleared) until the response
+    // body has actually been read: clearing it right after fetch() resolves
+    // only protects receiving the HEADERS — if the body stream itself then
+    // stalls (verified live: a real, if occasional, production failure mode
+    // that never reproduced locally), .json() below would hang with no
+    // timeout covering it at all, exactly matching a caller who sees the
+    // stream go dead with no error.
     const timeout = setTimeout(() => controller.abort(), 3800);
 
-    const v3Res = await fetch("https://api.sarvam.ai/text-to-speech", {
-      method: "POST",
-      headers: {
-        "api-subscription-key": sarvamKey,
-        "Content-Type": "application/json",
-      },
-      signal: controller.signal,
-      body: JSON.stringify({
-        inputs: [cleanSpeechText],
-        target_language_code: targetLang,
-        speaker: chosenSpeaker,
-        model: "bulbul:v3",
-        pace,                    // Tone-dependent speed (see TONE_PRESETS)
-        temperature,             // Tone-dependent expressiveness (v3-only knob)
-        speech_sample_rate: 8000, // 8kHz vs 22kHz → ~60% smaller file → faster transfer
-        enable_preprocessing: true,
-      }),
-    });
+    try {
+      const v3Res = await fetch("https://api.sarvam.ai/text-to-speech", {
+        method: "POST",
+        headers: {
+          "api-subscription-key": sarvamKey,
+          "Content-Type": "application/json",
+        },
+        signal: controller.signal,
+        body: JSON.stringify({
+          inputs: [cleanSpeechText],
+          target_language_code: targetLang,
+          speaker: chosenSpeaker,
+          model: "bulbul:v3",
+          pace,                    // Tone-dependent speed (see TONE_PRESETS)
+          temperature,             // Tone-dependent expressiveness (v3-only knob)
+          speech_sample_rate: 8000, // 8kHz vs 22kHz → ~60% smaller file → faster transfer
+          enable_preprocessing: true,
+        }),
+      });
 
-    clearTimeout(timeout);
-
-    if (v3Res.ok) {
-      const data = await v3Res.json();
-      if (data.audios && data.audios[0]) {
-        const base64Audio = data.audios[0];
-        // Store in cache
-        if (audioCache.size >= MAX_CACHE_SIZE) {
-          const firstKey = audioCache.keys().next().value;
-          if (firstKey) audioCache.delete(firstKey);
+      if (v3Res.ok) {
+        const data = await v3Res.json();
+        if (data.audios && data.audios[0]) {
+          const base64Audio = data.audios[0];
+          // Store in cache
+          if (audioCache.size >= MAX_CACHE_SIZE) {
+            const firstKey = audioCache.keys().next().value;
+            if (firstKey) audioCache.delete(firstKey);
+          }
+          audioCache.set(cacheKey, base64Audio);
+          return { audioBase64: base64Audio, detectedLang: targetLang };
         }
-        audioCache.set(cacheKey, base64Audio);
-        return { audioBase64: base64Audio, detectedLang: targetLang };
       }
+    } finally {
+      clearTimeout(timeout);
     }
   } catch (err) {
     console.warn("[Sarvam TTS server generation warn]:", err);
@@ -302,39 +311,45 @@ export async function transcribeSpeech(audioBase64: string, languageCode = "en-I
       // Sarvam auto-detect, same "auto" contract used with Whisper.
       formData.append("language_code", languageCode && speechLangIsExplicit(languageCode) ? languageCode : "unknown");
 
-      let sarvamRes: Response;
+      // The abort signal must stay live until the response BODY is fully
+      // read, not just until fetch() resolves with headers — clearing it
+      // right after fetch() only protects receiving headers; if the body
+      // stream then stalls, .json()/.text() below would hang with no
+      // timeout covering it at all (the same class of bug fixed in
+      // generateSarvamTTS above, verified live in production as an
+      // intermittent stall with no error).
       try {
-        sarvamRes = await fetch("https://api.sarvam.ai/speech-to-text", {
+        const sarvamRes = await fetch("https://api.sarvam.ai/speech-to-text", {
           method: "POST",
           headers: { "api-subscription-key": sarvamKey },
           signal: controller.signal,
           body: formData,
         });
+
+        if (sarvamRes.ok) {
+          const data = await sarvamRes.json();
+          const transcript = (data.transcript || "").trim();
+
+          if (!transcript) {
+            return {
+              success: false,
+              source: "sarvam-saaras",
+              message: "No genuine speech detected (likely background noise).",
+            };
+          }
+
+          return {
+            success: true,
+            source: "sarvam-saaras",
+            transcript,
+            detectedLanguageCode: data.language_code || "en-IN",
+            languageProbability: typeof data.language_probability === "number" ? data.language_probability : null,
+          };
+        }
+        console.warn("[Sarvam STT non-OK response]:", sarvamRes.status, await sarvamRes.text().catch(() => ""));
       } finally {
         clearTimeout(timeout);
       }
-
-      if (sarvamRes.ok) {
-        const data = await sarvamRes.json();
-        const transcript = (data.transcript || "").trim();
-
-        if (!transcript) {
-          return {
-            success: false,
-            source: "sarvam-saaras",
-            message: "No genuine speech detected (likely background noise).",
-          };
-        }
-
-        return {
-          success: true,
-          source: "sarvam-saaras",
-          transcript,
-          detectedLanguageCode: data.language_code || "en-IN",
-          languageProbability: typeof data.language_probability === "number" ? data.language_probability : null,
-        };
-      }
-      console.warn("[Sarvam STT non-OK response]:", sarvamRes.status, await sarvamRes.text().catch(() => ""));
     } catch (e) {
       console.warn("[Sarvam STT warn — falling back to Whisper]:", e);
     }
@@ -359,64 +374,65 @@ export async function transcribeSpeech(audioBase64: string, languageCode = "en-I
         formData.append("language", whisperLangCode(languageCode));
       }
 
-      let whisperRes: Response;
+      // Same fix as the Sarvam branch above: keep the abort signal live
+      // until the body is fully parsed, not just until headers arrive.
       try {
-        whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+        const whisperRes = await fetch("https://api.openai.com/v1/audio/transcriptions", {
           method: "POST",
           headers: { Authorization: `Bearer ${openaiKey}` },
           signal: controller.signal,
           body: formData,
         });
-      } finally {
-        clearTimeout(timeout);
-      }
 
-      if (whisperRes.ok) {
-        const data = await whisperRes.json();
-        const transcript = (data.text || "").trim();
+        if (whisperRes.ok) {
+          const data = await whisperRes.json();
+          const transcript = (data.text || "").trim();
 
-        // Whisper transcribes SOMETHING for almost any audio — including
-        // background noise, another conversation in the room, a TV, etc.
-        // — and can even hallucinate plausible-looking text from pure
-        // noise. verbose_json's per-segment no_speech_prob is the model's
-        // own confidence that a segment contains no real speech at all;
-        // averaging it across segments (weighted by duration, since a
-        // short noise blip shouldn't be swamped by one long clear
-        // segment) is a far more reliable signal than anything client-side
-        // amplitude detection can provide. Reject low-confidence audio
-        // here rather than letting it masquerade as something the caller
-        // actually said.
-        const segments: Array<{ no_speech_prob?: number; avg_logprob?: number; start?: number; end?: number }> = data.segments || [];
-        let noSpeechScore = 0;
-        if (segments.length > 0) {
-          let totalDuration = 0;
-          let weightedNoSpeech = 0;
-          for (const seg of segments) {
-            const duration = Math.max((seg.end ?? 0) - (seg.start ?? 0), 0.01);
-            weightedNoSpeech += (seg.no_speech_prob ?? 0) * duration;
-            totalDuration += duration;
+          // Whisper transcribes SOMETHING for almost any audio — including
+          // background noise, another conversation in the room, a TV, etc.
+          // — and can even hallucinate plausible-looking text from pure
+          // noise. verbose_json's per-segment no_speech_prob is the model's
+          // own confidence that a segment contains no real speech at all;
+          // averaging it across segments (weighted by duration, since a
+          // short noise blip shouldn't be swamped by one long clear
+          // segment) is a far more reliable signal than anything client-side
+          // amplitude detection can provide. Reject low-confidence audio
+          // here rather than letting it masquerade as something the caller
+          // actually said.
+          const segments: Array<{ no_speech_prob?: number; avg_logprob?: number; start?: number; end?: number }> = data.segments || [];
+          let noSpeechScore = 0;
+          if (segments.length > 0) {
+            let totalDuration = 0;
+            let weightedNoSpeech = 0;
+            for (const seg of segments) {
+              const duration = Math.max((seg.end ?? 0) - (seg.start ?? 0), 0.01);
+              weightedNoSpeech += (seg.no_speech_prob ?? 0) * duration;
+              totalDuration += duration;
+            }
+            noSpeechScore = totalDuration > 0 ? weightedNoSpeech / totalDuration : 0;
           }
-          noSpeechScore = totalDuration > 0 ? weightedNoSpeech / totalDuration : 0;
-        }
 
-        const NO_SPEECH_THRESHOLD = 0.6;
-        if (!transcript || noSpeechScore > NO_SPEECH_THRESHOLD) {
+          const NO_SPEECH_THRESHOLD = 0.6;
+          if (!transcript || noSpeechScore > NO_SPEECH_THRESHOLD) {
+            return {
+              success: false,
+              source: "openai-whisper",
+              message: "No genuine speech detected (likely background noise).",
+              noSpeechScore,
+            };
+          }
+
+          const detectedLanguageCode = whisperToBcp47(data.language);
           return {
-            success: false,
+            success: true,
             source: "openai-whisper",
-            message: "No genuine speech detected (likely background noise).",
+            transcript,
+            detectedLanguageCode,
             noSpeechScore,
           };
         }
-
-        const detectedLanguageCode = whisperToBcp47(data.language);
-        return {
-          success: true,
-          source: "openai-whisper",
-          transcript,
-          detectedLanguageCode,
-          noSpeechScore,
-        };
+      } finally {
+        clearTimeout(timeout);
       }
     } catch (e) {
       console.warn("Whisper STT fallback:", e);

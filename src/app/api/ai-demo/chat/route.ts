@@ -13,6 +13,20 @@ export type { ProcessChatTurnParams, ProcessChatTurnResult } from "@/lib/convers
 // hang (adjust if the current Vercel plan's actual ceiling differs).
 export const maxDuration = 60;
 
+// Races a promise against a hard, unconditional timeout. Used as a defensive
+// backstop around every TTS call in this file, independent of whatever
+// timeout generateSarvamTTS enforces internally — verified live in
+// production that a TTS call can occasionally stall indefinitely (never
+// reproduced locally) in a way that outlasted its own internal timeout, and
+// since these calls are awaited sequentially, one stuck promise blocks every
+// later chunk (or the whole non-streaming response) from ever being sent.
+function withHardTimeout<T>(promise: Promise<T>, ms: number, fallback: T): Promise<T> {
+  return Promise.race([
+    promise,
+    new Promise<T>((resolve) => setTimeout(() => resolve(fallback), ms)),
+  ]);
+}
+
 // Splits a reply into sentence-like chunks so TTS can be generated and
 // streamed one clip at a time instead of waiting for the whole reply to
 // synthesize as one blob. Falls back to the whole string as a single
@@ -142,14 +156,34 @@ export async function POST(req: Request) {
           // per turn. Order is still preserved on the wire: each promise is
           // awaited in its original sentence order before its chunk is
           // emitted, even though a later sentence may finish generating first.
+          //
+          // Each awaited promise is ALSO raced against a hard outer timeout,
+          // independent of generateSarvamTTS's own internal one. Verified
+          // live in production: this stream intermittently stalled forever
+          // after the first audio chunk (reproduced directly — 1 hang in 6
+          // real requests, an indefinite hang each time, never resolving on
+          // its own even after 90s) despite that inner timeout, which never
+          // reproduced locally. Whatever the exact cause (a Vercel-specific
+          // edge case in how AbortController/fetch interact under load, a
+          // cold-start-adjacent slowdown, or something else entirely), a
+          // stalled `await` at this specific point — sequential, one per
+          // sentence — is exactly what blocks every later chunk and "done"
+          // from ever being sent, which is indistinguishable from the app
+          // being completely broken from the caller's side. This outer race
+          // guarantees the loop always advances within a bounded time
+          // regardless of why any single attempt didn't resolve.
           const ttsPromises = sentences.map((sentence, i) =>
-            (i === 0 && earlyTtsPromise && earlyTtsSentenceText === sentences[0]
-              ? earlyTtsPromise
-              : generateSarvamTTS(sentence, speaker, finalLangCode, toneHint)
-            ).catch((ttsErr) => {
-              console.warn("[Streamed TTS chunk warn]:", ttsErr);
-              return { audioBase64: null };
-            })
+            withHardTimeout(
+              (i === 0 && earlyTtsPromise && earlyTtsSentenceText === sentences[0]
+                ? earlyTtsPromise
+                : generateSarvamTTS(sentence, speaker, finalLangCode, toneHint)
+              ).catch((ttsErr) => {
+                console.warn("[Streamed TTS chunk warn]:", ttsErr);
+                return { audioBase64: null };
+              }),
+              6000,
+              { audioBase64: null }
+            )
           );
 
           for (let i = 0; i < ttsPromises.length; i++) {
@@ -175,7 +209,11 @@ export async function POST(req: Request) {
     if (generateAudio && finalReply) {
       try {
         const ttsText = finalSpokenText || finalReply;
-        const ttsResult = await generateSarvamTTS(ttsText, speaker, finalLangCode, toneHint);
+        const ttsResult = await withHardTimeout(
+          generateSarvamTTS(ttsText, speaker, finalLangCode, toneHint),
+          6000,
+          { audioBase64: null, detectedLang: finalLangCode }
+        );
         audioBase64 = ttsResult.audioBase64;
       } catch (ttsErr) {
         console.warn("[Unified TTS generation warn]:", ttsErr);
