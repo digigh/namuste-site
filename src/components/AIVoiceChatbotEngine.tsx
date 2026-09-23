@@ -455,12 +455,6 @@ export default function AIVoiceChatbotEngine({
   // a single render) always check current state instead of a stale closure.
   const isCallActiveRef = useRef<boolean>(false);
   const isMutedRef = useRef<boolean>(false);
-  // Read inside the VAD tick loop (see startLiveListening) to detect a
-  // genuine barge-in — the loop is a long-lived requestAnimationFrame
-  // closure, so reading React state directly there would see a stale value
-  // frozen at whatever it was when the loop started, not whether the AI is
-  // ACTUALLY speaking right now.
-  const isAiSpeakingRef = useRef<boolean>(false);
   // Auto-hangup after a confirmed booking: armed once the AI's confirmation
   // reply finishes and listening resumes, cleared if the caller starts
   // speaking again (they get a real grace window, not a hard cutoff).
@@ -498,10 +492,6 @@ export default function AIVoiceChatbotEngine({
   useEffect(() => {
     isMutedRef.current = isMuted;
   }, [isMuted]);
-
-  useEffect(() => {
-    isAiSpeakingRef.current = isAiSpeaking;
-  }, [isAiSpeaking]);
 
   // Appends one "completed" activity entry per real field the extraction
   // pipeline has just filled in — a genuine log of what the backend did this
@@ -664,20 +654,6 @@ export default function AIVoiceChatbotEngine({
     onDone();
   }, []);
 
-  // Marks the current AI turn's watchdog as resolved WITHOUT invoking its
-  // onDone callback — unlike resolveAiSpeech above. Used only when a barge-in
-  // cuts the AI off mid-sentence (see interruptAiSpeechForBargeIn): that
-  // turn's onDone would call resumeListeningAfterTurn()/startLiveListening(),
-  // which would tear down and restart the mic session that's actively
-  // capturing the caller's interrupting utterance right now, losing it.
-  const cancelAiSpeechWatchdog = useCallback(() => {
-    aiSpeechResolvedRef.current = true;
-    if (aiSpeechWatchdogRef.current) {
-      clearTimeout(aiSpeechWatchdogRef.current);
-      aiSpeechWatchdogRef.current = null;
-    }
-  }, []);
-
   // Web Speech Fallback
   const fallbackBrowserSpeech = useCallback((text: string, langCode = "en-IN", onEndedCallback?: () => void) => {
     if (typeof window === "undefined" || !("speechSynthesis" in window)) {
@@ -725,18 +701,7 @@ export default function AIVoiceChatbotEngine({
     }
 
     stopCurrentAudio();
-    bargedInRef.current = false;
-    if (isCallActiveRef.current && !isMutedRef.current) {
-      // Listen concurrently with the AI's own speech instead of shutting the
-      // mic off for its whole duration, so a caller talking over it is
-      // actually detected as a barge-in (see the VAD tick in
-      // startLiveListening) instead of just being silently missed. Not
-      // awaited: mic/AudioContext setup running in parallel with the TTS
-      // fetch below, not before it.
-      startLiveListening();
-    } else {
-      stopLiveListening();
-    }
+    stopLiveListening();
     setIsAiSpeaking(true);
     setSpeechStatusText("AI speaking...");
 
@@ -800,14 +765,6 @@ export default function AIVoiceChatbotEngine({
   const audioChunkStreamDoneRef = useRef<boolean>(false);
   const isChunkPlayingRef = useRef<boolean>(false);
   const onAllAudioChunksDoneRef = useRef<(() => void) | null>(null);
-  // Set the instant a barge-in interrupts a streamed reply, cleared only when
-  // the NEXT turn's response starts streaming — NOT by resetAudioStreamState
-  // itself, since interruptAiSpeechForBargeIn calls that to drop the queue
-  // and must not immediately erase the very flag it's about to set. Guards
-  // playNextQueuedChunk/the "done" handler against resuming playback or
-  // restarting the mic from chunks that are still arriving over the network
-  // for the turn that was just cut off.
-  const bargedInRef = useRef<boolean>(false);
 
   const resetAudioStreamState = useCallback(() => {
     audioChunkQueueRef.current = [];
@@ -816,35 +773,7 @@ export default function AIVoiceChatbotEngine({
     isChunkPlayingRef.current = false;
   }, []);
 
-  // A caller starting to talk WHILE the AI is still speaking (detected by the
-  // VAD tick in startLiveListening below) cuts the AI off immediately instead
-  // of talking over them for several more seconds. The interruption itself
-  // is never lost: the SAME mic session that just detected it keeps
-  // recording uninterrupted, and its normal silence-triggered finalize (see
-  // startLiveListening) picks the utterance up and sends it for
-  // transcription exactly like any other turn — nothing else has to change.
-  // cancelAiSpeechWatchdog() must run BEFORE stopCurrentAudio(): pausing
-  // audio (or cancelling speechSynthesis) can still fire onended/onend, and
-  // without the resolved-guard already armed that would replay the
-  // interrupted turn's resumeListeningAfterTurn(), tearing down and
-  // restarting the very mic session that's now capturing the interruption.
-  const interruptAiSpeechForBargeIn = useCallback(() => {
-    if (!isAiSpeakingRef.current) return;
-    cancelAiSpeechWatchdog();
-    stopCurrentAudio();
-    bargedInRef.current = true;
-    resetAudioStreamState();
-    setSpeechStatusText("Listening to you...");
-  }, [cancelAiSpeechWatchdog, stopCurrentAudio, resetAudioStreamState]);
-
   const playNextQueuedChunk = useCallback(() => {
-    if (bargedInRef.current) {
-      // A barge-in already cut this turn off — drop any chunk still arriving
-      // from the in-flight stream instead of resuming playback with it.
-      audioChunkQueueRef.current = [];
-      isChunkPlayingRef.current = false;
-      return;
-    }
     if (isChunkPlayingRef.current) return;
     const next = audioChunkQueueRef.current.shift();
     if (!next) {
@@ -1074,13 +1003,6 @@ export default function AIVoiceChatbotEngine({
           if (isVoiceTurn && isSpeakerOn) {
             if (data.audioBase64) {
               stopCurrentAudio();
-              bargedInRef.current = false;
-              if (isCallActiveRef.current && !isMutedRef.current) {
-                // Listen concurrently so talking over this clip is detected
-                // as a barge-in instead of the mic staying off for its whole
-                // duration — see the matching comment in speakTextAudible.
-                startLiveListening();
-              }
               setIsAiSpeaking(true);
               setSpeechStatusText("AI speaking...");
               try {
@@ -1132,7 +1054,6 @@ export default function AIVoiceChatbotEngine({
           // "audio_chunk" plays as soon as it's synthesized instead of
           // waiting for the whole reply's audio.
           resetAudioStreamState();
-          bargedInRef.current = false;
           let replyApplied = false;
           let resumeListeningAfterTurn: (() => void) | null = null;
 
@@ -1149,23 +1070,10 @@ export default function AIVoiceChatbotEngine({
                 } else {
                   resumeListeningAfterTurn();
                 }
-              } else if (isCallActiveRef.current && !isMutedRef.current) {
-                // Start listening now, concurrently with the audio about to
-                // play below, so a caller talking over the AI is actually
-                // detected (see the VAD tick in startLiveListening) instead
-                // of the mic staying off for the whole reply as before.
-                // Fire-and-forget: awaiting this would delay audio playback
-                // on mic/AudioContext setup for no benefit.
-                startLiveListening();
               }
             } else if (evt.type === "audio_chunk" && evt.audioBase64 && isVoiceTurn && isSpeakerOn) {
               enqueueAudioChunk(evt.audioBase64);
             } else if (evt.type === "done" && isVoiceTurn && isSpeakerOn && resumeListeningAfterTurn) {
-              if (bargedInRef.current) {
-                // Already interrupted — the mic is already live and capturing
-                // the interruption; restarting it here would cut that off.
-                return;
-              }
               const resume = resumeListeningAfterTurn;
               finishAudioStream(() => {
                 stopCurrentAudio();
@@ -1347,18 +1255,6 @@ export default function AIVoiceChatbotEngine({
       // Require ~150ms of continuous energy above threshold before treating
       // it as the caller actually starting to talk, not just a brief blip.
       const REQUIRED_CONSECUTIVE_SPEECH_FRAMES = 9;
-      // Stricter gate used ONLY while the AI is speaking (barge-in
-      // detection) — the mic now stays live through AI playback (see
-      // speakTextAudible/playSingleAudioAndContinue/the NDJSON handler in
-      // processConversationTurn) so a caller can interrupt it, but that also
-      // means the AI's own voice bleeding into the mic through the device's
-      // speakers is now a real possibility, even with echoCancellation on
-      // (imperfect, especially without headphones). A higher amplitude
-      // threshold plus a longer sustained-energy requirement (~300ms vs
-      // ~150ms) filters out that residual echo while still catching a
-      // genuine, deliberate interruption quickly.
-      const BARGE_IN_RMS_THRESHOLD = 0.055;
-      const BARGE_IN_REQUIRED_CONSECUTIVE_FRAMES = 18;
       // Raised from 700ms — that was cutting people off during completely
       // normal mid-sentence pauses (recalling a number, a breath, an "umm").
       // The timer already correctly cancels and lets recording continue the
@@ -1381,15 +1277,10 @@ export default function AIVoiceChatbotEngine({
           sumSquares += normalized * normalized;
         }
         const rms = Math.sqrt(sumSquares / dataArray.length);
-        // Re-read every tick — the AI can start or stop speaking (or get
-        // barged into) at any point during this same long-lived loop.
-        const aiSpeaking = isAiSpeakingRef.current;
-        const activeThreshold = aiSpeaking ? BARGE_IN_RMS_THRESHOLD : SPEECH_RMS_THRESHOLD;
-        const activeRequiredFrames = aiSpeaking ? BARGE_IN_REQUIRED_CONSECUTIVE_FRAMES : REQUIRED_CONSECUTIVE_SPEECH_FRAMES;
 
-        if (rms > activeThreshold) {
+        if (rms > SPEECH_RMS_THRESHOLD) {
           consecutiveSpeechFrames++;
-          if (!speechDetectedRef.current && consecutiveSpeechFrames >= activeRequiredFrames) {
+          if (!speechDetectedRef.current && consecutiveSpeechFrames >= REQUIRED_CONSECUTIVE_SPEECH_FRAMES) {
             speechDetectedRef.current = true;
             setIsUserSpeaking(true);
             // Caller is speaking again after a confirmed booking — they get
@@ -1397,13 +1288,6 @@ export default function AIVoiceChatbotEngine({
             if (autoEndCallTimeoutRef.current) {
               clearTimeout(autoEndCallTimeoutRef.current);
               autoEndCallTimeoutRef.current = null;
-            }
-            // The AI was mid-sentence when this sustained speech onset was
-            // confirmed — a genuine barge-in. Cut it off now; this same
-            // recording keeps running and captures the interruption exactly
-            // like any other utterance (see interruptAiSpeechForBargeIn).
-            if (aiSpeaking) {
-              interruptAiSpeechForBargeIn();
             }
           }
           if (silenceTimeoutRef.current) {
@@ -1416,7 +1300,7 @@ export default function AIVoiceChatbotEngine({
           consecutiveSpeechFrames = 0;
         }
 
-        if (!(rms > activeThreshold) && speechDetectedRef.current && !silenceTimeoutRef.current) {
+        if (!(rms > SPEECH_RMS_THRESHOLD) && speechDetectedRef.current && !silenceTimeoutRef.current) {
           silenceTimeoutRef.current = setTimeout(() => {
             pendingFinalizeRef.current = true;
             setIsUserSpeaking(false);
@@ -1461,7 +1345,7 @@ export default function AIVoiceChatbotEngine({
         }, 1000);
       }
     }
-  }, [processConversationTurn, stopLiveListening, interruptAiSpeechForBargeIn]);
+  }, [processConversationTurn, stopLiveListening]);
 
 
   const handleStartCall = async () => {
