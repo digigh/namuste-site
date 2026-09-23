@@ -59,7 +59,7 @@ const USE_CASES = [
 ];
 
 function LeadForm({ onSuccess }: { onSuccess: (name: string) => void }) {
-  const [formData, setFormData] = useState({ name: "", clinicName: "", phone: "", email: "", city: "" });
+  const [formData, setFormData] = useState({ name: "", clinicName: "", phone: "", email: "", city: "", customCity: "" });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [status, setStatus] = useState<"idle" | "submitting">("idle");
 
@@ -83,7 +83,11 @@ function LeadForm({ onSuccess }: { onSuccess: (name: string) => void }) {
     }
 
     if (!formData.email.trim() || !formData.email.includes("@")) err.email = "Please enter a valid email address";
-    if (!formData.city) err.city = "Please select your city";
+    if (!formData.city) {
+      err.city = "Please select your city";
+    } else if (formData.city === "Other" && !formData.customCity.trim()) {
+      err.city = "Please enter your city";
+    }
 
     setErrors(err);
     return Object.keys(err).length === 0;
@@ -100,7 +104,7 @@ function LeadForm({ onSuccess }: { onSuccess: (name: string) => void }) {
       clinic_name: formData.clinicName.trim(),
       phone: `+91 ${formData.phone.trim()}`,
       email: formData.email.trim(),
-      city: formData.city,
+      city: formData.city === "Other" ? formData.customCity.trim() : formData.city,
       submitted_at: new Date().toISOString(),
       source: "Namuste Dentist Reach Landing Page",
     };
@@ -196,13 +200,24 @@ function LeadForm({ onSuccess }: { onSuccess: (name: string) => void }) {
               value={formData.city}
               onChange={(e) => setFormData({ ...formData, city: e.target.value })}
               className="dr-input dr-select"
-              style={{ borderColor: errors.city ? "var(--coral)" : undefined, color: formData.city ? "var(--text-ivory)" : "var(--text-muted)" }}
+              style={{ borderColor: errors.city && !formData.customCity ? "var(--coral)" : undefined, color: formData.city ? "var(--text-ivory)" : "var(--text-muted)" }}
             >
               <option value="" disabled>Select city</option>
               {CITIES.map((c) => (
                 <option key={c} value={c}>{c}</option>
               ))}
             </select>
+            {formData.city === "Other" && (
+              <input
+                type="text"
+                value={formData.customCity}
+                onChange={(e) => setFormData({ ...formData, customCity: e.target.value })}
+                placeholder="Enter your city (and state)"
+                className="dr-input"
+                style={{ marginTop: "8px", borderColor: errors.city ? "var(--coral)" : undefined }}
+                autoFocus
+              />
+            )}
             {errors.city && <span className="dr-error">{errors.city}</span>}
           </div>
 
