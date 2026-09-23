@@ -24,8 +24,15 @@ export function getFlowSteps(industry: IndustryFlow): FlowStep[] {
     const en = CLINIC_TEMPLATES["en-IN"];
     return [
       { id: "name", field: "name", askEnglish: en.couldNotUnderstand, askHindi: CLINIC_TEMPLATES["hi-IN"].couldNotUnderstand },
-      { id: "mobile", field: "mobile", askEnglish: en.askMobile.replace("{name}", "there"), askHindi: CLINIC_TEMPLATES["hi-IN"].askMobile },
-      { id: "dob", field: "dob", askEnglish: en.askDob.replace("{name}", "there"), askHindi: CLINIC_TEMPLATES["hi-IN"].askDob },
+      // "{name}" is left unresolved here deliberately — this array is built
+      // without knowing the caller's actual name (getFlowSteps takes no
+      // field values), so substituting a hardcoded "there" here would bake
+      // in an impersonal reply for every caller. The one call site that
+      // surfaces these strings directly to a user (chat/route.ts's
+      // deterministic re-validation guard) substitutes the real resolved
+      // name at that point instead, where it's actually known.
+      { id: "mobile", field: "mobile", askEnglish: en.askMobile, askHindi: CLINIC_TEMPLATES["hi-IN"].askMobile },
+      { id: "dob", field: "dob", askEnglish: en.askDob, askHindi: CLINIC_TEMPLATES["hi-IN"].askDob },
       { id: "department", field: "department", askEnglish: en.askDepartment, askHindi: CLINIC_TEMPLATES["hi-IN"].askDepartment },
       { id: "slot", field: "slot", askEnglish: en.askSlot, askHindi: CLINIC_TEMPLATES["hi-IN"].askSlot },
     ];

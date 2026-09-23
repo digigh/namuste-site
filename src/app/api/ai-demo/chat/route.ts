@@ -447,27 +447,79 @@ CRITICAL: every field above is EMPTY ("") because these are field NAMES, not exa
         const resolvedMobile = mobileCandidates.find((c) => isValidIndianMobile(c || "")) || "";
         const resolvedDob = sanitizeLlmField(parsed.extracted?.age) || sanitizeLlmField(parsed.extracted?.dob) || extracted.dob || currentExtracted.dob || "";
 
-        // Never take the model's isComplete claim at face value — see
-        // isBookingGenuinelyComplete() above for why. A downgrade here means
-        // GPT said "confirmed" but the fields don't actually back that up
-        // (missing/invalid mobile, an unfilled field, or — for the clinic —
-        // a slot outside real operating/doctor hours).
-        if (finalIsComplete) {
+        // ── Deterministic re-validation — GPT's own step/isComplete claims
+        // are advisory only from here on. This is the one place that
+        // decides whether the caller is actually allowed to be told "let's
+        // confirm" or "you're booked". It closes two related gaps that used
+        // to let a caller be asked the same thing twice:
+        // (1) GPT could present a confirmation summary ("is that correct?")
+        //     before every required field (DOB most often, since it's the
+        //     easiest to lose track of mid-conversation) was genuinely
+        //     collected. The old code only re-checked completeness at the
+        //     isComplete:true stage — by then the caller had already said
+        //     "yes" to a summary that was never actually complete.
+        // (2) The correction message was generic ("repeat your name, mobile
+        //     and time") regardless of what was ACTUALLY missing. If the
+        //     real gap was DOB, the caller — who had already given name,
+        //     mobile and time — was asked to repeat exactly the fields they
+        //     already gave, while DOB itself was never explicitly asked for.
+        // Both are the same root cause: GPT's free-form step/reply was never
+        // cross-checked against the deterministic step machine (the same one
+        // that already decides what to ask next on every non-confirmation
+        // turn) before being trusted. Recomputing it here — from the fully
+        // resolved fields, not GPT's own claims — makes "which field is
+        // still missing" a single source of truth instead of two disagreeing
+        // ones, and makes this idempotent: a field once genuinely present in
+        // finalExtracted is never re-asked, and a field that's genuinely
+        // missing is always identified and asked for by name.
+        const resolvedFieldsForFsm = { name: resolvedName, mobile: resolvedMobile, dob: resolvedDob, department: resolvedDept, slot: resolvedSlot };
+        const { step: recomputedStep, isReadyToConfirm: recomputedReady } = getCurrentStep(industry, resolvedFieldsForFsm);
+        // .includes() rather than an exact match — GPT occasionally echoes
+        // the JSON schema's own step enum (all seven options, pipe-
+        // separated) back as the "step" value instead of picking one,
+        // verified directly against the live API. An exact-match check
+        // would silently treat that malformed output as "not confirming"
+        // and let a premature confirmation through ungated; a substring
+        // check still catches it since "confirmation_summary" is one of the
+        // options in that string. finalIsComplete remains the primary,
+        // fully-reliable signal (a real boolean, not a freeform string) —
+        // this only widens the earlier, best-effort catch.
+        const gptAttemptingToWrapUp = finalIsComplete || (typeof finalStep === "string" && finalStep.includes("confirmation"));
+
+        if (gptAttemptingToWrapUp && !recomputedReady && recomputedStep) {
+          // A required field is genuinely still missing — never let a
+          // confirmation (summary or final) go out for an incomplete
+          // booking. Ask for exactly the missing field, by name, instead of
+          // a generic "repeat everything" message.
+          finalIsComplete = false;
+          finalStep = recomputedStep.id;
+          responseSource = "openai-gpt4o-mini-guarded";
+          toneHint = "neutral";
+          // The ask templates carry a literal "{name}" placeholder (see
+          // clinicTemplates.ts) that nothing else substitutes for these
+          // non-English strings when surfaced directly like this — without
+          // this, a caller would see the literal text "{name}" in the reply.
+          // resolvedName is expected to already be known by this point for
+          // every step after "name" itself; "there" is only a defensive
+          // fallback for the (should-be-unreachable) case it somehow isn't.
+          const askTemplate = isHindi ? recomputedStep.askHindi : recomputedStep.askEnglish;
+          finalReply = askTemplate.replace("{name}", resolvedName || "there");
+          finalSpokenText = "";
+        } else if (finalIsComplete) {
+          // Every field is genuinely present per the deterministic step
+          // machine — the only thing left to verify is business rules the
+          // simple presence check above can't see, e.g. the requested slot
+          // actually falling within real clinic/doctor operating hours.
           const nowIST = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
-          const genuinelyComplete = isBookingGenuinelyComplete(
-            industry,
-            industryId,
-            { name: resolvedName, mobile: resolvedMobile, dob: resolvedDob, department: resolvedDept, slot: resolvedSlot },
-            nowIST
-          );
+          const genuinelyComplete = isBookingGenuinelyComplete(industry, industryId, resolvedFieldsForFsm, nowIST);
           if (!genuinelyComplete) {
             finalIsComplete = false;
-            finalStep = "confirmation_summary";
+            finalStep = "slot";
             responseSource = "openai-gpt4o-mini-guarded";
             toneHint = "neutral";
             finalReply = isHindi
-              ? "Maaf kijiye, appointment confirm karne se pehle mujhe aapki details ek baar phir se verify karni hongi — kripya apna naam, mobile number aur pasandeeda samay dobara bataiye."
-              : "Before I can confirm this appointment, I need to verify a few details again — could you please confirm your name, mobile number, and preferred time once more?";
+              ? `Maaf kijiye, ${resolvedSlot} hamare operating hours ke bahar hai. Kripya koi doosra din ya samay batayein.`
+              : `Sorry, ${resolvedSlot} falls outside our operating hours. Could you share a different day or time?`;
             finalSpokenText = "";
           }
         }
