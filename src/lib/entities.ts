@@ -233,15 +233,33 @@ export function extractEntities(text: string, current: Record<string, string> = 
   const nowISTForSlot = new Date(new Date().toLocaleString("en-US", { timeZone: "Asia/Kolkata" }));
   const combinedForSlotParsing = current.pendingDate ? `${current.pendingDate} ${text}` : text;
   const parsedSlot = parseSlotWithChrono(combinedForSlotParsing, nowISTForSlot);
-  if (parsedSlot && parsedSlot.hasTime) {
-    // Store the RAW combined text, not a pre-resolved string — resolveAbsoluteSlotString
-    // (called downstream once the slot passes hours validation) does the
-    // actual resolution to an absolute date; this only decides "yes, a real
-    // date+time was given this turn" and hands the raw text forward.
-    const combined = combinedForSlotParsing.trim();
-    result.slotRequested = combined;
-    result.confirmedSlot = combined;
-    result.pendingDate = ""; // consumed (or superseded by an explicit date+time)
+  // Require BOTH a date and a time — a bare time mention alone ("2 baje")
+  // used to be enough, which is exactly what a caller pushing back on a
+  // rejected slot naturally says ("you said the doctor's available till 2,
+  // why can't I get 1?" mentions "2" as a real, chrono-parseable hour with
+  // no date attached). A genuine new slot always implies both; pendingDate
+  // (set when a caller gives a date with no time yet, see clinicEngine.ts)
+  // is prepended above specifically so a later bare time still combines
+  // with a real date instead of being rejected here.
+  if (parsedSlot && parsedSlot.hasTime && parsedSlot.hasDate) {
+    // Store ONLY the specific date/time phrase chrono actually matched, not
+    // the whole raw message. This used to store combinedForSlotParsing (the
+    // entire user turn) on the theory that resolveAbsoluteSlotString would
+    // re-parse it downstream anyway — but chrono confirming "this message
+    // CONTAINS a time" doesn't mean the message IS a slot. A caller pushing
+    // back ("you said the doctor's available till 2, why can't I get 1?")
+    // contains real time words too, and the whole sentence was getting
+    // stored as the "slot", then echoed back verbatim in confirmation
+    // messages — verified directly, this is not hypothetical. matchedText
+    // is chrono's own matched substring — normally the entire phrase for a
+    // genuine short slot answer like "kal subah 10 baje", but never more
+    // than the actual date/time expression for anything longer.
+    const combined = parsedSlot.matchedText.trim();
+    if (combined && combined.length <= 60) {
+      result.slotRequested = combined;
+      result.confirmedSlot = combined;
+      result.pendingDate = ""; // consumed (or superseded by an explicit date+time)
+    }
   }
 
   return result;

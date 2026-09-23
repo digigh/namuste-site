@@ -50,6 +50,7 @@ export interface ParsedSlot {
   date: Date;
   hasDate: boolean; // a real day (weekday, relative, or explicit) was actually specified
   hasTime: boolean; // a real hour was actually specified
+  matchedText: string; // the specific date/time phrase chrono matched — NOT the whole input
 }
 
 // Parses a slot phrase into a real Date via chrono-node, plus flags for
@@ -74,6 +75,25 @@ export function parseSlotWithChrono(rawText: string, nowIST: Date): ParsedSlot |
   const matchedText = result.text || "";
   const hasTime = result.start.isCertain("hour") && /\d|\bnoon\b|\bmidnight\b/i.test(matchedText);
 
+  // A bare hour with no AM/PM and no day-period word ("1 baje" alone, vs.
+  // "shaam 6 baje" which normalizeForChrono already turns into "evening 6
+  // o'clock" — chrono resolves THAT correctly on its own) defaults to the
+  // AM reading, verified directly: "Wednesday 1 o'clock" resolves to 1:00
+  // AM. No clinic department opens before 7 AM (see clinicTemplates.ts),
+  // so a caller who names an hour clinics only operate at in the afternoon
+  // — "1 baje", "2 baje" — almost never means 1/2 AM. Reinterpret hours
+  // 1-6 as PM specifically because that range is NEVER a valid opening
+  // hour for any department, so this can't misfire on a genuine early
+  // booking; 7/8 AM are left alone since the fasting-blood-test desk
+  // opens at 7 AM and a caller asking for that really can mean AM.
+  if (hasTime && !result.start.isCertain("meridiem")) {
+    const bareHour = date.getHours();
+    if (bareHour >= 1 && bareHour <= 6) {
+      date = new Date(date.getTime());
+      date.setHours(bareHour + 12);
+    }
+  }
+
   // chrono's English parser doesn't recognize a bare ordinal day-of-month
   // with no month name ("the 29th", "on the 5th") as a date component at
   // all — it silently falls back to "today" for the date part. Cover that
@@ -97,7 +117,7 @@ export function parseSlotWithChrono(rawText: string, nowIST: Date): ParsedSlot |
     }
   }
 
-  return { date, hasDate, hasTime };
+  return { date, hasDate, hasTime, matchedText };
 }
 
 // ─── Deterministic day/hour resolution for slot validation ──────────────────
