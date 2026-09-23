@@ -190,6 +190,34 @@ describe("conversationGraph — post-confirmation 'thank you'", () => {
     expect(result.finalReply).not.toContain("SUN-12345");
   });
 
+  // Confirmed live against production that a narrower first version of this
+  // check missed every one of these — real users don't just say "thank you".
+  it.each([
+    "thanks a lot",
+    "thank u",
+    "ok thank you",
+    "great, thank you",
+    "Thanks!",
+    "thank you so much",
+    "thankyou",
+  ])("also ends the call warmly for %j", async (userMessage) => {
+    const result = await runConversationTurn({
+      industryId: "doctors-clinics",
+      messages: [],
+      userMessage,
+      currentExtracted: {
+        ...CLINIC_EXTRACTED_BASE,
+        dob: "28",
+        slot: "Thursday, 25 September 2026, 11:00 am",
+        confirmed: true,
+        appointment_id: "SUN-12345",
+      },
+    });
+
+    expect(result.finalCallEnded).toBe(true);
+    expect(result.finalReply).not.toContain("SUN-12345");
+  });
+
   it("does not end the call for a compound message that merely starts with thanks", async () => {
     // No LLM mock: with no OPENAI_API_KEY stubbed as empty here (default from
     // beforeEach), the fast path/graph should simply not short-circuit via

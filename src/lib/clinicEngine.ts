@@ -35,6 +35,29 @@ export interface ChatTurnResult {
   finalCallEnded: boolean;
 }
 
+// Recognizes a message that is PURELY a gratitude/closing acknowledgment —
+// optionally wrapped in a leading filler word ("ok", "great", ...) and/or a
+// trailing intensifier ("so much", "a lot", ...) — with nothing else in it.
+// A single regex covering every real phrasing ("thanks a lot", "thank u",
+// "ok thank you", "great, thank you" were all confirmed live to slip past an
+// earlier, narrower version of this check) got unreadable fast, so this
+// strips the optional wrapping pieces first and checks what's left against a
+// small exact-match set instead. Any message with REAL additional content
+// ("thanks, my name is Ankush") fails to reduce to a bare token and
+// correctly falls through unmatched.
+function isPureGratitudeMessage(userMessage: string): boolean {
+  let s = userMessage.trim().toLowerCase();
+  s = s.replace(/^[\s,.!]+|[\s,.!]+$/g, "");
+  s = s.replace(/^(ok(ay)?|alright|great|perfect|awesome|cool|sure)[\s,.!]*/, "");
+  s = s.replace(/[\s,.!]*(so\s+so\s+much|so\s+much|very\s+much|a\s+lot|a\s+ton)\s*$/, "");
+  s = s.replace(/^[\s,.!]+|[\s,.!]+$/g, "");
+  const GRATITUDE_TOKENS = new Set([
+    "thanks", "thank you", "thank u", "thankyou", "thnx", "ty",
+    "shukriya", "dhanyavad", "dhanyawad", "dhanyabad",
+  ]);
+  return GRATITUDE_TOKENS.has(s);
+}
+
 // ── Farewell Interceptor ─────────────────────────────────────────────────────
 // Caller signals they're done (bye/goodbye/hang up/end call) at ANY point in
 // the conversation — not just after a completed booking. Deliberately narrow
@@ -62,8 +85,7 @@ export function checkFarewell(params: {
   const { userMessage, industryId, detectedLang, isHindi, currentExtracted } = params;
 
   const isFarewell = /\b(bye+|good\s*bye|hang\s*up|end\s*(the\s*)?call|alvida)\b/i.test(userMessage);
-  const isPureGratitude = /^\s*(thanks?(\s+you)?|thank\s*you|thnx|ty|shukriya|dhanya\s*v?ā?a?d)(\s+(so|very)\s+much)?\s*[.!,]*\s*$/i.test(userMessage);
-  const isConfirmedThanks = !isFarewell && isPureGratitude && !!currentExtracted?.confirmed;
+  const isConfirmedThanks = !isFarewell && isPureGratitudeMessage(userMessage) && !!currentExtracted?.confirmed;
   if (!isFarewell && !isConfirmedThanks) return null;
 
   const finalReply =
