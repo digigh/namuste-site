@@ -382,37 +382,54 @@ CRITICAL: every field above is EMPTY ("") because these are field NAMES, not exa
     }
 
     let parsed: Record<string, any>;
-    // Tracks whether Groq answered this turn — surfaced in responseSource so
-    // a real demo session's degradation is visible without digging through
-    // function logs for every turn.
+    // Tracks which provider's result was actually used this turn — surfaced
+    // in responseSource so a race outcome or fallback is visible without
+    // digging through function logs.
     let usedGroqFastPath = false;
-    if (onEarlyReplyText) {
+
+    const groqKey = process.env.GROQ_API_KEY?.trim() || "";
+    const startOpenAiAttempt = () =>
+      onEarlyReplyText
+        ? callOpenAIStreaming(systemPrompt, openaiMessages, openaiKey, (replyText) => {
+            onEarlyReplyText(replyText, detectedLang);
+          })
+        : callOpenAI(systemPrompt, openaiMessages, openaiKey);
+
+    if (groqKey) {
+      // Measured live against production: OpenAI's own call consistently
+      // takes 2.2-3.3s by itself — the dominant cost of nearly every turn —
+      // while Groq typically answers in well under a second. Racing both
+      // and taking whichever settles FIRST with a valid reply (each
+      // provider's own call already validates its output's JSON shape
+      // internally and throws on anything malformed, so a fulfilled promise
+      // here is never a half-formed result) cuts perceived latency on most
+      // turns. The tradeoff, by explicit choice: Groq's weaker model can now
+      // "win" a turn OpenAI would eventually have handled slightly better,
+      // not just stand in when OpenAI fails outright as before.
+      const openaiAttempt = startOpenAiAttempt().then((p) => ({ parsed: p, viaGroq: false }));
+      const groqAttempt = callGroq(systemPrompt, openaiMessages, groqKey).then((p) => ({ parsed: p, viaGroq: true }));
       try {
-        parsed = await callOpenAIStreaming(systemPrompt, openaiMessages, openaiKey, (replyText) => {
-          onEarlyReplyText(replyText, detectedLang);
-        });
-      } catch (streamErr: any) {
-        console.warn("[OpenAI streaming warn — falling back]:", streamErr?.message || streamErr);
-        // A live voice call can't afford to pay for a second full OpenAI
-        // retry chain on top of the 8s the streaming attempt just spent —
-        // try Groq directly first (a single ~6s attempt, a different
-        // provider), only falling back to the full OpenAI retry chain if
-        // Groq isn't configured or also fails.
-        const groqKey = process.env.GROQ_API_KEY?.trim() || "";
-        if (groqKey) {
-          try {
-            parsed = await callGroq(systemPrompt, openaiMessages, groqKey);
-            usedGroqFastPath = true;
-          } catch (groqErr: any) {
-            console.warn("[Groq fallback warn — falling back to OpenAI retry]:", groqErr?.message || groqErr);
-            parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
-          }
-        } else {
-          parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
-        }
+        const winner = await Promise.any([openaiAttempt, groqAttempt]);
+        parsed = winner.parsed;
+        usedGroqFastPath = winner.viaGroq;
+      } catch {
+        // Both providers failed outright — nothing left to race. Give
+        // OpenAI's own internal retry chain (see callOpenAI) one more shot,
+        // exactly as the pre-race fallback path did.
+        console.warn("[LLM race warn — both providers failed, retrying OpenAI directly]");
+        parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
       }
     } else {
-      parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
+      // No Groq key configured — nothing to race against; unchanged from
+      // before, including OpenAI's own internal Groq-on-failure fallback
+      // (a no-op here since groqKey is empty).
+      try {
+        parsed = await startOpenAiAttempt();
+      } catch (streamErr: any) {
+        if (!onEarlyReplyText) throw streamErr;
+        console.warn("[OpenAI streaming warn — falling back]:", streamErr?.message || streamErr);
+        parsed = await callOpenAI(systemPrompt, openaiMessages, openaiKey);
+      }
     }
 
     const finalReply = parsed.reply || "";
@@ -423,7 +440,7 @@ CRITICAL: every field above is EMPTY ("") because these are field NAMES, not exa
     const finalStep = parsed.step || "intake_name_mobile";
     const finalIsComplete = parsed.isComplete || false;
     const finalIsOffTopic = parsed.isOffTopic || false;
-    const responseSource = usedGroqFastPath ? "groq-fallback" : "openai-gpt4o-mini";
+    const responseSource = usedGroqFastPath ? "groq-race-win" : "openai-gpt4o-mini";
     const toneHint: GraphState["toneHint"] = (finalIsComplete || finalStep === "confirmation_complete") ? "confirmed" : "neutral";
 
     // Only carry forward fields that are ACTUALLY provided — every

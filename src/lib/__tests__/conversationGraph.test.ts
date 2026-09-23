@@ -107,6 +107,43 @@ describe("conversationGraph — out-of-hours slot", () => {
   });
 });
 
+describe("conversationGraph — Groq/OpenAI race", () => {
+  it("still produces a correct turn when both providers are configured and racing", async () => {
+    // Both GROQ and OPENAI keys set — exercises the Promise.any race path in
+    // callLlmNode instead of the single-provider path every other test here
+    // uses. mockOpenAIOnce's stub matches Groq's OpenAI-compatible response
+    // shape too, so whichever provider's promise happens to settle first in
+    // this mocked (near-instant) environment, the turn must still resolve
+    // correctly — the assertions here don't depend on which one "wins".
+    vi.stubEnv("GROQ_API_KEY", "test-groq-key");
+    mockOpenAIOnce({
+      reply: "Excellent! Your appointment is confirmed.",
+      step: "confirmation_complete",
+      isComplete: true,
+      isOffTopic: false,
+      extracted: {
+        patient_name: "Ankush",
+        mobile_number: "9876543210",
+        age: "28",
+        department: "Orthopedics",
+        doctor: "Dr. Rajiv Verma",
+        preferred_date: "Thursday, 25 September 2026",
+        preferred_time: "11:00 AM",
+      },
+    });
+
+    const result = await runConversationTurn({
+      industryId: "doctors-clinics",
+      messages: [{ speaker: "user", text: "yes that's correct" }],
+      userMessage: "yes that's correct",
+      currentExtracted: { ...CLINIC_EXTRACTED_BASE, dob: "28" },
+    });
+
+    expect(result.finalIsComplete).toBe(true);
+    expect(result.finalExtracted.appointment_id).toMatch(/^SUN-\d+$/);
+  });
+});
+
 describe("conversationGraph — non-clinic industry, no DOB requirement", () => {
   it("does not misfire any DOB-related check for an industry where requiresDob is false", async () => {
     mockOpenAIOnce({
