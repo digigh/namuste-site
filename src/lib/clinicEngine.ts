@@ -47,13 +47,21 @@ export interface ChatTurnResult {
 // correctly falls through unmatched.
 function isPureGratitudeMessage(userMessage: string): boolean {
   let s = userMessage.trim().toLowerCase();
-  s = s.replace(/^[\s,.!]+|[\s,.!]+$/g, "");
-  s = s.replace(/^(ok(ay)?|alright|great|perfect|awesome|cool|sure)[\s,.!]*/, "");
-  s = s.replace(/[\s,.!]*(so\s+so\s+much|so\s+much|very\s+much|a\s+lot|a\s+ton)\s*$/, "");
-  s = s.replace(/^[\s,.!]+|[\s,.!]+$/g, "");
+  s = s.replace(/^[\s,.!।]+|[\s,.!।]+$/g, "");
+  s = s.replace(/^(ok(ay)?|alright|great|perfect|awesome|cool|sure|theek\s*hai|ठीक\s*है)[\s,.!।]*/, "");
+  s = s.replace(/[\s,.!।]*(so\s+so\s+much|so\s+much|very\s+much|a\s+lot|a\s+ton|बहुत\s*बहुत|बहुत\s*ज़्यादा|बहुत\s*ज्यादा)\s*$/, "");
+  s = s.replace(/^[\s,.!।]+|[\s,.!।]+$/g, "");
+  // STT transcribes spoken Hindi gratitude phrases in Devanagari script, not
+  // romanized text — a Hindi caller saying "thank you"/"dhanyavad" comes back
+  // as "थैंक यू"/"धन्यवाद", which the Latin-only token set below never
+  // matched, so the farewell interceptor silently missed every Hindi
+  // "thank you" and kept repeating the booking confirmation instead of
+  // ending the call (reported live on a Hindi call).
   const GRATITUDE_TOKENS = new Set([
     "thanks", "thank you", "thank u", "thankyou", "thnx", "ty",
     "shukriya", "dhanyavad", "dhanyawad", "dhanyabad",
+    "थैंक यू", "थैंक्यू", "थैंक्स", "थैंक", "थैंकयू",
+    "धन्यवाद", "शुक्रिया", "शुक्रिया जी", "धन्यवाद जी",
   ]);
   return GRATITUDE_TOKENS.has(s);
 }
