@@ -41,3 +41,31 @@ describe("checkFarewell — Hindi (Devanagari) gratitude after confirmation", ()
     expect(result).toBeNull();
   });
 });
+
+// The clinic flow supports 10 languages (CLINIC_SUPPORTED_LANGS) — the
+// Devanagari fix above only covered Hindi, so verify every other supported
+// language's native "thank you" is recognized too, or the exact same bug
+// just resurfaces call-by-call as each language gets tested live.
+describe("checkFarewell — gratitude in every clinic-supported language", () => {
+  const confirmed = { confirmed: true };
+
+  it.each([
+    ["ta", "நன்றி"],
+    ["te", "ధన్యవాదాలు"],
+    ["bn", "ধন্যবাদ"],
+    ["ml", "നന്ദി"],
+    ["kn", "ಧನ್ಯವಾದಗಳು"],
+    ["pa", "ਧੰਨਵਾਦ"],
+    ["gu", "આભાર"],
+    ["or", "ଧନ୍ୟବାଦ"],
+  ])("recognizes %s gratitude phrase %s once confirmed", (detectedLang, userMessage) => {
+    const result = checkFarewell({
+      userMessage,
+      industryId: "doctors-clinics",
+      detectedLang,
+      isHindi: false,
+      currentExtracted: confirmed,
+    });
+    expect(result).not.toBeNull();
+  });
+});

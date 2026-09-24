@@ -51,17 +51,37 @@ function isPureGratitudeMessage(userMessage: string): boolean {
   s = s.replace(/^(ok(ay)?|alright|great|perfect|awesome|cool|sure|theek\s*hai|ठीक\s*है)[\s,.!।]*/, "");
   s = s.replace(/[\s,.!।]*(so\s+so\s+much|so\s+much|very\s+much|a\s+lot|a\s+ton|बहुत\s*बहुत|बहुत\s*ज़्यादा|बहुत\s*ज्यादा)\s*$/, "");
   s = s.replace(/^[\s,.!।]+|[\s,.!।]+$/g, "");
-  // STT transcribes spoken Hindi gratitude phrases in Devanagari script, not
+  // STT transcribes spoken gratitude phrases in the caller's own script, not
   // romanized text — a Hindi caller saying "thank you"/"dhanyavad" comes back
-  // as "थैंक यू"/"धन्यवाद", which the Latin-only token set below never
-  // matched, so the farewell interceptor silently missed every Hindi
-  // "thank you" and kept repeating the booking confirmation instead of
-  // ending the call (reported live on a Hindi call).
+  // as "थैंक यू"/"धन्यवाद", which a Latin-only token set never matches, so
+  // the farewell interceptor silently missed every non-English "thank you"
+  // and kept repeating the booking confirmation instead of ending the call
+  // (reported live on a Hindi call). The clinic flow supports 10 languages
+  // (CLINIC_SUPPORTED_LANGS) — every one needs its native gratitude word(s)
+  // here, not just Hindi, or the same bug just resurfaces per-language.
   const GRATITUDE_TOKENS = new Set([
+    // English
     "thanks", "thank you", "thank u", "thankyou", "thnx", "ty",
+    // Hindi (romanized + Devanagari)
     "shukriya", "dhanyavad", "dhanyawad", "dhanyabad",
     "थैंक यू", "थैंक्यू", "थैंक्स", "थैंक", "थैंकयू",
     "धन्यवाद", "शुक्रिया", "शुक्रिया जी", "धन्यवाद जी",
+    // Tamil
+    "நன்றி", "தேங்க்ஸ்", "நன்றி நன்றி",
+    // Telugu
+    "ధన్యవాదాలు", "థాంక్స్", "ధన్యవాదములు",
+    // Bengali
+    "ধন্যবাদ", "থ্যাংক ইউ", "থ্যাঙ্কস",
+    // Malayalam
+    "നന്ദി", "താങ്ക്സ്",
+    // Kannada
+    "ಧನ್ಯವಾದಗಳು", "ಥ್ಯಾಂಕ್ಸ್", "ಧನ್ಯವಾದ",
+    // Punjabi (Gurmukhi)
+    "ਧੰਨਵਾਦ", "ਥੈਂਕ ਯੂ", "ਸ਼ੁਕਰੀਆ",
+    // Gujarati
+    "આભાર", "થેન્ક્સ",
+    // Odia
+    "ଧନ୍ୟବାଦ", "ଥ୍ୟାଙ୍କ ୟୁ",
   ]);
   return GRATITUDE_TOKENS.has(s);
 }
