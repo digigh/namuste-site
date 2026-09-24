@@ -15,12 +15,25 @@ export function blobToBase64(blob: Blob): Promise<string> {
 // Reads a newline-delimited JSON response body (used by the streaming chat
 // reply path — /api/ai-demo/chat responds this way only for doctors-clinics
 // voice/audio turns) and invokes onLine for each parsed object, in arrival
-// order. A malformed line is skipped rather than aborting the whole stream.
+// order. A malformed line is skipped rather than aborting the whole stream,
+// but an error thrown by onLine itself is NOT swallowed here — it propagates
+// to the caller so a bug in turn handling surfaces as a visible failure
+// instead of silent dead air (the caller already has real recovery logic
+// for that: see the outer try/catch in processConversationTurn).
 export async function readNdjsonLines(res: Response, onLine: (obj: any) => void): Promise<void> {
   const reader = res.body?.getReader();
   if (!reader) return;
   const decoder = new TextDecoder();
   let buffer = "";
+
+  const parseLine = (raw: string): unknown | undefined => {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return undefined; // malformed line: skip
+    }
+  };
+
   for (;;) {
     const { done, value } = await reader.read();
     if (done) break;
@@ -30,12 +43,14 @@ export async function readNdjsonLines(res: Response, onLine: (obj: any) => void)
       const line = buffer.slice(0, newlineIndex).trim();
       buffer = buffer.slice(newlineIndex + 1);
       if (!line) continue;
-      try { onLine(JSON.parse(line)); } catch { /* skip malformed line */ }
+      const parsed = parseLine(line);
+      if (parsed !== undefined) onLine(parsed);
     }
   }
   const rest = buffer.trim();
   if (rest) {
-    try { onLine(JSON.parse(rest)); } catch { /* skip malformed trailing line */ }
+    const parsed = parseLine(rest);
+    if (parsed !== undefined) onLine(parsed);
   }
 }
 
