@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { motion } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
-import AIVoiceChatbotEngine from "@/components/AIVoiceChatbotEngine";
+import ClinicLiveAgent from "@/components/ClinicLiveAgent";
 import {
   PhoneCall,
   PhoneMissed,
@@ -476,7 +476,7 @@ export default function DentistReachClient() {
               </p>
             </div>
 
-            <AIVoiceChatbotEngine lockedIndustryId="doctors-clinics" hideIndustrySelector={true} />
+            <ClinicLiveAgent />
           </div>
         </section>
       )}

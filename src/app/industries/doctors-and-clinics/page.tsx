@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
-import AIVoiceChatbotEngine from "@/components/AIVoiceChatbotEngine";
+import ClinicLiveAgent from "@/components/ClinicLiveAgent";
 import { Card, CardContent } from "@/components/ui/card";
 import {
   PhoneCall,
@@ -145,7 +145,7 @@ export default function DoctorsAndClinicsPage() {
               </p>
             </div>
 
-            <AIVoiceChatbotEngine lockedIndustryId="doctors-clinics" hideIndustrySelector={true} />
+            <ClinicLiveAgent />
           </div>
         </section>
 

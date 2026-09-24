@@ -3,7 +3,7 @@
 import React from "react";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import AIVoiceChatbotEngine from "./AIVoiceChatbotEngine";
+import ClinicLiveAgent from "./ClinicLiveAgent";
 
 export default function HP07Multilingual() {
   return (
@@ -59,16 +59,16 @@ export default function HP07Multilingual() {
               margin: 0,
             }}
           >
-            Namuste handles accents, context and code-switching across 8 business verticals — collecting customer details, answering domain questions, and dispatching live webhooks.
+            Namuste handles accents, context and code-switching across 10 Indian languages. Try it live as a clinic receptionist: real doctor availability, real bookings, and an instant WhatsApp confirmation.
           </p>
         </div>
 
-        {/* Multi-Industry AI Voice Calling & Chatbot Engine — framed as a physical
+        {/* Live clinic receptionist (LiveKit agent) — framed as a physical
             kiosk/tablet sitting on the page, not another bordered dashboard card */}
         <div className="hp07-device-frame" style={{ margin: "32px 0 44px" }}>
           <div className="hp07-device-notch" />
           <div className="hp07-device-screen">
-            <AIVoiceChatbotEngine />
+            <ClinicLiveAgent />
           </div>
           <div className="hp07-device-home" />
         </div>
