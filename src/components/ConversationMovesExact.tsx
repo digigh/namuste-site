@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import { motion } from "framer-motion";
-import { ArrowRight, Check, MessageSquare, User, Sparkles } from "lucide-react";
+import { ArrowRight, Check, MessageSquare, User } from "lucide-react";
 
 export default function ConversationMovesExact() {
   const [hoveredNode, setHoveredNode] = useState<number | null>(null);

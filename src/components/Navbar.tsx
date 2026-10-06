@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { motion, AnimatePresence } from "framer-motion";
 import { ArrowUpRight, X } from "lucide-react";
 import ThemeToggle from "./ThemeToggle";
+import { openLeadModal } from "@/lib/openLeadModal";
 
 const MENU: { label: string; href: string; children?: { label: string; href: string }[] }[] = [
   {
@@ -72,13 +73,35 @@ export default function Navbar() {
           left: 0,
           right: 0,
           zIndex: 200,
-          padding: "18px 0",
+          padding: "0 0 14px 0",
           transition: "background 0.3s ease, border-color 0.3s ease",
-          background: scrolled || menuOpen ? "var(--nav-glass)" : "transparent",
-          backdropFilter: scrolled || menuOpen ? "blur(20px)" : "none",
+          background: scrolled || menuOpen ? "var(--nav-glass)" : "var(--glass-bg)",
+          backdropFilter: "blur(20px)",
           borderBottom: scrolled ? "1px solid var(--border)" : "1px solid transparent",
         }}
       >
+        {/* Top Locked Announcement Bar */}
+        <div className="nav-top-banner">
+          <div className="nav-top-banner-inner">
+            <div className="nav-top-banner-left">
+              <span className="nav-top-pulse-dot" />
+              <span className="nav-top-tag">DOCTORS &amp; CLINIC PLATFORM</span>
+              <span className="nav-top-divider">·</span>
+              <span className="nav-top-msg">
+                Special Launch: <strong>7 Days Free Trial</strong> for Clinics with 100 free voice minutes
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={openLeadModal}
+              className="nav-top-link"
+            >
+              <span>Claim Free Trial</span>
+              <ArrowUpRight size={12} />
+            </button>
+          </div>
+        </div>
+
         <div
           style={{
             maxWidth: "1360px",
@@ -126,6 +149,7 @@ export default function Navbar() {
                 fontSize: "13px",
                 fontWeight: 700,
                 textDecoration: "none",
+                transition: "all 0.2s ease",
               }}
             >
               Book a demo
@@ -298,6 +322,115 @@ export default function Navbar() {
         .nav-timer-dot { animation: navTimerPulse 1.6s ease-in-out infinite; }
         .menu-item-link { transition: color 0.2s ease; }
         .menu-item-link:hover { color: var(--green) !important; }
+
+        .nav-top-banner {
+          background: var(--surface2);
+          border-bottom: 1px solid var(--border-green);
+          padding: 6px 20px;
+          margin-bottom: 10px;
+          transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .nav-top-banner-inner {
+          max-width: 1360px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 12px;
+        }
+        .nav-top-banner-left {
+          display: flex;
+          align-items: center;
+          gap: 8px;
+          font-size: 12px;
+        }
+        .nav-top-pulse-dot {
+          width: 7px;
+          height: 7px;
+          border-radius: 50%;
+          background: var(--green);
+          box-shadow: 0 0 8px var(--green);
+          animation: navDotGlow 1.8s ease-in-out infinite;
+          flex-shrink: 0;
+        }
+        @keyframes navDotGlow {
+          0%, 100% { opacity: 0.5; transform: scale(0.9); }
+          50% { opacity: 1; transform: scale(1.15); box-shadow: 0 0 12px var(--green); }
+        }
+        .nav-top-tag {
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 10px;
+          font-weight: 700;
+          letter-spacing: 0.08em;
+          color: var(--green);
+          background: var(--green-glow);
+          padding: 2px 7px;
+          border-radius: 4px;
+          border: 1px solid var(--border-green);
+          white-space: nowrap;
+        }
+        .nav-top-divider {
+          color: var(--text-dim);
+        }
+        .nav-top-msg {
+          color: var(--text-body);
+        }
+        .nav-top-msg strong {
+          color: var(--text-ivory);
+          font-weight: 700;
+        }
+        .nav-top-link {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 11.5px;
+          font-weight: 800;
+          color: #05180D !important;
+          text-decoration: none;
+          padding: 4px 12px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #00E575 0%, #00B853 45%, #9BEA16 100%);
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
+          box-shadow: 0 0 16px rgba(0, 229, 117, 0.45), 0 2px 8px rgba(0, 0, 0, 0.2);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          white-space: nowrap;
+          flex-shrink: 0;
+          overflow: hidden;
+        }
+        .nav-top-link::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -120%;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+          transform: skewX(-20deg);
+          animation: navTopShine 3s infinite ease-in-out;
+        }
+        .nav-top-link:hover {
+          transform: translateY(-1.5px) scale(1.03);
+          box-shadow: 0 0 24px rgba(0, 229, 117, 0.65), 0 4px 12px rgba(0, 0, 0, 0.3);
+        }
+        @keyframes navTopShine {
+          0% { left: -120%; }
+          35%, 100% { left: 160%; }
+        }
+
+        @media (max-width: 768px) {
+          .nav-top-banner {
+            padding: 6px 12px;
+          }
+          .nav-top-tag, .nav-top-divider {
+            display: none;
+          }
+          .nav-top-msg {
+            font-size: 11px;
+          }
+        }
         @media (max-width: 720px) {
           .nav-timer { display: none !important; }
           .nav-cta { display: none !important; }

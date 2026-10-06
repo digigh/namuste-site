@@ -36,6 +36,37 @@ const TIMELINE = [
 ];
 
 export default function ClosingCallToAction() {
+  const scrollToVoiceModule = (e: React.MouseEvent) => {
+    e.preventDefault();
+    const target = document.getElementById("live-agent-module") || document.getElementById("voice-engine-demo");
+    if (target) {
+      const rect = target.getBoundingClientRect();
+      const currentY = window.pageYOffset || document.documentElement.scrollTop;
+      const targetY = rect.top + currentY - 80;
+      const startY = currentY;
+      const diff = targetY - startY;
+      const duration = 750;
+      let startTime: number | null = null;
+      const easeInOutCubic = (t: number) =>
+        t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+
+      const step = (now: number) => {
+        if (!startTime) startTime = now;
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / duration, 1);
+        window.scrollTo(0, startY + diff * easeInOutCubic(progress));
+
+        if (progress < 1) {
+          requestAnimationFrame(step);
+        } else {
+          target.classList.add("hp07-module-spotlight");
+          setTimeout(() => target.classList.remove("hp07-module-spotlight"), 2000);
+        }
+      };
+      requestAnimationFrame(step);
+    }
+  };
+
   return (
     <section
       id="closing-cta"
@@ -59,11 +90,19 @@ export default function ClosingCallToAction() {
             </p>
             <div className="cta-buttons">
               <Link href="/contact" className="cta-btn-primary">
-                Book a Live Consultation <ArrowRight size={16} />
+                <span>Book a Live Consultation</span>
+                <ArrowRight size={16} className="cta-btn-arrow" />
               </Link>
-              <Link href="#hp-03" className="cta-btn-secondary">
-                Explore Demo
-              </Link>
+              <button
+                type="button"
+                onClick={scrollToVoiceModule}
+                className="cta-btn-secondary"
+                title="Jump directly to the interactive AI voice calling module"
+              >
+                <span className="cta-btn-dot" />
+                <span>Explore Demo</span>
+                <ArrowRight size={14} className="cta-btn-arrow" />
+              </button>
             </div>
             <div className="cta-features">
               {FEATURES.map((f, i) => {
@@ -182,22 +221,77 @@ export default function ClosingCallToAction() {
 
         .cta-buttons { display: flex; gap: 14px; flex-wrap: wrap; margin-bottom: 36px; }
         .cta-btn-primary {
-          display: inline-flex; align-items: center; gap: 8px;
-          padding: 16px 30px; border-radius: 999px;
-          background: var(--text-ivory); color: var(--bg);
+          position: relative;
+          display: inline-flex; align-items: center; gap: 10px;
+          padding: 16px 32px; border-radius: 999px;
+          background: linear-gradient(135deg, #00E575 0%, #00B853 45%, #9BEA16 100%);
+          color: #05180D !important;
+          font-size: 15px; font-weight: 800; text-decoration: none;
+          letter-spacing: -0.01em;
+          box-shadow: 0 0 28px rgba(0, 229, 117, 0.42), 0 12px 28px rgba(0, 0, 0, 0.35);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+        }
+        .cta-btn-primary::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -120%;
+          width: 60%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.45), transparent);
+          transform: skewX(-20deg);
+          animation: ctaBtnShimmer 3.2s infinite ease-in-out;
+        }
+        .cta-btn-primary:hover {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 0 38px rgba(0, 229, 117, 0.65), 0 16px 36px rgba(0, 0, 0, 0.45);
+        }
+        .cta-btn-primary:hover .cta-btn-arrow {
+          transform: translateX(4px);
+        }
+        .cta-btn-secondary {
+          position: relative;
+          display: inline-flex; align-items: center; gap: 9px;
+          padding: 15px 28px; border-radius: 999px;
+          border: 1.5px solid var(--border-green);
+          background: var(--surface);
+          backdrop-filter: blur(12px);
+          color: var(--text-ivory);
           font-size: 15px; font-weight: 700; text-decoration: none;
-          box-shadow: 0 14px 28px -10px rgba(11, 15, 13, 0.4);
+          cursor: pointer;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          box-shadow: 0 4px 16px var(--shadow-subtle);
+        }
+        .cta-btn-secondary:hover {
+          border-color: var(--green);
+          background: var(--surface2);
+          color: var(--green);
+          transform: translateY(-2px);
+          box-shadow: 0 0 24px var(--border-green), 0 8px 20px var(--shadow-subtle);
+        }
+        .cta-btn-secondary:hover .cta-btn-arrow {
+          transform: translateX(3px);
+        }
+        .cta-btn-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--green-luminous);
+          box-shadow: 0 0 8px var(--green-luminous);
+          animation: ctaDotPulse 1.6s infinite ease-in-out;
+        }
+        .cta-btn-arrow {
           transition: transform 0.2s ease;
         }
-        .cta-btn-primary:hover { transform: translateY(-2px); }
-        .cta-btn-secondary {
-          display: inline-flex; align-items: center;
-          padding: 16px 30px; border-radius: 999px;
-          border: 1px solid var(--border2); color: var(--text-ivory);
-          font-size: 15px; font-weight: 600; text-decoration: none;
-          transition: border-color 0.2s ease, background 0.2s ease;
+        @keyframes ctaBtnShimmer {
+          0% { left: -120%; }
+          35%, 100% { left: 160%; }
         }
-        .cta-btn-secondary:hover { border-color: var(--border-green); background: var(--green-glow); }
+        @keyframes ctaDotPulse {
+          0%, 100% { transform: scale(1); opacity: 0.7; }
+          50% { transform: scale(1.35); opacity: 1; box-shadow: 0 0 12px var(--green-luminous); }
+        }
 
         .cta-features { display: flex; gap: 26px; flex-wrap: wrap; }
         .cta-feature { display: flex; align-items: center; gap: 10px; }

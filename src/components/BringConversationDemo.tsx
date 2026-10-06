@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import {
-  Sparkles,
+  Zap,
   PhoneCall,
   MessageSquare,
   Globe,
@@ -261,7 +261,7 @@ export default function BringConversationDemo() {
                 <span>Processing...</span>
               ) : (
                 <>
-                  <Sparkles size={16} />
+                  <Zap size={16} />
                   <span>Let Namuste Answer</span>
                 </>
               )}

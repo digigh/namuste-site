@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Phone, MessageSquare, Clock, CheckCircle2, Play, Pause, Volume2, Sparkles } from "lucide-react";
+import { Phone, MessageSquare, Clock, CheckCircle2, Play, Pause, Volume2 } from "lucide-react";
 
 export default function HeroConversation() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -128,7 +128,7 @@ export default function HeroConversation() {
         }}
       >
         <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "8px" }}>
-          <Sparkles size={14} style={{ color: "var(--green)" }} />
+          <CheckCircle2 size={14} style={{ color: "var(--green)" }} />
           <span style={{ fontSize: "12px", fontWeight: 700, color: "var(--green)" }}>Organised Business Outcome</span>
         </div>
 

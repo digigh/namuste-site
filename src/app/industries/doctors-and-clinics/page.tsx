@@ -12,11 +12,15 @@ import {
   ShieldAlert,
   ArrowRight,
   HeartPulse,
-  Sparkles,
+  Headphones,
   MessageSquare,
   Building2,
+  Stethoscope,
+  ArrowUpRight,
 } from "lucide-react";
+import LeadTrialTriggerButton from "@/components/LeadTrialTriggerButton";
 
+// Note: metadata is still exported — works in client components too
 export const metadata: Metadata = {
   title: "AI Receptionist & Appointment Assistant for Doctors & Clinics — Namuste",
   description:
@@ -87,7 +91,7 @@ export default function DoctorsAndClinicsPage() {
                 <div className="dc-connector" />
 
                 <div className="dc-node is-response">
-                  <span className="dc-node-icon is-response"><Sparkles size={18} /></span>
+                  <span className="dc-node-icon is-response"><Headphones size={18} /></span>
                   <div>
                     <div className="dc-node-label is-response">Namuste:</div>
                     <div className="dc-node-text">Would you prefer morning or evening?</div>
@@ -106,6 +110,55 @@ export default function DoctorsAndClinicsPage() {
 
           <div className="dc-hero-line">
             A <span style={{ color: "var(--green)", fontWeight: 700 }}>calmer</span> front desk. A more <span style={{ color: "var(--green)", fontWeight: 700 }}>responsive</span> clinic.
+          </div>
+        </section>
+
+        {/* DOCTORS & CLINIC SPECIAL LAUNCH OFFER (Theme-Adaptive & Animated) */}
+        <section className="dc-trial-section">
+          <div className="dc-container-wide">
+            <div className="dc-trial-card">
+              <div className="dc-trial-glow" />
+              <div className="dc-trial-body">
+                <div className="dc-trial-info">
+                  <div className="dc-trial-badge-row">
+                    <span className="dc-trial-badge">
+                      <Stethoscope size={13} />
+                      <span>CLINIC LAUNCH OFFER</span>
+                    </span>
+                    <span className="dc-trial-pill">7 DAYS FREE TRIAL</span>
+                    <span className="dc-trial-badge-sub">100 FREE VOICE MINUTES</span>
+                  </div>
+
+                  <h3 className="dc-trial-heading">
+                    Try the Doctors &amp; Clinic AI Platform Free for 7 Days
+                  </h3>
+
+                  <p className="dc-trial-subtext">
+                    Let Namuste answer patient enquiries, schedule consultations on your doctor calendar, and confirm bookings over WhatsApp. Zero hardware, setup in 2 minutes, and no credit card required.
+                  </p>
+
+                  <div className="dc-trial-perks-row">
+                    <span className="dc-trial-perk"><CheckCircle2 size={14} /> 100 Free Voice Minutes</span>
+                    <span className="dc-trial-perk"><CheckCircle2 size={14} /> OPD Calendar Integration</span>
+                    <span className="dc-trial-perk"><CheckCircle2 size={14} /> WhatsApp Slot Confirmation</span>
+                    <span className="dc-trial-perk"><CheckCircle2 size={14} /> No Credit Card Required</span>
+                  </div>
+                </div>
+
+                <div className="dc-trial-cta-col">
+                  <LeadTrialTriggerButton
+                    className="dc-trial-cta-btn"
+                  >
+                    <span className="dc-trial-btn-shine" />
+                    <span>Start 7-Day Free Trial</span>
+                    <ArrowUpRight size={15} />
+                  </LeadTrialTriggerButton>
+                  <Link href="/pricing" className="dc-trial-pricing-link">
+                    View Solo, Pro &amp; Clinic Plans <ArrowRight size={13} />
+                  </Link>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -232,14 +285,21 @@ export default function DoctorsAndClinicsPage() {
 
         .dc-actions { display: flex; gap: 14px; flex-wrap: wrap; }
         .dc-btn-primary {
+          position: relative;
           display: inline-flex; align-items: center; gap: 8px;
-          padding: 15px 26px; border-radius: 999px;
-          background: var(--text-ivory); color: var(--bg);
-          font-size: 14px; font-weight: 700; text-decoration: none;
-          box-shadow: 0 12px 24px -10px rgba(11, 15, 13, 0.4);
-          transition: transform 0.2s ease;
+          padding: 15px 28px; border-radius: 999px;
+          background: linear-gradient(135deg, #00E575 0%, #00B853 45%, #9BEA16 100%);
+          color: #05180D !important;
+          font-size: 14px; font-weight: 800; text-decoration: none;
+          letter-spacing: -0.01em;
+          box-shadow: 0 0 28px rgba(0, 229, 117, 0.42), 0 10px 24px rgba(0, 0, 0, 0.3);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
         }
-        .dc-btn-primary:hover { transform: translateY(-2px); }
+        .dc-btn-primary:hover {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 0 38px rgba(0, 229, 117, 0.65), 0 14px 30px rgba(0, 0, 0, 0.4);
+        }
         .dc-btn-secondary {
           display: inline-flex; align-items: center; gap: 8px;
           padding: 15px 24px; border-radius: 999px;
@@ -275,6 +335,169 @@ export default function DoctorsAndClinicsPage() {
         .dc-hero-line {
           text-align: center; margin-top: 60px; border-top: 1px solid var(--border); padding-top: 32px;
           font-family: var(--font-sans); font-weight: 700; font-size: clamp(19px, 2.4vw, 30px); color: var(--text-ivory);
+        }
+
+        /* CLINIC LAUNCH TRIAL CARD (Theme-Adaptive & Animated) */
+        .dc-trial-section {
+          padding: 30px 36px 70px;
+        }
+        .dc-trial-card {
+          position: relative;
+          border-radius: 24px;
+          background: var(--surface2);
+          border: 1.5px solid var(--border-green);
+          box-shadow: 0 20px 60px -15px var(--shadow-subtle), 0 0 30px -5px var(--green-glow);
+          overflow: hidden;
+          transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .dc-trial-glow {
+          position: absolute;
+          top: -60px;
+          right: -60px;
+          width: 320px;
+          height: 320px;
+          background: radial-gradient(circle, var(--green-glow-strong) 0%, transparent 65%);
+          pointer-events: none;
+        }
+        .dc-trial-body {
+          position: relative;
+          z-index: 1;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          padding: 36px 44px;
+          gap: 36px;
+          flex-wrap: wrap;
+        }
+        .dc-trial-info {
+          flex: 1;
+          min-width: 320px;
+        }
+        .dc-trial-badge-row {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+          margin-bottom: 14px;
+        }
+        .dc-trial-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: var(--green-glow);
+          color: var(--green);
+          border: 1px solid var(--border-green);
+          font-size: 10.5px;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+        }
+        .dc-trial-pill {
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 11px;
+          font-weight: 700;
+          color: var(--green);
+          background: var(--green-glow);
+          padding: 3px 9px;
+          border-radius: 999px;
+          border: 1px solid var(--border-green);
+        }
+        .dc-trial-badge-sub {
+          font-size: 11px;
+          font-weight: 600;
+          color: var(--text-muted);
+        }
+        .dc-trial-heading {
+          font-size: clamp(22px, 2.5vw, 32px);
+          font-weight: 800;
+          letter-spacing: -0.02em;
+          color: var(--text-ivory);
+          margin: 0 0 10px;
+          line-height: 1.25;
+        }
+        .dc-trial-subtext {
+          font-size: 14.5px;
+          color: var(--text-body);
+          line-height: 1.6;
+          max-width: 660px;
+          margin: 0 0 18px;
+        }
+        .dc-trial-perks-row {
+          display: flex;
+          align-items: center;
+          gap: 18px;
+          flex-wrap: wrap;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text-body);
+        }
+        .dc-trial-perk {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+        }
+        .dc-trial-perk svg {
+          color: var(--green);
+        }
+        .dc-trial-cta-col {
+          display: flex;
+          flex-direction: column;
+          align-items: center;
+          gap: 10px;
+        }
+        .dc-trial-cta-btn {
+          display: inline-flex;
+          align-items: center;
+          gap: 8px;
+          padding: 15px 34px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #00E575 0%, #00B853 45%, #9BEA16 100%);
+          color: #05180D !important;
+          font-size: 14.5px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          text-decoration: none;
+          border: none;
+          cursor: pointer;
+          font-family: inherit;
+          outline: none;
+          box-shadow: 0 0 32px rgba(0, 229, 117, 0.45), 0 10px 24px rgba(0, 0, 0, 0.3);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          position: relative;
+          overflow: hidden;
+          white-space: nowrap;
+        }
+        .dc-trial-cta-btn:hover {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 0 44px rgba(0, 229, 117, 0.7), 0 14px 34px rgba(0, 0, 0, 0.4);
+        }
+        .dc-trial-btn-shine {
+          position: absolute;
+          top: 0;
+          left: -120%;
+          width: 55%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+          transform: skewX(-20deg);
+          animation: dcBtnShine 3.2s infinite ease-in-out;
+        }
+        @keyframes dcBtnShine {
+          0% { left: -120%; }
+          35%, 100% { left: 160%; }
+        }
+        .dc-trial-pricing-link {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          font-size: 12.5px;
+          font-weight: 600;
+          color: var(--text-muted);
+          text-decoration: none;
+          transition: color 0.15s ease;
+        }
+        .dc-trial-pricing-link:hover {
+          color: var(--green);
         }
 
         .dc-section-pad { padding: 90px 36px; }

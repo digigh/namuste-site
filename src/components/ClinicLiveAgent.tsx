@@ -1,7 +1,7 @@
 "use client";
 
 // The live clinic receptionist on the website: a real voice call or text chat
-// with the LiveKit agent (real doctor availability, real bookings). Same look as
+// with the clinic receptionist agent (real doctor availability, real bookings). Same look as
 // the older AIVoiceChatbotEngine dashboard.
 
 import React, { useEffect, useRef, useState } from "react";
@@ -24,13 +24,18 @@ import {
   Phone,
   PhoneOff,
   RotateCcw,
+  Scissors,
   Send,
   ShieldCheck,
-  Sparkles,
+  Zap,
+  Bot,
+  Sprout,
   Stethoscope,
+  HeartPulse,
   Tag,
   User,
   X,
+  ArrowUpRight,
 } from "lucide-react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
@@ -38,18 +43,112 @@ import { Badge } from "@/components/ui/badge";
 import AnimatedOrb from "./AnimatedOrb";
 import { SpeechWaveform } from "./SpeechWaveform";
 import { AI_DASH_CSS } from "./aiDashStyles";
+import { openLeadModal } from "@/lib/openLeadModal";
 import { useClinicAgent, type SessionMode } from "@/hooks/use-clinic-agent";
 import { LANGUAGE_NAMES, formatDuration, languageName } from "@/lib/agentTranscript";
 
-const CLINIC_NAME = "Sunrise Multi-Specialty Clinic";
-const RECEPTIONIST = "Ritu";
+export type IndustryId = "clinic" | "salon" | "agri";
 
-const QUICK_PROMPTS = [
-  "I need a dentist tomorrow evening",
-  "मुझे कल सुबह डॉक्टर को दिखाना है",
-  "What are your clinic timings and fees?",
-  "I want to cancel my appointment",
-];
+export interface IndustryConfig {
+  id: IndustryId;
+  label: string;
+  categoryLabel: string;
+  name: string;
+  role: string;
+  sub: string;
+  receptionist: string;
+  personaRole: string;
+  headerTitle: string;
+  icon: React.ReactNode;
+  actionFields: {
+    label: string;
+    icon: React.ReactNode;
+    getValue: (booking: any) => string;
+  }[];
+  quickPrompts: string[];
+  verificationBadge: string;
+}
+
+const INDUSTRIES: Record<IndustryId, IndustryConfig> = {
+  clinic: {
+    id: "clinic",
+    label: "Sunrise Multi-Specialty Clinic",
+    categoryLabel: "Clinic",
+    name: "Sunrise Multi-Specialty Clinic",
+    role: "Virtual Receptionist",
+    sub: "Demo clinic · real-time availability",
+    receptionist: "Ritu",
+    personaRole: "AI Receptionist",
+    headerTitle: "AI Receptionist",
+    icon: <Stethoscope size={14} />,
+    actionFields: [
+      { label: "Department", icon: <Stethoscope size={14} />, getValue: (b) => b?.department || "—" },
+      { label: "Doctor", icon: <User size={14} />, getValue: (b) => b?.doctor || "—" },
+      { label: "Appointment", icon: <Calendar size={14} />, getValue: (b) => (b ? `${b.date}, ${b.time}` : "—") },
+      { label: "Reference", icon: <Tag size={14} />, getValue: (b) => b?.reference || "—" },
+    ],
+    quickPrompts: [
+      "I need a dentist tomorrow evening",
+      "मुझे कल सुबह डॉक्टर को दिखाना है",
+      "What are your clinic timings and fees?",
+      "I want to cancel my appointment",
+    ],
+    verificationBadge:
+      "Books against real doctor schedules. Never double-books, reads details back before confirming, and directs emergencies to 112.",
+  },
+  salon: {
+    id: "salon",
+    label: "Headlocks Luxury Salon",
+    categoryLabel: "Salon",
+    name: "Headlocks Luxury Salon",
+    role: "Virtual Receptionist",
+    sub: "Golf Course Road · real-time availability",
+    receptionist: "Riya",
+    personaRole: "AI Receptionist",
+    headerTitle: "AI Receptionist",
+    icon: <Scissors size={14} />,
+    actionFields: [
+      { label: "Service", icon: <Scissors size={14} />, getValue: (b) => b?.service || b?.department || "—" },
+      { label: "Stylist", icon: <User size={14} />, getValue: (b) => b?.stylist || b?.doctor || "—" },
+      { label: "Appointment", icon: <Calendar size={14} />, getValue: (b) => (b ? `${b.date}, ${b.time}` : "—") },
+      { label: "Reference", icon: <Tag size={14} />, getValue: (b) => b?.reference || "—" },
+    ],
+    quickPrompts: [
+      "I want a haircut tomorrow evening",
+      "मुझे शनिवार को फेशियल करवाना है",
+      "What are your timings and prices for keratin?",
+      "I want to cancel my appointment",
+    ],
+    verificationBadge:
+      "Books against real stylist schedules. Never double-books, reads details back before confirming, and hands special requests to our team.",
+  },
+  agri: {
+    id: "agri",
+    label: "Kisan Sathi Agri Inputs",
+    categoryLabel: "Agri Input",
+    name: "Kisan Sathi Agri Inputs",
+    role: "Virtual Sales & Crop Advisor",
+    sub: "Demo · live stock, prices & advice",
+    receptionist: "Priya",
+    personaRole: "AI Agri Assistant",
+    headerTitle: "AI Assistant",
+    icon: <Sprout size={14} />,
+    actionFields: [
+      { label: "Customer", icon: <User size={14} />, getValue: (b) => b?.customer || b?.patient || "—" },
+      { label: "Crop / Product", icon: <Sprout size={14} />, getValue: (b) => b?.crop || b?.product || b?.department || "—" },
+      { label: "Order", icon: <Tag size={14} />, getValue: (b) => b?.order || b?.doctor || "—" },
+      { label: "Reference", icon: <Tag size={14} />, getValue: (b) => b?.reference || "—" },
+    ],
+    quickPrompts: [
+      "My cotton leaves are curling, small white flies underneath",
+      "मेरी सोयाबीन के पत्ते पीले पड़ रहे हैं",
+      "How much Coragen do I need for 3 acres of paddy?",
+      "Which shop near me sells Nativo?",
+    ],
+    verificationBadge:
+      "Quotes from live stock and prices. Reads every order back before confirming, and never advises more than the label dose.",
+  },
+};
 
 const STATE_LABEL: Record<string, string> = {
   initializing: "Connecting…",
@@ -58,12 +157,64 @@ const STATE_LABEL: Record<string, string> = {
   speaking: "Speaking",
 };
 
+/* MINIMALIST TRANSIENT MEDALLION FOR INDUSTRY SWITCH (Positioned at top of live conversation card, rings removed) */
+function MinimalIndustryWave({ id }: { id: IndustryId }) {
+  const meta = {
+    salon: {
+      name: "Headlocks Salon",
+      sub: "Salon AI Ready",
+      icon: <Scissors size={15} strokeWidth={2.4} />,
+      iconClass: "ai-min-icon-salon",
+    },
+    agri: {
+      name: "Kisan Sathi Agri",
+      sub: "Agri AI Ready",
+      icon: <Sprout size={15} strokeWidth={2.4} />,
+      iconClass: "ai-min-icon-agri",
+    },
+    clinic: {
+      name: "Sunrise Clinic",
+      sub: "Clinic AI Ready",
+      icon: <Stethoscope size={15} strokeWidth={2.4} />,
+      iconClass: "ai-min-icon-clinic",
+    },
+  }[id];
+
+  return (
+    <motion.div
+      className="ai-minimal-medallion"
+      initial={{ scale: 0.85, opacity: 0, y: -8 }}
+      animate={{ scale: 1, opacity: 1, y: 0 }}
+      exit={{ scale: 0.92, opacity: 0, y: -6 }}
+      transition={{ type: "spring", stiffness: 450, damping: 26 }}
+    >
+      <div className={`ai-min-icon-box ${meta.iconClass}`}>
+        {meta.icon}
+      </div>
+      <div className="ai-min-content">
+        <div className="ai-min-name">{meta.name}</div>
+        <div className="ai-min-sub">
+          <span className="ai-live-dot-mini" /> {meta.sub}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 export default function ClinicLiveAgent() {
+  const [industry, setIndustry] = useState<IndustryId>("clinic");
+  const [industryOpen, setIndustryOpen] = useState(false);
+  const [industrySwitchEffect, setIndustrySwitchEffect] = useState<{ id: IndustryId; key: number } | null>(null);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+  const ind = INDUSTRIES[industry];
+
   const agent = useClinicAgent();
   const {
     mode,
     status,
     agentState,
+    connectingStep,
+    errorKind,
     lines,
     activity,
     booking,
@@ -81,15 +232,45 @@ export default function ClinicLiveAgent() {
   const chatInputRef = useRef<HTMLInputElement>(null);
 
   const live = status === "connecting" || status === "connected";
-  const inCall = mode === "voice" && live;
+  const inCall = mode === "voice" && status === "connected";
   const aiSpeaking = status === "connected" && agentState === "speaking";
   const thinking = status === "connected" && agentState === "thinking";
+
+  // Auto-dismiss transient industry switch animation after 1.8s
+  useEffect(() => {
+    if (!industrySwitchEffect) return;
+    const timer = setTimeout(() => {
+      setIndustrySwitchEffect(null);
+    }, 1800);
+    return () => clearTimeout(timer);
+  }, [industrySwitchEffect]);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setIndustryOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   // Keep the newest message in view without scrolling the whole page.
   useEffect(() => {
     const el = transcriptRef.current;
     if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
-  }, [lines, thinking]);
+  }, [lines, thinking, status]);
+
+  const switchIndustry = (next: IndustryId) => {
+    setIndustryOpen(false);
+    setIndustrySwitchEffect({ id: next, key: Date.now() });
+    if (next === industry) {
+      return;
+    }
+    void agent.reset();
+    setIndustry(next);
+  };
 
   const switchChannel = (next: SessionMode) => {
     if (next === mode) return;
@@ -100,7 +281,7 @@ export default function ClinicLiveAgent() {
     if (!text.trim() || sending) return;
     setSending(true);
     try {
-      await agent.sendText(text);
+      await agent.sendText(text, industry);
     } finally {
       setSending(false);
     }
@@ -108,7 +289,7 @@ export default function ClinicLiveAgent() {
 
   const onQuickPrompt = (p: string) => {
     if (mode === "voice" && status !== "connected") {
-      void agent.start("voice");
+      void agent.start("voice", industry);
       return;
     }
     void send(p);
@@ -120,30 +301,33 @@ export default function ClinicLiveAgent() {
         ? "Ready for a call"
         : "Ready to chat"
       : status === "connecting"
-      ? "Connecting…"
+      ? connectingStep === "mic_permission"
+        ? "Allow microphone"
+        : connectingStep === "waiting_agent"
+        ? "Ringing line…"
+        : "Connecting…"
       : status === "connected"
       ? emergency
         ? "Emergency guidance given"
+        : lines.length === 0
+        ? "Answering…"
         : STATE_LABEL[agentState] || "Live"
       : status === "error"
-      ? "Couldn't connect"
+      ? errorKind === "mic_denied"
+        ? "Mic blocked"
+        : errorKind === "timeout"
+        ? "Line busy"
+        : "Couldn't connect"
       : "Session ended";
 
   const rows: { icon: React.ReactNode; label: string; value: string }[] = [
     { icon: <Activity size={14} />, label: "Status", value: statusValue },
     { icon: <Globe size={14} />, label: "Language", value: languageName(language) },
-    {
-      icon: <Stethoscope size={14} />,
-      label: "Department",
-      value: booking ? booking.department : "—",
-    },
-    { icon: <User size={14} />, label: "Doctor", value: booking ? booking.doctor : "—" },
-    {
-      icon: <Calendar size={14} />,
-      label: "Appointment",
-      value: booking ? `${booking.date}, ${booking.time}` : "—",
-    },
-    { icon: <Tag size={14} />, label: "Reference", value: booking ? booking.reference : "—" },
+    ...ind.actionFields.map((f) => ({
+      icon: f.icon,
+      label: f.label,
+      value: f.getValue(booking),
+    })),
   ];
 
   const busy = thinking || (sending && mode === "chat");
@@ -153,13 +337,87 @@ export default function ClinicLiveAgent() {
       <div className="ai-dash">
         <div className="ai-dash-topbar">
           <div className="ai-dash-fields">
-            <div className="ai-dash-field">
-              <span className="ai-dash-field-label">Clinic</span>
-              <div className="ai-dash-select ai-dash-select-static">
-                <span className="ai-dash-select-icon"><Building2 size={13} /></span>
-                <span>{CLINIC_NAME}</span>
+            <div className="ai-dash-field ai-dropdown-wrapper" ref={dropdownRef}>
+              <div className="ai-field-label-group">
+                <span className="ai-dash-field-label">Industry Demo</span>
+                <span className="ai-live-pill-tag">
+                  <span className="ai-live-dot-mini" /> 3 Live Agents
+                </span>
               </div>
+              <button
+                type="button"
+                className={`ai-industry-btn${industryOpen ? " ai-industry-btn-open" : ""}`}
+                onClick={() => setIndustryOpen(!industryOpen)}
+                aria-expanded={industryOpen}
+                aria-label="Switch industry demo"
+              >
+                <span className="ai-industry-icon-box">{ind.icon}</span>
+                <div className="ai-industry-info">
+                  <span className="ai-industry-name">{ind.name}</span>
+                  <span className="ai-industry-hint">{ind.receptionist} · {ind.role}</span>
+                </div>
+                <span className="ai-industry-switch-pill">
+                  <span>Switch</span>
+                  <ChevronDown
+                    size={12}
+                    style={{
+                      transition: "transform 0.2s ease",
+                      transform: industryOpen ? "rotate(180deg)" : "rotate(0deg)",
+                    }}
+                  />
+                </span>
+              </button>
+
+              {industryOpen && (
+                <div className="ai-industry-dropdown-menu">
+                  <div className="ai-industry-dropdown-header">
+                    <div className="ai-industry-dropdown-title">
+                      <span>Select Live AI Assistant</span>
+                      <span className="ai-live-pill-tag"><span className="ai-live-dot-mini" /> 3 Available</span>
+                    </div>
+                    <div className="ai-industry-dropdown-sub">
+                      Switch instantly to test real-world conversational workflows
+                    </div>
+                  </div>
+
+                  <div className="ai-industry-card-list">
+                    {(Object.keys(INDUSTRIES) as IndustryId[]).map((id) => {
+                      const item = INDUSTRIES[id];
+                      const selected = id === industry;
+                      return (
+                        <button
+                          key={id}
+                          type="button"
+                          className={`ai-industry-card-item${selected ? " is-active" : ""}`}
+                          onClick={() => switchIndustry(id)}
+                        >
+                          <span className="ai-industry-card-icon">{item.icon}</span>
+                          <div className="ai-industry-card-body">
+                            <div className="ai-industry-card-title">
+                              <span>{item.name}</span>
+                              {selected && (
+                                <span className="ai-selected-badge">
+                                  <Check size={11} strokeWidth={3} /> Active
+                                </span>
+                              )}
+                            </div>
+                            <div className="ai-industry-card-agent">
+                              {item.receptionist} · {item.role}
+                            </div>
+                            <div className="ai-industry-card-desc">{item.sub}</div>
+                          </div>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  <div className="ai-industry-dropdown-footer">
+                    ⚡ Live voice calls & natural chat powered by dedicated production pipelines
+                  </div>
+                </div>
+              )}
             </div>
+
             <div className="ai-dash-field">
               <span className="ai-dash-field-label">Language</span>
               <div className="ai-dash-select ai-dash-select-static">
@@ -199,6 +457,17 @@ export default function ClinicLiveAgent() {
               <RotateCcw size={12} />
               <span>Reset</span>
             </button>
+
+            <button
+              type="button"
+              onClick={openLeadModal}
+              className="ai-dash-trial-cta"
+              title="Start 7-Day Free Trial for Doctors & Clinics"
+            >
+              <Zap size={13} strokeWidth={2.5} />
+              <span className="ai-trial-tag-text">Claim 7-Day Free Trial</span>
+              <ArrowUpRight size={13} className="ai-trial-cta-arrow" />
+            </button>
           </div>
         </div>
 
@@ -207,24 +476,50 @@ export default function ClinicLiveAgent() {
           <Card className="ai-panel">
             <CardContent className="ai-panel-body">
               <div className="ai-panel-head">
-                <span>AI Receptionist</span>
+                <span>{ind.headerTitle}</span>
                 <Badge className="ai-badge-active"><span className="ai-live-dot" /> {live ? "Live" : "Online"}</Badge>
               </div>
 
+              {/* Quick 1-click industry switcher pills */}
+              <div className="ai-quick-industry-box">
+                <div className="ai-quick-industry-title">
+                  <span>Switch Industry Demo</span>
+                  <span className="ai-live-pill-tag"><span className="ai-live-dot-mini" /> 3 Ready</span>
+                </div>
+                <div className="ai-quick-industry-pills">
+                  {(Object.keys(INDUSTRIES) as IndustryId[]).map((id) => {
+                    const item = INDUSTRIES[id];
+                    const active = id === industry;
+                    return (
+                      <button
+                        key={id}
+                        type="button"
+                        onClick={() => switchIndustry(id)}
+                        className={`ai-quick-industry-pill${active ? " is-active" : ""}`}
+                        title={`Switch to ${item.name}`}
+                      >
+                        <span className="ai-quick-pill-icon">{item.icon}</span>
+                        <span>{item.categoryLabel}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
               <div className="ai-agent-card">
-                <span className="ai-agent-icon"><Stethoscope size={16} /></span>
+                <span className="ai-agent-icon">{ind.icon}</span>
                 <div style={{ minWidth: 0 }}>
-                  <div className="ai-agent-name">{CLINIC_NAME}</div>
-                  <div className="ai-agent-role">Virtual Receptionist</div>
-                  <div className="ai-agent-sub">Demo clinic · real-time availability</div>
+                  <div className="ai-agent-name">{ind.name}</div>
+                  <div className="ai-agent-role">{ind.role}</div>
+                  <div className="ai-agent-sub">{ind.sub}</div>
                 </div>
               </div>
 
               <div className="ai-agent-card ai-persona-card" style={{ cursor: "default" }}>
                 <span className="ai-persona-avatar"><AnimatedOrb size={36} /></span>
                 <div style={{ minWidth: 0, flex: 1, textAlign: "left" }}>
-                  <div className="ai-agent-name">{RECEPTIONIST}</div>
-                  <div className="ai-agent-role">{status === "connected" ? STATE_LABEL[agentState] || "Live" : "AI Receptionist"}</div>
+                  <div className="ai-agent-name">{ind.receptionist}</div>
+                  <div className="ai-agent-role">{status === "connected" ? STATE_LABEL[agentState] || "Live" : ind.personaRole}</div>
                 </div>
                 <span className="ai-persona-wave">
                   <SpeechWaveform
@@ -249,13 +544,13 @@ export default function ClinicLiveAgent() {
                 className="ai-try-cta"
                 onClick={() => {
                   if (mode === "voice") {
-                    if (!live) void agent.start("voice");
+                    if (!live) void agent.start("voice", industry);
                   } else {
                     chatInputRef.current?.focus();
                   }
                 }}
               >
-                <span className="ai-try-cta-icon"><Sparkles size={14} /></span>
+                <span className="ai-try-cta-icon"><Zap size={14} /></span>
                 <span className="ai-try-cta-text">
                   <span className="ai-try-cta-title">Try it now</span>
                   <span className="ai-try-cta-sub">
@@ -267,22 +562,34 @@ export default function ClinicLiveAgent() {
 
               <div className="ai-tip-box">
                 <ShieldCheck size={14} />
-                <span>
-                  Books against real doctor schedules. Never double-books, reads details back before confirming, and
-                  directs emergencies to 112.
-                </span>
+                <span>{ind.verificationBadge}</span>
               </div>
             </CardContent>
           </Card>
 
           {/* CENTER — live conversation */}
           <Card className={`ai-panel ai-panel-center${mode === "chat" ? " is-whatsapp" : ""}`}>
-            <CardContent className="ai-panel-body ai-center-body">
+            <CardContent className="ai-panel-body ai-center-body" style={{ position: "relative" }}>
+              {/* Minimalist transient wave animation centered in the voice box */}
+              <AnimatePresence>
+                {industrySwitchEffect && (
+                  <motion.div
+                    key={industrySwitchEffect.key}
+                    className="ai-minimal-wave-overlay"
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0, transition: { duration: 0.3 } }}
+                  >
+                    <MinimalIndustryWave id={industrySwitchEffect.id} />
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {mode === "chat" ? (
                 <div className="ai-wa-header">
-                  <span className="ai-wa-avatar"><Stethoscope size={16} /></span>
+                  <span className="ai-wa-avatar">{ind.icon}</span>
                   <div className="ai-wa-header-text">
-                    <span className="ai-wa-name">{CLINIC_NAME}</span>
+                    <span className="ai-wa-name">{ind.name}</span>
                     <span className="ai-wa-status">
                       {status === "connecting" ? "connecting…" : busy ? "typing…" : "online"}
                     </span>
@@ -308,37 +615,219 @@ export default function ClinicLiveAgent() {
               )}
 
               <div className="ai-transcript" ref={transcriptRef}>
-                {lines.length === 0 && status !== "connecting" ? (
-                  <div className="ai-transcript-empty">
+                {status === "connecting" && mode === "voice" ? (
+                  <div className="ai-connecting-stage">
                     <div className="ai-empty-orb-wrap">
                       <motion.span
                         className="ai-empty-orb-ring"
-                        animate={{ scale: [1, 1.7], opacity: [0.6, 0] }}
-                        transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
+                        animate={{ scale: [1, 1.8], opacity: [0.7, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
                       />
                       <motion.span
                         className="ai-empty-orb-ring"
-                        animate={{ scale: [1, 1.7], opacity: [0.6, 0] }}
-                        transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut", delay: 1.1 }}
+                        animate={{ scale: [1, 2.2], opacity: [0.4, 0] }}
+                        transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut", delay: 0.6 }}
                       />
-                      <AnimatedOrb size={104} />
+                      <AnimatedOrb size={96} />
                     </div>
-                    <p className="ai-empty-title">
-                      {status === "ended" ? "Session ended." : "Ready when you are."}
+
+                    <div className="ai-connecting-badge">
+                      <span className="ai-live-dot" />
+                      <span>
+                        {connectingStep === "mic_permission"
+                          ? "Action required: Allow Microphone"
+                          : connectingStep === "waiting_agent" || connectingStep === "ready"
+                          ? `Ringing ${ind.name}…`
+                          : `Connecting to ${ind.name}…`}
+                      </span>
+                    </div>
+
+                    <h3 className="ai-connecting-title">
+                      {connectingStep === "mic_permission"
+                        ? "Please allow microphone access"
+                        : connectingStep === "waiting_agent" || connectingStep === "ready"
+                        ? `Connecting to ${ind.receptionist}…`
+                        : "Establishing secure line…"}
+                    </h3>
+
+                    <p className="ai-connecting-sub">
+                      {connectingStep === "mic_permission"
+                        ? "Look for your browser's microphone popup near the address bar and click 'Allow' to speak."
+                        : connectingStep === "waiting_agent" || connectingStep === "ready"
+                        ? `Waiting for ${ind.receptionist} to pick up the line. Please hold on — she will greet you in a moment.`
+                        : "Connecting a secure private voice channel."}
                     </p>
-                    <p className="ai-empty-sub">
-                      {mode === "voice"
-                        ? "Tap “Start Voice Call” and speak in any Indian language."
-                        : "Type a message below, in English, Hindi or your language."}
-                    </p>
-                    <motion.span
-                      className="ai-empty-nudge"
-                      animate={{ y: [0, 6, 0] }}
-                      transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+
+                    <div className="ai-connecting-steps">
+                      <div className={`ai-cstep ${connectingStep !== "token" ? "is-done" : "is-active"}`}>
+                        <span className="ai-cstep-dot" />
+                        <span>Line</span>
+                      </div>
+                      <span className="ai-cstep-line" />
+                      <div
+                        className={`ai-cstep ${
+                          connectingStep === "mic_permission"
+                            ? "is-active"
+                            : connectingStep === "waiting_agent" || connectingStep === "ready"
+                            ? "is-done"
+                            : ""
+                        }`}
+                      >
+                        <span className="ai-cstep-dot" />
+                        <span>Microphone</span>
+                      </div>
+                      <span className="ai-cstep-line" />
+                      <div
+                        className={`ai-cstep ${
+                          connectingStep === "waiting_agent" || connectingStep === "ready" ? "is-active" : ""
+                        }`}
+                      >
+                        <span className="ai-cstep-dot" />
+                        <span>{ind.receptionist}</span>
+                      </div>
+                    </div>
+
+                    <div className="ai-connecting-hint">
+                      <Languages size={13} style={{ color: "var(--green)", flexShrink: 0 }} />
+                      <span>
+                        {ind.receptionist} understands English, Hindi, and 8 other Indian languages. Feel free to speak naturally once she answers.
+                      </span>
+                    </div>
+
+                    <button
+                      type="button"
+                      className="ai-connecting-cancel-btn"
+                      onClick={() => void agent.stop()}
                     >
-                      <ChevronDown size={16} />
-                    </motion.span>
+                      <PhoneOff size={13} />
+                      <span>Cancel Call</span>
+                    </button>
                   </div>
+                ) : status === "error" ? (
+                  <div className="ai-error-stage">
+                    <div className="ai-error-icon-wrap">
+                      {errorKind === "mic_denied" ? (
+                        <MicOff size={28} style={{ color: "#EF4444" }} />
+                      ) : errorKind === "timeout" ? (
+                        <PhoneOff size={28} style={{ color: "#F59E0B" }} />
+                      ) : (
+                        <AlertTriangle size={28} style={{ color: "#EF4444" }} />
+                      )}
+                    </div>
+
+                    <h3 className="ai-error-title">
+                      {errorKind === "mic_denied"
+                        ? "Microphone Access Required"
+                        : errorKind === "mic_not_found"
+                        ? "No Microphone Detected"
+                        : errorKind === "timeout"
+                        ? "Receptionist Line Busy"
+                        : errorKind === "rate_limited"
+                        ? "Session Limit Reached"
+                        : "Call Couldn't Connect"}
+                    </h3>
+
+                    <p className="ai-error-description">
+                      {errorKind === "mic_denied"
+                        ? "Your browser blocked or has not granted microphone permission. Please click the lock or camera icon in your address bar to allow microphone access, or switch to chat below."
+                        : errorKind === "timeout"
+                        ? "The receptionist didn't answer within 20 seconds. The service may be warming up or under temporary load. Please try calling again in a moment."
+                        : errorKind === "rate_limited"
+                        ? "To keep the demo available to everyone, sessions are limited. You can use text chat or wait a few minutes."
+                        : error || "We couldn't connect your call. Please check your network and try again."}
+                    </p>
+
+                    <div className="ai-error-actions">
+                      <button
+                        type="button"
+                        className="ai-error-retry-btn"
+                        onClick={() => void agent.start(mode, industry)}
+                      >
+                        <RotateCcw size={13} />
+                        <span>{mode === "voice" ? "Try Calling Again" : "Try Again"}</span>
+                      </button>
+
+                      {mode === "voice" && (
+                        <button
+                          type="button"
+                          className="ai-error-chat-btn"
+                          onClick={() => switchChannel("chat")}
+                        >
+                          <MessageSquare size={13} />
+                          <span>Switch to Text Chat</span>
+                        </button>
+                      )}
+
+                      <button
+                        type="button"
+                        className="ai-error-dismiss-btn"
+                        onClick={() => void agent.reset()}
+                      >
+                        Reset
+                      </button>
+                    </div>
+                  </div>
+                ) : lines.length === 0 ? (
+                  status === "connected" ? (
+                    <div className="ai-transcript-empty" style={{ padding: "30px 20px" }}>
+                      <div className="ai-empty-orb-wrap">
+                        <motion.span
+                          className="ai-empty-orb-ring"
+                          animate={{ scale: [1, 1.6], opacity: [0.6, 0] }}
+                          transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
+                        />
+                        <AnimatedOrb size={88} />
+                      </div>
+                      <p className="ai-empty-title">
+                        {aiSpeaking ? `${ind.receptionist} is speaking…` : `Connected with ${ind.receptionist}`}
+                      </p>
+                      <p className="ai-empty-sub">
+                        {aiSpeaking
+                          ? `Listen in as ${ind.receptionist} greets you. Feel free to speak or reply at any time.`
+                          : `${ind.receptionist} is preparing her greeting… she will speak in a moment.`}
+                      </p>
+                      <div style={{ marginTop: 12 }}>
+                        <SpeechWaveform
+                          state={aiSpeaking ? "ai" : "idle"}
+                          userAnalyserRef={agent.userAnalyserRef}
+                          aiAnalyserRef={agent.aiAnalyserRef}
+                          barCount={8}
+                          barColor="var(--green)"
+                        />
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="ai-transcript-empty">
+                      <div className="ai-empty-orb-wrap">
+                        <motion.span
+                          className="ai-empty-orb-ring"
+                          animate={{ scale: [1, 1.7], opacity: [0.6, 0] }}
+                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut" }}
+                        />
+                        <motion.span
+                          className="ai-empty-orb-ring"
+                          animate={{ scale: [1, 1.7], opacity: [0.6, 0] }}
+                          transition={{ duration: 2.2, repeat: Infinity, ease: "easeOut", delay: 1.1 }}
+                        />
+                        <AnimatedOrb size={104} />
+                      </div>
+                      <p className="ai-empty-title">
+                        {status === "ended" ? "Session ended." : "Ready when you are."}
+                      </p>
+                      <p className="ai-empty-sub">
+                        {mode === "voice"
+                          ? "Tap “Start Voice Call” and speak in any Indian language."
+                          : "Type a message below, in English, Hindi or your language."}
+                      </p>
+                      <motion.span
+                        className="ai-empty-nudge"
+                        animate={{ y: [0, 6, 0] }}
+                        transition={{ duration: 1.4, repeat: Infinity, ease: "easeInOut" }}
+                      >
+                        <ChevronDown size={16} />
+                      </motion.span>
+                    </div>
+                  )
                 ) : (
                   <AnimatePresence initial={false}>
                     {lines.map((line) => {
@@ -351,9 +840,9 @@ export default function ClinicLiveAgent() {
                           transition={{ duration: 0.2 }}
                           className={`ai-msg ${isAi ? "is-ai" : "is-user"}`}
                         >
-                          <span className="ai-msg-avatar">{isAi ? <Sparkles size={12} /> : <User size={12} />}</span>
+                          <span className="ai-msg-avatar">{isAi ? <Bot size={12} /> : <User size={12} />}</span>
                           <div className={`ai-msg-bubble${!line.final && !isAi ? " ai-msg-live" : ""}`}>
-                            <div className="ai-msg-from">{isAi ? RECEPTIONIST : !line.final ? "You · live" : "You"}</div>
+                            <div className="ai-msg-from">{isAi ? ind.receptionist : !line.final ? "You · live" : "You"}</div>
                             <p>{line.text}</p>
                             <span className="ai-msg-time">
                               {new Date(line.at).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
@@ -364,22 +853,20 @@ export default function ClinicLiveAgent() {
                     })}
                   </AnimatePresence>
                 )}
-                {(status === "connecting" || busy) && (
+                {status === "connected" && busy && (
                   <div className="ai-msg is-ai">
-                    <span className="ai-msg-avatar"><Sparkles size={12} /></span>
+                    <span className="ai-msg-avatar"><Bot size={12} /></span>
                     <div className="ai-msg-bubble ai-typing">
                       <span className="ai-typing-dot" />
                       <span className="ai-typing-dot" />
                       <span className="ai-typing-dot" />
-                      <span className="ai-typing-text">
-                        {status === "connecting" ? "Connecting to the receptionist…" : "Thinking…"}
-                      </span>
+                      <span className="ai-typing-text">Thinking…</span>
                     </div>
                   </div>
                 )}
               </div>
 
-              {error && (
+              {error && status !== "error" && (
                 <div
                   role="alert"
                   style={{
@@ -405,7 +892,29 @@ export default function ClinicLiveAgent() {
 
               {mode === "voice" ? (
                 <div className="ai-call-bar">
-                  {!inCall ? (
+                  {status === "connecting" ? (
+                    <div className="ai-call-connecting-bar">
+                      <div className="ai-call-connecting-info">
+                        <Loader2 size={16} className="ai-spin" style={{ color: "var(--green)" }} />
+                        <span>
+                          {connectingStep === "mic_permission"
+                            ? "Waiting for microphone permission…"
+                            : connectingStep === "waiting_agent" || connectingStep === "ready"
+                            ? `Ringing ${ind.receptionist} at ${ind.name}…`
+                            : `Connecting to ${ind.name} voice line…`}
+                        </span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => void agent.stop()}
+                        className="ai-ctrl-btn ai-ctrl-end"
+                        style={{ flexDirection: "row", gap: 6, padding: "8px 16px", borderRadius: 999 }}
+                      >
+                        <PhoneOff size={14} />
+                        <span>Cancel</span>
+                      </button>
+                    </div>
+                  ) : !inCall ? (
                     <div className="ai-call-cta-wrap" style={{ flexDirection: "column", gap: 8 }}>
                       <div style={{ position: "relative", display: "flex", justifyContent: "center" }}>
                         <motion.span
@@ -414,7 +923,7 @@ export default function ClinicLiveAgent() {
                           transition={{ duration: 1.8, repeat: Infinity, ease: "easeOut" }}
                         />
                         <motion.button
-                          onClick={() => void agent.start("voice")}
+                          onClick={() => void agent.start("voice", industry)}
                           whileHover={{ scale: 1.02 }}
                           whileTap={{ scale: 0.98 }}
                           className="ai-call-start"
@@ -425,8 +934,8 @@ export default function ClinicLiveAgent() {
                         </motion.button>
                       </div>
                       <span style={{ fontSize: 11, color: "var(--text-muted)", textAlign: "center", lineHeight: 1.4 }}>
-                        Uses your microphone. Calls may be recorded for quality. Demo clinic: please don&apos;t share
-                        sensitive medical details.
+                        Uses your microphone. Calls may be recorded for quality. Demo: please don&apos;t share
+                        sensitive personal details.
                       </span>
                     </div>
                   ) : (
@@ -445,16 +954,16 @@ export default function ClinicLiveAgent() {
                           barColor={aiSpeaking ? "var(--green)" : userSpeaking ? "#0EA5E9" : "var(--text-dim)"}
                         />
                         <span className="ai-call-wave-label">
-                          {status === "connecting"
-                            ? "Connecting…"
-                            : aiSpeaking
-                            ? `${RECEPTIONIST} is speaking…`
+                          {aiSpeaking
+                            ? `${ind.receptionist} is speaking…`
                             : thinking
-                            ? `${RECEPTIONIST} is thinking…`
+                            ? `${ind.receptionist} is thinking…`
                             : muted
                             ? "You're muted"
                             : userSpeaking
                             ? "Listening…"
+                            : lines.length === 0
+                            ? `Connected · ${ind.receptionist} answering…`
                             : `On call · ${formatDuration(elapsed)}`}
                         </span>
                       </div>
@@ -483,7 +992,7 @@ export default function ClinicLiveAgent() {
                     maxLength={500}
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder="Type a message"
-                    aria-label="Message the receptionist"
+                    aria-label={`Message ${ind.receptionist}`}
                   />
                   <button type="submit" disabled={sending || !chatInput.trim()} aria-label="Send">
                     {sending ? <Loader2 size={16} className="ai-spin" /> : <Send size={16} />}
@@ -549,7 +1058,7 @@ export default function ClinicLiveAgent() {
                 <div style={{ minWidth: 0 }}>
                   <div className="ai-tip-title">Need something to try?</div>
                   <div className="ai-quick-prompts">
-                    {QUICK_PROMPTS.map((p) => (
+                    {ind.quickPrompts.map((p) => (
                       <button key={p} onClick={() => onQuickPrompt(p)} disabled={sending}>
                         &ldquo;{p}&rdquo;
                       </button>

@@ -1,5 +1,5 @@
 // Pure helpers for the live assistant widget: building the transcript from
-// LiveKit transcription streams, and reading the agent's activity events.
+// real-time transcription streams, and reading the agent's activity events.
 
 export type Speaker = "user" | "ai";
 

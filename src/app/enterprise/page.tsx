@@ -11,7 +11,7 @@ import {
   BarChart3,
   Layers,
   ArrowRight,
-  Sparkles,
+  TrendingUp,
 } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -26,7 +26,7 @@ const PILLARS = [
   { icon: <BarChart3 size={20} />, title: "Consolidated Group Analytics", desc: "Gain real-time visibility into overall call volumes, resolution velocities, customer sentiment trends, and team productivity across entities." },
   { icon: <Layers size={20} />, title: "Modular Custom Integrations", desc: "Connect seamlessly to enterprise ERPs (SAP, Oracle, Salesforce) and custom in-house databases via secure webhooks." },
   { icon: <ShieldCheck size={20} />, title: "Enterprise SLA & Dedicated Compute", desc: "Guaranteed 99.9% uptime SLAs with dedicated private VPC deployment options and localized Indian data sovereignty." },
-  { icon: <Sparkles size={20} />, title: "Phased Group Rollout Strategy", desc: "Start with one high-friction workflow in a single business unit, validate ROI, and deploy reusable playbooks across the group." },
+  { icon: <TrendingUp size={20} />, title: "Phased Group Rollout Strategy", desc: "Start with one high-friction workflow in a single business unit, validate ROI, and deploy reusable playbooks across the group." },
 ];
 
 export default function EnterprisePage() {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Scale, FileText, Briefcase, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
+import { Scale, FileText, Briefcase, CheckCircle2, ShieldCheck } from "lucide-react";
 
 interface ProfessionConfig {
   id: "lawyers" | "accountants" | "consultants";
@@ -171,7 +171,7 @@ export default function IntakeAssistantDemo() {
           }}
         >
           <div style={{ display: "flex", alignItems: "center", gap: "8px", marginBottom: "16px" }}>
-            <Sparkles size={16} style={{ color: "var(--green)" }} />
+            <ShieldCheck size={16} style={{ color: "var(--green)" }} />
             <h4 style={{ fontSize: "13px", fontWeight: 700, textTransform: "uppercase", letterSpacing: "0.08em", color: "var(--green)" }}>
               Structured Intake Result
             </h4>

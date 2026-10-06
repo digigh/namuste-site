@@ -22,6 +22,11 @@ export default function HomePage() {
         <HeroVisualExact />
 
         {/* =========================================================================
+            SPEAK NATURALLY (MULTILINGUAL INTELLIGENCE / LIVE RECEPTIONIST DEMO)
+            ========================================================================= */}
+        <HP07Multilingual />
+
+        {/* =========================================================================
             HP-02: THE RESPONSE PROBLEM
             ========================================================================= */}
         <LossEnquiryExact />
@@ -35,11 +40,6 @@ export default function HomePage() {
             SYSTEMS & INTEGRATIONS
             ========================================================================= */}
         <HP06Systems />
-
-        {/* =========================================================================
-            SPEAK NATURALLY (MULTILINGUAL INTELLIGENCE)
-            ========================================================================= */}
-        <HP07Multilingual />
 
         {/* =========================================================================
             TRUST: judgment + handoff + brand-voice, consolidated into one real

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { PhoneCall, MessageSquare, Globe, Check, Sparkles } from "lucide-react";
+import { PhoneCall, MessageSquare, Globe, Check, CheckCircle2 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -94,7 +94,7 @@ export default function ChannelSwitcher() {
               {/* Right: structured outcome */}
               <div className="cs-outcome">
                 <div className="cs-outcome-head">
-                  <Sparkles size={15} />
+                  <CheckCircle2 size={15} />
                   <h4>Structured Outcome</h4>
                 </div>
                 <p className="cs-outcome-text">{current.outcome}</p>

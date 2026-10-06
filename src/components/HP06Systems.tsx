@@ -13,7 +13,7 @@ import {
   CreditCard,
   Check,
   ArrowRight,
-  Sparkles,
+  RefreshCw,
 } from "lucide-react";
 import {
   SiWhatsapp,
@@ -79,7 +79,7 @@ export default function HP06Systems() {
 
             <div className="hp06-benefits">
               {[
-                { icon: Sparkles, title: "No context switching", sub: "Everything in sync." },
+                { icon: RefreshCw, title: "No context switching", sub: "Everything in sync." },
                 { icon: Check, title: "Save hours every week", sub: "Automate updates." },
                 { icon: Headphones, title: "More productive teams", sub: "All data in one place." },
                 { icon: Users, title: "Happier customers", sub: "Faster, consistent service." },

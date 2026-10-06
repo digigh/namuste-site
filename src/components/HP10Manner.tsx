@@ -3,7 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
-import { User, Headphones, Check, ArrowRight, Globe, ShieldCheck, Sparkles, Volume2, MessageSquare } from "lucide-react";
+import { User, Headphones, Check, ArrowRight, Globe, ShieldCheck, Volume2, MessageSquare } from "lucide-react";
 
 export default function HP10Manner() {
   const [selectedManner, setSelectedManner] = useState<"warm" | "formal" | "direct">("warm");

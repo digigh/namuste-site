@@ -2,7 +2,8 @@
 
 import React, { useMemo, useState } from "react";
 import Link from "next/link";
-import { ArrowRight } from "lucide-react";
+import { ArrowRight, Stethoscope } from "lucide-react";
+import { openLeadModal } from "@/lib/openLeadModal";
 
 const WAVEFORM_BARS = 72;
 
@@ -50,7 +51,7 @@ export default function HeroVisualExact() {
             fontSize: "12px",
             letterSpacing: "0.1em",
             color: "var(--text-muted)",
-            marginBottom: "40px",
+            marginBottom: "24px",
             flexWrap: "wrap",
             gap: "10px",
           }}
@@ -60,6 +61,27 @@ export default function HeroVisualExact() {
             <span style={{ width: "6px", height: "6px", borderRadius: "50%", background: answered ? "var(--green-luminous)" : "var(--coral)", boxShadow: `0 0 8px ${answered ? "var(--green-luminous)" : "var(--coral)"}` }} />
             {answered ? "CONNECTED" : "RINGING"}
           </span>
+        </div>
+
+        {/* Sleek, integrated announcement chip (clean, elegant, no DOS, no heavy banner) */}
+        <div style={{ marginBottom: "26px" }}>
+          <button
+            type="button"
+            onClick={openLeadModal}
+            className="hero-launch-chip"
+          >
+            <span className="hero-chip-badge">
+              <Stethoscope size={13} />
+              <span>DOCTORS &amp; CLINICS</span>
+            </span>
+            <span className="hero-chip-text">
+              Special Launch: <strong>7-Day Free Trial</strong> with 100 free voice minutes
+            </span>
+            <span className="hero-chip-cta">
+              <span>Claim Free Trial</span>
+              <ArrowRight size={12} className="hero-chip-arrow" />
+            </span>
+          </button>
         </div>
 
         {/* Oversized editorial headline — dominates the viewport instead of sharing it with a visual column */}
@@ -86,23 +108,50 @@ export default function HeroVisualExact() {
 
           <div style={{ display: "flex", alignItems: "center", gap: "20px", flexWrap: "wrap" }}>
             <button
-              onClick={() => setAnswered(!answered)}
-              style={{
-                display: "inline-flex",
-                alignItems: "center",
-                gap: "10px",
-                background: "var(--text-ivory)",
-                color: "var(--bg)",
-                padding: "16px 30px",
-                borderRadius: "999px",
-                fontSize: "15px",
-                fontWeight: 700,
-                border: "none",
-                cursor: "pointer",
+              onClick={() => {
+                setAnswered(true);
+                // Snappy 180ms reaction so the click feels immediate, then a velvety smooth scroll directly to the module
+                setTimeout(() => {
+                  const target = document.getElementById("live-agent-module") || document.getElementById("voice-engine-demo");
+                  if (target) {
+                    const rect = target.getBoundingClientRect();
+                    const currentY = window.pageYOffset || document.documentElement.scrollTop;
+                    // Perfect landing: leaves 80px breathing room so the full module topbar & buttons are in view
+                    const targetY = rect.top + currentY - 80;
+
+                    const startY = currentY;
+                    const diff = targetY - startY;
+                    const duration = 750;
+                    let startTime: number | null = null;
+
+                    // Smooth easeInOutCubic curve
+                    const easeInOutCubic = (t: number) =>
+                      t < 0.5 ? 4 * t * t * t : (t - 1) * (2 * t - 2) * (2 * t - 2) + 1;
+
+                    const step = (now: number) => {
+                      if (!startTime) startTime = now;
+                      const elapsed = now - startTime;
+                      const progress = Math.min(elapsed / duration, 1);
+                      window.scrollTo(0, startY + diff * easeInOutCubic(progress));
+
+                      if (progress < 1) {
+                        requestAnimationFrame(step);
+                      } else {
+                        target.classList.add("hp07-module-spotlight");
+                        setTimeout(() => target.classList.remove("hp07-module-spotlight"), 2000);
+                      }
+                    };
+
+                    requestAnimationFrame(step);
+                  }
+                }, 180);
               }}
+              className="hero-cta-btn"
             >
+              <span className="hero-cta-shine" />
+              <span className="hero-cta-dot" />
               <span>{answered ? "Connected to Namuste" : "Answer it"}</span>
-              <ArrowRight size={16} />
+              <ArrowRight size={16} className="hero-cta-arrow" />
             </button>
 
             <a href="#problem-loss" style={{ color: "var(--text-body)", fontSize: "14.5px", textDecoration: "none", display: "inline-flex", alignItems: "center", gap: "6px" }}>
@@ -211,11 +260,172 @@ export default function HeroVisualExact() {
         .hero-wave-marker.is-active { color: var(--green); }
         .hero-wave-marker.is-done .hero-wave-marker-dot { background: var(--coral); }
 
+        .hero-launch-chip {
+          display: inline-flex;
+          align-items: center;
+          gap: 12px;
+          padding: 5px 8px 5px 12px;
+          border-radius: 999px;
+          background: var(--surface2);
+          border: 1px solid var(--border-green);
+          box-shadow: 0 4px 16px -4px var(--shadow-subtle), 0 0 16px -4px var(--green-glow);
+          text-decoration: none;
+          cursor: pointer;
+          text-align: left;
+          font-family: inherit;
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          max-width: 100%;
+        }
+        .hero-launch-chip:hover {
+          border-color: var(--green);
+          box-shadow: 0 8px 24px -4px var(--shadow-subtle), 0 0 24px var(--green-glow);
+          transform: translateY(-1.5px);
+        }
+        .hero-chip-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 9px;
+          border-radius: 999px;
+          background: var(--green-glow);
+          color: var(--green);
+          border: 1px solid var(--border-green);
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          flex-shrink: 0;
+        }
+        .hero-chip-text {
+          font-size: 13px;
+          color: var(--text-body);
+          line-height: 1.4;
+        }
+        .hero-chip-text strong {
+          color: var(--text-ivory);
+          font-weight: 700;
+        }
+        .hero-chip-cta {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 5px 13px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #00E575 0%, #00B853 45%, #9BEA16 100%);
+          color: #05180D !important;
+          font-size: 11.5px;
+          font-weight: 800;
+          white-space: nowrap;
+          flex-shrink: 0;
+          box-shadow: 0 0 14px rgba(0, 229, 117, 0.42);
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+        }
+        .hero-chip-cta::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -120%;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+          transform: skewX(-20deg);
+          animation: heroChipShine 3s infinite ease-in-out;
+        }
+        .hero-launch-chip:hover .hero-chip-cta {
+          transform: translateY(-1px) scale(1.03);
+          box-shadow: 0 0 20px rgba(0, 229, 117, 0.65);
+        }
+        @keyframes heroChipShine {
+          0% { left: -120%; }
+          35%, 100% { left: 160%; }
+        }
+        .hero-chip-arrow {
+          transition: transform 0.2s ease;
+        }
+        .hero-launch-chip:hover .hero-chip-arrow {
+          transform: translateX(2.5px);
+        }
+
+        /* VIBRANT HERO CTA BUTTON */
+        .hero-cta-btn {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 11px;
+          padding: 16px 34px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #00E575 0%, #00B853 45%, #9BEA16 100%);
+          color: #05180D !important;
+          font-size: 15px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          border: none;
+          cursor: pointer;
+          box-shadow: 0 0 32px rgba(0, 229, 117, 0.45), 0 12px 28px rgba(0, 0, 0, 0.35);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          overflow: hidden;
+        }
+        .hero-cta-btn::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -120%;
+          width: 55%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.48), transparent);
+          transform: skewX(-20deg);
+          animation: heroBtnShine 3.2s infinite ease-in-out;
+        }
+        .hero-cta-btn:hover {
+          transform: translateY(-3px) scale(1.02);
+          box-shadow: 0 0 42px rgba(0, 229, 117, 0.68), 0 16px 36px rgba(0, 0, 0, 0.45);
+        }
+        .hero-cta-btn:active {
+          transform: translateY(-1px) scale(0.99);
+        }
+        .hero-cta-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: #05180D;
+          animation: heroDotPulse 1.6s infinite ease-in-out;
+        }
+        .hero-cta-arrow {
+          transition: transform 0.2s ease;
+        }
+        .hero-cta-btn:hover .hero-cta-arrow {
+          transform: translateX(4px);
+        }
+        @keyframes heroBtnShine {
+          0% { left: -120%; }
+          35%, 100% { left: 160%; }
+        }
+        @keyframes heroDotPulse {
+          0%, 100% { transform: scale(1); opacity: 0.7; }
+          50% { transform: scale(1.35); opacity: 1; }
+        }
+
         @media (max-width: 768px) {
           .hero-exact-section { padding-top: 86px !important; padding-bottom: 28px !important; }
           .hero-exact-pad { padding: 0 20px !important; }
           .hero-waveform { height: 72px; }
           .hero-wave-markers { flex-wrap: wrap; gap: 12px; }
+          .hero-launch-chip {
+            padding: 8px 12px;
+            border-radius: 16px;
+            flex-wrap: wrap;
+            gap: 8px;
+          }
+          .hero-chip-text {
+            font-size: 12px;
+            width: 100%;
+          }
+          .hero-chip-cta {
+            width: 100%;
+            justify-content: center;
+          }
         }
       `}</style>
     </section>

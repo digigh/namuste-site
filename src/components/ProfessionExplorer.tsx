@@ -12,7 +12,7 @@ import {
   Calculator,
   Compass,
   Building2,
-  Sparkles,
+  Scissors,
   TrendingUp,
   Briefcase,
   CheckCircle2,
@@ -234,7 +234,7 @@ export const PROFESSIONS_DATA: ProfessionData[] = [
     id: "salons",
     name: "Salons & Aesthetics",
     badge: "Wellness & Beauty",
-    icon: Sparkles,
+    icon: Scissors,
     slug: "professional-services",
     channels: {
       voice: {

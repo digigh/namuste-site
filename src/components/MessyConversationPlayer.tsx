@@ -17,7 +17,7 @@ import {
   Plus,
   Mic,
   CheckCheck,
-  Sparkles,
+  Bot,
 } from "lucide-react";
 
 const caveat = Caveat({ subsets: ["latin"], weight: ["600", "700"] });
@@ -237,7 +237,7 @@ export default function MessyConversationPlayer() {
 
           <div className="mcp-phone-header">
             <span className="mcp-phone-avatar">
-              <Sparkles size={14} />
+              <Bot size={14} />
             </span>
             <div className="mcp-phone-header-text">
               <div className="mcp-phone-name">Sunrise Clinic</div>

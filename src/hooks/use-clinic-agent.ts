@@ -1,8 +1,8 @@
 "use client";
 
-// Connects the browser to the clinic receptionist (a LiveKit agent running on
-// LiveKit Cloud) for a voice call or a text chat, and exposes everything the
-// widget shows: transcript, agent state, live activity, booking, audio levels.
+// Connects the browser to the clinic receptionist for a voice call or a text chat,
+// and exposes everything the widget shows: transcript, agent state, live activity,
+// booking, audio levels.
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
@@ -25,6 +25,20 @@ import {
 export type SessionMode = "voice" | "chat";
 export type SessionStatus = "idle" | "connecting" | "connected" | "ended" | "error";
 export type AgentState = "initializing" | "listening" | "thinking" | "speaking";
+export type ConnectingStep =
+  | "idle"
+  | "token"
+  | "connecting_room"
+  | "mic_permission"
+  | "waiting_agent"
+  | "ready";
+export type ErrorKind =
+  | "mic_denied"
+  | "mic_not_found"
+  | "timeout"
+  | "rate_limited"
+  | "unavailable"
+  | "generic";
 
 export interface ActivityItem {
   id: number;
@@ -45,19 +59,52 @@ function clock(): string {
   return new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" });
 }
 
-function friendlyError(err: unknown): string {
+function classifyError(err: unknown, statusCode?: number): { message: string; kind: ErrorKind } {
   const name = err instanceof Error ? err.name : "";
-  if (name === "NotAllowedError" || name === "SecurityError") {
-    return "Microphone access was blocked. Allow the microphone in your browser and try again, or use chat.";
+  const msg = err instanceof Error && err.message ? err.message : "";
+
+  if (name === "NotAllowedError" || name === "SecurityError" || /permission|denied|not allowed/i.test(msg)) {
+    return {
+      kind: "mic_denied",
+      message: "Microphone access was blocked. Please allow microphone permissions in your browser or switch to chat.",
+    };
   }
-  if (name === "NotFoundError") return "No microphone was found on this device. You can use chat instead.";
-  return err instanceof Error && err.message ? err.message : "Something went wrong. Please try again.";
+  if (name === "NotFoundError" || /not found|device not found/i.test(msg)) {
+    return {
+      kind: "mic_not_found",
+      message: "No microphone detected on this device. You can chat with the receptionist using text instead.",
+    };
+  }
+  if (statusCode === 429 || /too many sessions|rate limit/i.test(msg)) {
+    return {
+      kind: "rate_limited",
+      message: "Demo call limit reached (5 calls per 10 min). Please wait a couple minutes or try text chat.",
+    };
+  }
+  if (statusCode === 503 || /isn't configured|not configured/i.test(msg)) {
+    return {
+      kind: "unavailable",
+      message: "The live voice assistant is currently being configured or maintained. Please try again shortly or use the demo booking below.",
+    };
+  }
+  if (/didn't pick up|timeout|timed out/i.test(msg)) {
+    return {
+      kind: "timeout",
+      message: "The receptionist didn't pick up within 20 seconds. The line may be busy or reconnecting. Please try again.",
+    };
+  }
+  return {
+    kind: "generic",
+    message: msg || "Something went wrong while connecting. Please try again.",
+  };
 }
 
 export function useClinicAgent() {
   const [mode, setMode] = useState<SessionMode>("voice");
   const [status, setStatus] = useState<SessionStatus>("idle");
   const [agentState, setAgentState] = useState<AgentState>("initializing");
+  const [connectingStep, setConnectingStep] = useState<ConnectingStep>("idle");
+  const [errorKind, setErrorKind] = useState<ErrorKind | null>(null);
   const [lines, setLines] = useState<TranscriptLine[]>([]);
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [booking, setBooking] = useState<BookingEvent | null>(null);
@@ -115,12 +162,15 @@ export function useClinicAgent() {
     roomRef.current = null;
     if (room) await room.disconnect();
     cleanup();
+    setConnectingStep("idle");
     setStatus((s) => (s === "error" ? s : s === "idle" ? "idle" : "ended"));
   }, [cleanup]);
 
   const reset = useCallback(async () => {
     await stop();
     setStatus("idle");
+    setConnectingStep("idle");
+    setErrorKind(null);
     setLines([]);
     setActivity([]);
     setBooking(null);
@@ -139,11 +189,13 @@ export function useClinicAgent() {
   }, []);
 
   const start = useCallback(
-    async (nextMode: SessionMode) => {
+    async (nextMode: SessionMode, industry: string = "clinic") => {
       if (roomRef.current) await stop();
       setMode(nextMode);
       setStatus("connecting");
+      setConnectingStep("token");
       setError(null);
+      setErrorKind(null);
       setLines([]);
       setActivity([]);
       setBooking(null);
@@ -157,13 +209,16 @@ export function useClinicAgent() {
         const res = await fetch("/api/livekit-token", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ mode: nextMode }),
+          body: JSON.stringify({ mode: nextMode, industry }),
         });
         const data = await res.json().catch(() => ({}));
         if (!res.ok || !data.token) {
-          throw new Error(data.error || "The assistant is unavailable right now. Please try again shortly.");
+          const err = new Error(data.error || "The assistant is unavailable right now. Please try again shortly.");
+          (err as { status?: number }).status = res.status;
+          throw err;
         }
 
+        setConnectingStep("connecting_room");
         const room = new Room({
           adaptiveStream: false,
           dynacast: false,
@@ -243,6 +298,7 @@ export function useClinicAgent() {
             if (roomRef.current === room) {
               roomRef.current = null;
               cleanup();
+              setConnectingStep("idle");
               setStatus((s) => (s === "error" ? s : "ended"));
             }
           });
@@ -250,12 +306,14 @@ export function useClinicAgent() {
         await room.connect(data.serverUrl, data.token);
 
         if (nextMode === "voice") {
+          setConnectingStep("mic_permission");
           await room.localParticipant.setMicrophoneEnabled(true);
           const mic = room.localParticipant.getTrackPublication(Track.Source.Microphone)?.track;
           if (mic?.mediaStreamTrack) userAnalyserRef.current = makeAnalyser(mic.mediaStreamTrack);
           await room.startAudio();
         }
 
+        setConnectingStep("waiting_agent");
         const agentAlreadyHere = Array.from(room.remoteParticipants.values()).some(isAgent);
         const agentJoined = agentAlreadyHere
           ? Promise.resolve(true)
@@ -274,6 +332,7 @@ export function useClinicAgent() {
         }
         if (roomRef.current !== room) return; // stopped meanwhile
 
+        setConnectingStep("ready");
         setStatus("connected");
         const startedAt = Date.now();
         const tick = () => {
@@ -287,12 +346,19 @@ export function useClinicAgent() {
           timersRef.current.push(window.setTimeout(tick, 1000));
         };
         tick();
-      } catch (err) {
+      } catch (err: unknown) {
         const room = roomRef.current;
         roomRef.current = null;
         if (room) await room.disconnect();
         cleanup();
-        setError(friendlyError(err));
+        const statusCode =
+          typeof err === "object" && err !== null && "status" in err
+            ? (err as { status?: number }).status
+            : undefined;
+        const classified = classifyError(err, statusCode);
+        setError(classified.message);
+        setErrorKind(classified.kind);
+        setConnectingStep("idle");
         setStatus("error");
       }
     },
@@ -301,11 +367,11 @@ export function useClinicAgent() {
 
   /** Send a typed message. In chat mode the first message starts the session. */
   const sendText = useCallback(
-    async (raw: string) => {
+    async (raw: string, industry: string = "clinic") => {
       const text = raw.trim().slice(0, 500);
       if (!text) return;
       if (!roomRef.current) {
-        await start("chat");
+        await start("chat", industry);
       }
       const room = roomRef.current;
       if (!room || room.state !== ConnectionState.Connected) return;
@@ -344,6 +410,8 @@ export function useClinicAgent() {
     mode,
     status,
     agentState,
+    connectingStep,
+    errorKind,
     lines,
     activity,
     booking,

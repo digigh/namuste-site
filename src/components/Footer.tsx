@@ -1,9 +1,45 @@
+"use client";
+
 import Link from "next/link";
-import { ShieldCheck, Mail, MapPin } from "lucide-react";
+import { ShieldCheck, Mail, MapPin, ArrowUpRight, Stethoscope } from "lucide-react";
+import { openLeadModal } from "@/lib/openLeadModal";
 
 export default function Footer() {
   return (
     <footer style={{ background: "var(--bg)", borderTop: "1px solid var(--border)", position: "relative" }}>
+      {/* Launch Offer Callout Strip (Theme-Adaptive & Animated) */}
+      <div className="footer-trial-strip">
+        <div className="footer-trial-inner">
+          <div className="footer-trial-left">
+            <span className="footer-trial-badge">
+              <Stethoscope size={12} />
+              <span>SPECIAL LAUNCH</span>
+            </span>
+            <span className="footer-trial-title">
+              7-Day Free Trial for Doctors &amp; Clinics
+            </span>
+            <span className="footer-trial-divider">·</span>
+            <span className="footer-trial-desc">
+              Experience the AI Voice Receptionist for your practice with 100 free minutes. Instant 2-min setup, zero risk.
+            </span>
+          </div>
+
+          <div className="footer-trial-actions">
+            <button
+              type="button"
+              onClick={openLeadModal}
+              className="footer-trial-btn"
+            >
+              <span>Claim Free Trial</span>
+              <ArrowUpRight size={13} />
+            </button>
+            <Link href="/pricing" className="footer-trial-link">
+              View Plans
+            </Link>
+          </div>
+        </div>
+      </div>
+
       {/* Main Sitemap Grid */}
       <div className="footer-main-container" style={{ maxWidth: "1360px", margin: "0 auto", padding: "48px 40px 40px" }}>
         <div
@@ -163,7 +199,114 @@ export default function Footer() {
       </div>
 
       <style>{`
+        .footer-trial-strip {
+          background: var(--surface2);
+          border-bottom: 1px solid var(--border-green);
+          padding: 12px 40px;
+          transition: background 0.3s ease, border-color 0.3s ease;
+        }
+        .footer-trial-inner {
+          max-width: 1360px;
+          margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 16px;
+          flex-wrap: wrap;
+        }
+        .footer-trial-left {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .footer-trial-badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 5px;
+          padding: 3px 8px;
+          border-radius: 999px;
+          background: var(--green-glow);
+          color: var(--green);
+          border: 1px solid var(--border-green);
+          font-size: 10px;
+          font-weight: 800;
+          letter-spacing: 0.05em;
+        }
+        .footer-trial-title {
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-ivory);
+        }
+        .footer-trial-divider {
+          color: var(--text-dim);
+        }
+        .footer-trial-desc {
+          font-size: 12.5px;
+          color: var(--text-muted);
+        }
+        .footer-trial-actions {
+          display: flex;
+          align-items: center;
+          gap: 12px;
+        }
+        .footer-trial-btn {
+          position: relative;
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 6px 16px;
+          border-radius: 999px;
+          background: linear-gradient(135deg, #00E575 0%, #00B853 45%, #9BEA16 100%);
+          color: #05180D !important;
+          font-size: 12px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
+          text-decoration: none;
+          border: none;
+          cursor: pointer;
+          outline: none;
+          font-family: inherit;
+          box-shadow: 0 0 18px rgba(0, 229, 117, 0.45), 0 2px 8px rgba(0, 0, 0, 0.2);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+          white-space: nowrap;
+          overflow: hidden;
+        }
+        .footer-trial-btn::before {
+          content: "";
+          position: absolute;
+          top: 0;
+          left: -120%;
+          width: 50%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.5), transparent);
+          transform: skewX(-20deg);
+          animation: footerBtnShine 3s infinite ease-in-out;
+        }
+        .footer-trial-btn:hover {
+          transform: translateY(-2px) scale(1.03);
+          box-shadow: 0 0 28px rgba(0, 229, 117, 0.65), 0 4px 14px rgba(0, 0, 0, 0.3);
+        }
+        @keyframes footerBtnShine {
+          0% { left: -120%; }
+          35%, 100% { left: 160%; }
+        }
+        .footer-trial-link {
+          font-size: 12px;
+          font-weight: 600;
+          color: var(--text-muted);
+          text-decoration: none;
+          transition: color 0.15s ease;
+          white-space: nowrap;
+        }
+        .footer-trial-link:hover {
+          color: var(--green);
+        }
+
         @media (max-width: 1024px) {
+          .footer-trial-strip {
+            padding: 12px 24px;
+          }
           .footer-grid {
             grid-template-columns: 1fr 1fr !important;
             gap: 40px 24px !important;
