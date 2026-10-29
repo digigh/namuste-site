@@ -3,7 +3,10 @@
 // React/TS wrapper around namo.js (vanilla, no dependencies). Mirrors the
 // vendor's Namo.jsx exactly, just typed against namo.d.ts.
 import { useEffect, useRef } from "react";
-// @ts-expect-error -- namo.js is vendored plain JS; namo.d.ts supplies the types below.
+// @ts-ignore -- namo.js is vendored plain JS; namo.d.ts supplies the types below.
+// (ts-ignore, not ts-expect-error: whether TS resolves namo.d.ts for this
+// .js import on its own varies by environment/build-cache state, and
+// ts-expect-error fails the build if it turns out to be unneeded there.)
 import { createNamo } from "./namo.js";
 import type { NamoInstance, NamoMood, NamoOptions, NamoState } from "./namo.d";
 
