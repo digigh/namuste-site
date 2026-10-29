@@ -25,12 +25,15 @@ export const NAMO_EXPERIENCE_CSS = `
     100% { transform: scale(2.5); opacity: 0; }
   }
   @keyframes namoBlobFloatA {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(50px, 60px) scale(1.15); }
+    0%, 100% { transform: translate(calc(var(--mx, 0) * 26px), calc(var(--my, 0) * 26px)) scale(1); }
+    50% { transform: translate(calc(50px + var(--mx, 0) * 26px), calc(60px + var(--my, 0) * 26px)) scale(1.15); }
   }
   @keyframes namoBlobFloatB {
-    0%, 100% { transform: translate(0, 0) scale(1); }
-    50% { transform: translate(-40px, -50px) scale(1.1); }
+    0%, 100% { transform: translate(calc(var(--mx, 0) * -22px), calc(var(--my, 0) * -22px)) scale(1); }
+    50% { transform: translate(calc(-40px + var(--mx, 0) * -22px), calc(-50px + var(--my, 0) * -22px)) scale(1.1); }
+  }
+  @keyframes namoAuraSpin {
+    to { transform: translate(-50%, -50%) rotate(360deg); }
   }
   @keyframes namoCardSpin {
     to { --namo-angle: 360deg; }
@@ -55,19 +58,33 @@ export const NAMO_EXPERIENCE_CSS = `
   }
 
   /* ---------- ambient futuristic background: a living world, not a backdrop ---------- */
-  .namo-bg-fx { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+  /* Reads --mx/--my (set from pointer position, see the component's
+     pointermove effect) so the whole scene has real depth — the blobs
+     drift opposite each other and the grid tilts like it's a floor, all
+     layered on top of their own slow ambient animation, not replacing it. */
+  .namo-bg-fx { position: absolute; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; perspective: 1400px; }
+  .namo-bg-aura {
+    position: absolute; left: 50%; top: 38%; width: 1100px; height: 1100px; margin: -550px 0 0 -550px;
+    background: conic-gradient(from 0deg, var(--green-glow-strong), transparent 18%, transparent 82%, var(--green-glow-strong));
+    opacity: .35; filter: blur(60px); animation: namoAuraSpin 40s linear infinite;
+    transform: translate(calc(-50% + var(--mx, 0) * -14px), calc(-50% + var(--my, 0) * -14px));
+  }
   .namo-bg-blob { position: absolute; border-radius: 50%; filter: blur(70px); opacity: .5; }
   .namo-bg-blob-a { width: 520px; height: 520px; left: -130px; top: -110px; background: radial-gradient(circle, var(--green-glow-strong), transparent 70%); animation: namoBlobFloatA 19s ease-in-out infinite; }
   .namo-bg-blob-b { width: 460px; height: 460px; right: -150px; bottom: -120px; background: radial-gradient(circle, var(--coral-bg), transparent 70%); animation: namoBlobFloatB 23s ease-in-out infinite; }
   .namo-bg-grid {
-    position: absolute; inset: 0;
+    position: absolute; inset: -10%;
     background-image: linear-gradient(var(--border) 1px, transparent 1px), linear-gradient(90deg, var(--border) 1px, transparent 1px);
     background-size: 44px 44px; opacity: .14;
+    transform: rotateX(calc(6deg + var(--my, 0) * 5deg)) rotateY(calc(var(--mx, 0) * -5deg));
+    transition: transform .4s ease-out;
     mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 35%, transparent 85%);
     -webkit-mask-image: radial-gradient(ellipse 80% 70% at 50% 40%, black 35%, transparent 85%);
   }
   .namo-stars { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
   .namo-star { position: absolute; border-radius: 50%; background: var(--green-luminous); animation: namoTwinkle 3.2s ease-in-out infinite; }
+
+  .namo-kiosk.is-roaming { cursor: pointer; }
 
   /* ---------- HUD header ---------- */
   .namo-hud-bar { position: relative; z-index: 5; width: 100%; display: flex; flex-direction: column; align-items: center; gap: 10px; padding: 26px 0 0; }
@@ -83,11 +100,14 @@ export const NAMO_EXPERIENCE_CSS = `
   /* ---------- Namo's free-roam character + its magic ---------- */
   .namo-floor-wrap { position: fixed; left: 0; top: 0; width: 230px; height: 230px; transform: translate(-50%, -50%); z-index: 3; pointer-events: none; }
   .namo-floor-wrap.is-interactive { pointer-events: auto; cursor: pointer; }
+  .namo-floor-wrap.is-grabbable:active { cursor: grabbing; }
 
   /* ---------- continuously-cycling feature ticker ---------- */
-  .namo-ticker-wrap { position: relative; z-index: 5; height: 0; width: 100%; max-width: 480px; display: flex; justify-content: center; overflow: visible; }
+  /* Reserves real layout height (not an overlay) so it pushes the pills
+     row down instead of sitting on top of it and eating their clicks. */
+  .namo-ticker-wrap { position: relative; z-index: 5; height: 52px; width: 100%; max-width: 480px; display: flex; justify-content: center; overflow: visible; margin-top: 6px; }
   .namo-ticker {
-    position: absolute; top: 4px; display: flex; align-items: center; gap: 9px;
+    position: absolute; top: 0; display: flex; align-items: center; gap: 9px;
     background: var(--glass-bg); border: 1px solid var(--glass-border);
     backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
     border-radius: 999px; padding: 8px 18px 8px 10px; box-shadow: var(--shadow-subtle), 0 0 18px var(--green-glow);

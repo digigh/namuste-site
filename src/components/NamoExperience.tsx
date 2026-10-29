@@ -21,10 +21,11 @@
 // working voice/chat agent underneath (unchanged).
 
 import { useEffect, useRef, useState } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, useMotionValue } from "framer-motion";
 import {
   Stethoscope, Scissors, Sprout, Mic, MicOff, PhoneOff, Send, ChevronDown, Tag,
-  Languages, CalendarCheck, Clock, ShieldAlert, Sparkles, Users, Headset,
+  Languages, CalendarCheck, Clock, ShieldAlert, ShieldCheck, Sparkles, Users, Headset,
+  Zap, Lock, Globe, TrendingUp, PhoneCall,
   Radio, Activity, CheckCircle2, XCircle, MessageSquare, X,
 } from "lucide-react";
 import Namo from "@/components/namo/Namo";
@@ -53,16 +54,29 @@ const STATUS_LABEL: Record<string, string> = {
 
 // What Namo "discovers" and shows off while roaming — one flattened pool,
 // picked at random so the floating holograms never repeat predictably.
-type CapFact = { icon: React.ReactNode; title: string; sub: string };
+// Every fact gets its own Lucide icon (never repeated) and an accent-color
+// pair, so the cards read as a real set rather than one template reused.
+type Accent = readonly [string, string];
+const ACCENT_GREEN: Accent = ["var(--green-luminous)", "var(--green)"];
+const ACCENT_AMBER: Accent = ["#ffc24b", "#e8960b"];
+const ACCENT_BLUE: Accent = ["#6fb3ff", "#2f6fe0"];
+const ACCENT_CORAL: Accent = ["#ff9a7a", "var(--coral)"];
+
+type CapFact = { icon: React.ReactNode; title: string; sub: string; accent: Accent };
 const CAPABILITY_FACTS: CapFact[] = [
-  { icon: <Languages size={16} />, title: "10+ languages", sub: "Hindi, Tamil, Telugu, Bengali & more" },
-  { icon: <Sparkles size={16} />, title: "Switches instantly", sub: "Follows the caller, mid-sentence" },
-  { icon: <CalendarCheck size={16} />, title: "Real bookings", sub: "Checks live availability, in real time" },
-  { icon: <Users size={16} />, title: "Never double-books", sub: "Reads every detail back before confirming" },
-  { icon: <Clock size={16} />, title: "Always on", sub: "24×7, no hold music, ever" },
-  { icon: <Headset size={16} />, title: "Voice or chat", sub: "Same brain, either channel" },
-  { icon: <ShieldAlert size={16} />, title: "Safety first", sub: "Flags real emergencies immediately" },
-  { icon: <ShieldAlert size={16} />, title: "Never guesses", sub: "No diagnosis, no prescriptions" },
+  { icon: <Languages size={16} />, title: "10+ languages", sub: "Hindi, Tamil, Telugu, Bengali & more", accent: ACCENT_BLUE },
+  { icon: <Sparkles size={16} />, title: "Switches instantly", sub: "Follows the caller, mid-sentence", accent: ACCENT_BLUE },
+  { icon: <CalendarCheck size={16} />, title: "Real bookings", sub: "Checks live availability, in real time", accent: ACCENT_GREEN },
+  { icon: <Users size={16} />, title: "Never double-books", sub: "Reads every detail back before confirming", accent: ACCENT_GREEN },
+  { icon: <Clock size={16} />, title: "Always on", sub: "24×7, no hold music, ever", accent: ACCENT_AMBER },
+  { icon: <Headset size={16} />, title: "Voice or chat", sub: "Same brain, either channel", accent: ACCENT_AMBER },
+  { icon: <PhoneCall size={16} />, title: "Handles real calls", sub: "Picks up instantly, every time", accent: ACCENT_AMBER },
+  { icon: <ShieldAlert size={16} />, title: "Safety first", sub: "Flags real emergencies immediately", accent: ACCENT_CORAL },
+  { icon: <ShieldCheck size={16} />, title: "Never guesses", sub: "No diagnosis, no prescriptions", accent: ACCENT_CORAL },
+  { icon: <Lock size={16} />, title: "Private & secure", sub: "Your conversation stays protected", accent: ACCENT_CORAL },
+  { icon: <Zap size={16} />, title: "No waiting, ever", sub: "Instant replies, zero hold music", accent: ACCENT_GREEN },
+  { icon: <Globe size={16} />, title: "Always reachable", sub: "No app to download, just talk", accent: ACCENT_BLUE },
+  { icon: <TrendingUp size={16} />, title: "Scales with you", sub: "One caller or a hundred, same quality", accent: ACCENT_GREEN },
 ];
 
 // Salon sends a BCP-47 code (same convention clinic uses); agri sends an
@@ -94,10 +108,14 @@ function toNamoState(status: string, agentState: string): NamoState {
 }
 
 // Local-flavor moves while landed between flights, and the feeling/body-
-// language emotes mixed in with them — real namo.js locomotion, not CSS.
-const CARD_EMOTES: readonly NamoEmote[] = ["info", "calendar", "pin", "clock", "search", "chart", "chat"];
-const FEEL_EMOTES: readonly NamoEmote[] = ["wave", "namaste", "dance", "cheer", "love", "shy", "zap", "stretch"];
-const BODY_EMOTES: readonly NamoEmote[] = ["nod", "shake", "shrug", "clap"];
+// language/pose emotes mixed in with them — real namo.js locomotion, not
+// CSS. Covers nearly everything namo.js's own demo exposes: show-on-screen
+// props, feelings, and body language/poses.
+const CARD_EMOTES: readonly NamoEmote[] = ["info", "calendar", "pin", "clock", "search", "chart", "chat", "idea"];
+const FEEL_EMOTES: readonly NamoEmote[] = ["wave", "namaste", "dance", "cheer", "love", "shy", "zap", "stretch", "sorry"];
+const BODY_EMOTES: readonly NamoEmote[] = ["nod", "shake", "shrug", "clap", "look", "present", "pointR", "pointL"];
+const REACT_EMOTES = ["surprised", "happy", "laugh"] as const;
+const ALL_MOODS: readonly NamoMood[] = ["friendly", "happy", "calm", "curious", "caring", "confident"];
 
 function pick<T>(arr: readonly T[]): T {
   return arr[Math.floor(Math.random() * arr.length)];
@@ -108,12 +126,51 @@ function wait(ms: number) {
   });
 }
 
-// Keep Namo's flight spots clear of the HUD bar/pills (top), and the
-// floating controls/panels (bottom) — a generous safe band in the middle.
+// Pixel-based safe margins (not percentages) so Namo genuinely uses the
+// whole screen on a big event display instead of a shrinking fraction of
+// it — just enough clearance for the HUD/ticker up top and the floating
+// controls/panels down below.
+// Namo's own box is 230px (so it needs >=115px of clearance on its own),
+// and a hologram card can be offset further out and extends upward from
+// its anchor point — these margins keep both fully on-screen, never
+// clipped, even right up against an edge.
+const SAFE_MARGIN = { top: 210, bottom: 160, side: 130 };
+
+function clampTarget(p: Point): Point {
+  const w = window.innerWidth;
+  const h = window.innerHeight;
+  return {
+    x: Math.min(Math.max(p.x, SAFE_MARGIN.side), Math.max(SAFE_MARGIN.side, w - SAFE_MARGIN.side)),
+    y: Math.min(Math.max(p.y, SAFE_MARGIN.top), Math.max(SAFE_MARGIN.top, h - SAFE_MARGIN.bottom)),
+  };
+}
+
 function pickRoamTarget(): Point {
   const w = window.innerWidth;
   const h = window.innerHeight;
-  return { x: w * (0.12 + Math.random() * 0.76), y: h * (0.22 + Math.random() * 0.46) };
+  return clampTarget({
+    x: SAFE_MARGIN.side + Math.random() * Math.max(1, w - SAFE_MARGIN.side * 2),
+    y: SAFE_MARGIN.top + Math.random() * Math.max(1, h - SAFE_MARGIN.top - SAFE_MARGIN.bottom),
+  });
+}
+
+// Spread a new hologram away from any still-active ones instead of letting
+// them stack — try a handful of candidate spots around the character and
+// keep whichever has the most breathing room from the others.
+function pickHoloSpot(center: Point, existing: Point[]): Point {
+  let best = clampTarget({ x: center.x, y: center.y - 95 });
+  let bestScore = -Infinity;
+  for (let i = 0; i < 7; i++) {
+    const angle = Math.random() * Math.PI * 2;
+    const dist = 115 + Math.random() * 80;
+    const candidate = clampTarget({ x: center.x + Math.cos(angle) * dist, y: center.y - 60 + Math.sin(angle) * dist });
+    const score = existing.reduce((min, e) => Math.min(min, Math.hypot(candidate.x - e.x, candidate.y - e.y)), Infinity);
+    if (score > bestScore) {
+      bestScore = score;
+      best = candidate;
+    }
+  }
+  return best;
 }
 
 let portalSeq = 0;
@@ -136,16 +193,44 @@ export default function NamoExperience() {
   const lastHoverReactRef = useRef(0);
   const levelRafRef = useRef<number | null>(null);
   const dockRef = useRef<HTMLDivElement>(null);
+  const kioskRef = useRef<HTMLDivElement>(null);
 
   const [target, setTarget] = useState<Point | null>(null);
   const targetRef = useRef<Point | null>(null);
   const [flying, setFlying] = useState(false);
   const [portals, setPortals] = useState<{ id: number; x: number; y: number }[]>([]);
   const [holograms, setHolograms] = useState<{ id: number; x: number; y: number; fact: CapFact }[]>([]);
+  // A tap/click anywhere on the idle screen — the roam loop picks this up
+  // and flies Namo straight there instead of its next random spot.
+  const forceSummonRef = useRef<Point | null>(null);
+  // Picked up and dragged by hand — the roam loop pauses entirely while
+  // this is true, so it never fights the drag.
+  const isDraggingRef = useRef(false);
+  // framer-motion's `drag` moves the element via a transform offset
+  // layered on top of the `left`/`top` animate below; these reset to 0 the
+  // instant a drag ends, after folding the drop point into `target` itself
+  // — otherwise the offset would silently double up on the next flight.
+  const dragX = useMotionValue(0);
+  const dragY = useMotionValue(0);
 
   const applyTarget = (t: Point) => {
     targetRef.current = t;
     setTarget(t);
+  };
+
+  // Shared portal-out / relocate / portal-in sequence — used by both the
+  // ambient roam loop and a click-to-summon.
+  const flyTo = async (api: NamoInstance, to: Point) => {
+    const from = targetRef.current ?? to;
+    spawnPortal(from.x, from.y);
+    api.emote("zap");
+    setFlying(true);
+    await wait(140);
+    applyTarget(to);
+    await wait(650);
+    setFlying(false);
+    spawnPortal(to.x, to.y);
+    api.jump(true);
   };
 
   const spawnPortal = (x: number, y: number) => {
@@ -159,12 +244,11 @@ export default function NamoExperience() {
     holoSeq += 1;
     const id = holoSeq;
     const fact = pick(CAPABILITY_FACTS);
-    const w = window.innerWidth;
-    const h = window.innerHeight;
-    const offX = (Math.random() < 0.5 ? -1 : 1) * (90 + Math.random() * 50);
-    const cx = Math.min(Math.max(x + offX, 115), w - 115);
-    const cy = Math.min(Math.max(y - 90, 90), h - 140);
-    setHolograms((hs) => [...hs.slice(-2), { id, x: cx, y: cy, fact }]);
+    setHolograms((hs) => {
+      const kept = hs.slice(-1); // cap at 2 on screen together — never stacked 3-deep
+      const spot = pickHoloSpot({ x, y }, kept);
+      return [...kept, { id, x: spot.x, y: spot.y, fact }];
+    });
     window.setTimeout(() => setHolograms((hs) => hs.filter((hh) => hh.id !== id)), 4200);
   };
 
@@ -309,8 +393,29 @@ export default function NamoExperience() {
           continue;
         }
 
+        // Being dragged by hand right now — stay completely out of the way.
+        if (isDraggingRef.current) {
+          await wait(150);
+          continue;
+        }
+
+        // A click/tap landed on the idle screen — honour it before
+        // anything else, as close to instantly as the current beat allows.
+        if (forceSummonRef.current) {
+          const to = forceSummonRef.current;
+          forceSummonRef.current = null;
+          await flyTo(api, to);
+          api.react(pick(REACT_EMOTES));
+          spawnHologram(to.x, to.y);
+          await wait(250);
+          continue;
+        }
+
+        if (Math.random() < 0.2) api.setMood(pick(ALL_MOODS));
+
         const beats = 2 + Math.floor(Math.random() * 2);
         for (let i = 0; i < beats && !cancelled; i++) {
+          if (forceSummonRef.current || isDraggingRef.current) break;
           const roll = Math.random();
           try {
             if (roll < 0.3) {
@@ -321,7 +426,7 @@ export default function NamoExperience() {
               api.jump(Math.random() < 0.3);
             } else if (roll < 0.45) {
               api.point(Math.random() < 0.5 ? "left" : "right");
-            } else if (roll < 0.8) {
+            } else if (roll < 0.78) {
               api.emote(pick(CARD_EMOTES));
               if (targetRef.current) spawnHologram(targetRef.current.x, targetRef.current.y);
             } else {
@@ -331,26 +436,14 @@ export default function NamoExperience() {
             // Namo may be mid-destroy on a fast state flip — just skip this beat.
           }
           if (cancelled) break;
-          await wait(500 + Math.random() * 500);
+          await wait(350 + Math.random() * 350);
         }
-        if (cancelled) break;
+        if (cancelled || forceSummonRef.current || isDraggingRef.current) continue;
 
         // Flight: portal out, relocate across the whole screen, portal in.
-        const from = targetRef.current ?? pickRoamTarget();
-        spawnPortal(from.x, from.y);
-        api.emote("zap");
-        setFlying(true);
-        await wait(140);
+        await flyTo(api, pickRoamTarget());
         if (cancelled) break;
-        const to = pickRoamTarget();
-        applyTarget(to);
-        await wait(650);
-        setFlying(false);
-        if (cancelled) break;
-        spawnPortal(to.x, to.y);
-        api.jump(true);
-        spawnHologram(to.x, to.y);
-        await wait(700 + Math.random() * 500);
+        await wait(650 + Math.random() * 500);
       }
     };
     const kickoff = window.setTimeout(loop, 0);
@@ -359,6 +452,22 @@ export default function NamoExperience() {
       window.clearTimeout(kickoff);
     };
   }, [roaming]);
+
+  // Tap/click anywhere on the open floor — not on Namo, a card, or a
+  // control — summons Namo there. Reacts immediately; the fly-over itself
+  // lands within the next beat (see forceSummonRef above).
+  const onStageClick = (e: React.MouseEvent) => {
+    if (!roaming) return;
+    // Skip anything actually interactive (buttons, pills, cards, panels) —
+    // this is a delegated handler on the whole page, so only a click that
+    // isn't already somebody else's control should summon Namo.
+    const el = e.target as HTMLElement;
+    if (el.closest("button, input, a, .namo-cap-card, .namo-booking-card, .namo-panel, .namo-transcript-drawer, .namo-transcript-fab, .namo-floor-wrap")) {
+      return;
+    }
+    namoApi.current?.react(pick(REACT_EMOTES));
+    forceSummonRef.current = clampTarget({ x: e.clientX, y: e.clientY });
+  };
 
   const switchIndustry = async (next: IndustryId) => {
     if (next === industry) return;
@@ -387,6 +496,30 @@ export default function NamoExperience() {
         ? "Listening…"
         : "Thinking…";
 
+  // Cheap 3D parallax: track the pointer as two CSS custom properties on
+  // the root (direct DOM write, not React state — this fires on every
+  // pointermove and a re-render per frame would be wasteful). The
+  // background's own keyframe animations read these via calc() so the
+  // depth effect layers on top of, rather than fights, their float loops.
+  useEffect(() => {
+    let raf = 0;
+    const onMove = (e: PointerEvent) => {
+      if (raf) return;
+      raf = requestAnimationFrame(() => {
+        raf = 0;
+        const mx = (e.clientX / window.innerWidth) * 2 - 1;
+        const my = (e.clientY / window.innerHeight) * 2 - 1;
+        kioskRef.current?.style.setProperty("--mx", mx.toFixed(3));
+        kioskRef.current?.style.setProperty("--my", my.toFixed(3));
+      });
+    };
+    window.addEventListener("pointermove", onMove, { passive: true });
+    return () => {
+      window.removeEventListener("pointermove", onMove);
+      if (raf) cancelAnimationFrame(raf);
+    };
+  }, []);
+
   const liveFieldEntries = Object.entries(liveFields).filter(([key]) => !LIVE_FIELD_SKIP_KEYS.has(key));
   const hasCaptured = activity.length > 0 || !!booking || liveFieldEntries.length > 0;
   // Stays up after the call ends (so the recap doesn't vanish mid-glance) —
@@ -394,10 +527,11 @@ export default function NamoExperience() {
   const showPanel = !panelClosed && (connected || busy || (status === "ended" && hasCaptured));
 
   return (
-    <div className="namo-kiosk">
+    <div ref={kioskRef} className={`namo-kiosk${roaming ? " is-roaming" : ""}`} onClick={onStageClick}>
       <style>{NAMO_EXPERIENCE_CSS}</style>
 
       <div className="namo-bg-fx">
+        <div className="namo-bg-aura" />
         <div className="namo-bg-blob namo-bg-blob-a" />
         <div className="namo-bg-blob namo-bg-blob-b" />
         <div className="namo-bg-grid" />
@@ -408,7 +542,7 @@ export default function NamoExperience() {
         <img src="/logo.png" alt="Namuste" className="brand-logo" style={{ height: "36px", width: "auto", objectFit: "contain" }} />
         <span className="namo-live-badge">
           <span className="namo-live-dot" />
-          Agent Live · event demo
+          Agent Live
         </span>
       </div>
 
@@ -423,12 +557,31 @@ export default function NamoExperience() {
           actual walk/run/jump/emote animation while it's landed. */}
       {target && (
         <motion.div
-          className={`namo-floor-wrap${roaming ? " is-interactive" : ""}${flying ? " is-flying" : ""}`}
+          className={`namo-floor-wrap${roaming ? " is-interactive is-grabbable" : ""}${flying ? " is-flying" : ""}`}
+          style={{ x: dragX, y: dragY }}
           animate={{ left: target.x, top: target.y }}
           transition={flying ? { type: "spring", stiffness: 95, damping: 11 } : { type: "spring", stiffness: 140, damping: 18 }}
+          drag={roaming}
+          dragMomentum={false}
+          dragElastic={0.12}
+          whileDrag={{ scale: 1.08 }}
+          onDragStart={() => {
+            isDraggingRef.current = true;
+            namoApi.current?.react("surprised");
+          }}
+          onDragEnd={(_evt, info) => {
+            isDraggingRef.current = false;
+            dragX.set(0);
+            dragY.set(0);
+            const to = clampTarget({ x: info.point.x, y: info.point.y });
+            applyTarget(to);
+            namoApi.current?.react(pick(REACT_EMOTES));
+            namoApi.current?.jump();
+            spawnHologram(to.x, to.y);
+          }}
           onClick={() => {
             if (!roaming) return;
-            namoApi.current?.react(pick(["surprised", "happy", "laugh"] as const));
+            namoApi.current?.react(pick(REACT_EMOTES));
             if (targetRef.current) spawnHologram(targetRef.current.x, targetRef.current.y);
           }}
           onHoverStart={() => {
@@ -492,7 +645,7 @@ export default function NamoExperience() {
               }}
             >
               <span className="namo-cap-live-dot" />
-              <span className="namo-cap-icon">{h.fact.icon}</span>
+              <span className="namo-cap-icon" style={{ background: `linear-gradient(135deg, ${h.fact.accent[0]}, ${h.fact.accent[1]})` }}>{h.fact.icon}</span>
               <div>
                 <div className="namo-cap-title">{h.fact.title}</div>
                 <div className="namo-cap-sub">{h.fact.sub}</div>
@@ -812,7 +965,7 @@ function FeatureTicker({ active }: { active: boolean }) {
           exit={{ x: -70, opacity: 0 }}
           transition={{ type: "spring", stiffness: 260, damping: 24 }}
         >
-          <span className="namo-ticker-icon">{fact.icon}</span>
+          <span className="namo-ticker-icon" style={{ background: `linear-gradient(135deg, ${fact.accent[0]}, ${fact.accent[1]})` }}>{fact.icon}</span>
           <span className="namo-ticker-title">{fact.title}</span>
           <span className="namo-ticker-sub">{fact.sub}</span>
         </motion.div>
