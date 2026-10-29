@@ -1,4 +1,4 @@
-// Scoped styles for /namo-live. Self-contained — does not touch aiDashStyles.ts
+// Scoped styles for /agent-live. Self-contained — does not touch aiDashStyles.ts
 // (the existing dashboard pages' styling) so this page can be iterated on
 // without any risk to doctors-and-clinics / the homepage / dentist_reach.
 export const NAMO_EXPERIENCE_CSS = `
@@ -82,7 +82,28 @@ export const NAMO_EXPERIENCE_CSS = `
 
   /* ---------- Namo's free-roam character + its magic ---------- */
   .namo-floor-wrap { position: fixed; left: 0; top: 0; width: 230px; height: 230px; transform: translate(-50%, -50%); z-index: 3; pointer-events: none; }
-  .namo-floor-wrap.is-interactive { pointer-events: auto; }
+  .namo-floor-wrap.is-interactive { pointer-events: auto; cursor: pointer; }
+
+  /* ---------- continuously-cycling feature ticker ---------- */
+  .namo-ticker-wrap { position: relative; z-index: 5; height: 0; width: 100%; max-width: 480px; display: flex; justify-content: center; overflow: visible; }
+  .namo-ticker {
+    position: absolute; top: 4px; display: flex; align-items: center; gap: 9px;
+    background: var(--glass-bg); border: 1px solid var(--glass-border);
+    backdrop-filter: var(--glass-blur); -webkit-backdrop-filter: var(--glass-blur);
+    border-radius: 999px; padding: 8px 18px 8px 10px; box-shadow: var(--shadow-subtle), 0 0 18px var(--green-glow);
+    white-space: nowrap;
+  }
+  .namo-ticker-icon {
+    flex-shrink: 0; width: 26px; height: 26px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    background: linear-gradient(135deg, var(--green-luminous), var(--green)); color: #fff;
+  }
+  .namo-ticker-title { font-size: 13px; font-weight: 700; color: var(--text-ivory); }
+  .namo-ticker-sub { font-size: 12px; color: var(--text-muted); }
+  @media (max-width: 640px) {
+    .namo-ticker-sub { display: none; }
+    .namo-ticker { padding: 7px 14px 7px 8px; }
+  }
   .namo-floor-ring {
     position: absolute; left: 50%; bottom: 18px; width: 170px; height: 36px; transform: translateX(-50%);
     border-radius: 50%; background: radial-gradient(ellipse, var(--green-glow-strong), transparent 70%);

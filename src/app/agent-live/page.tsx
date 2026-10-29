@@ -6,12 +6,12 @@ import NamoExperience from "@/components/NamoExperience";
 // normal site page, so none of the site chrome (promo banner, call timer,
 // "Book a demo", menu, footer links) belongs here.
 export const metadata: Metadata = {
-  title: "Namo Live — talk to our AI receptionist | Namuste",
+  title: "Agent Live — talk to our AI receptionist | Namuste",
   description:
-    "Namo Live: talk or chat with Namuste's live AI receptionist for clinics, salons, and agri inputs — book an appointment or ask a question, right here.",
+    "Agent Live: talk or chat with Namuste's live AI receptionist for clinics, salons, and agri inputs — book an appointment or ask a question, right here.",
 };
 
-export default function NamoLivePage() {
+export default function AgentLivePage() {
   return (
     <main style={{ background: "var(--bg)", minHeight: "100vh" }}>
       <NamoExperience />

@@ -20,7 +20,7 @@ const WEBHOOK_FALLBACK = "https://aiautomation.digicides.com/webhook/pop_up_data
 // Full-screen kiosk/event pages run their own self-contained demo flow —
 // this marketing popup would interrupt a live booth demo, so it never
 // auto-triggers there (an explicit "open-lead-modal" dispatch still works).
-const KIOSK_ROUTE_PREFIXES = ["/namo-live"];
+const KIOSK_ROUTE_PREFIXES = ["/agent-live"];
 
 const INDUSTRIES = [
   "Doctors & Clinics (Flagship)",

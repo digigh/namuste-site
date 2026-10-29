@@ -1,6 +1,6 @@
 "use client";
 
-// /namo-live — "Namo Live": a full-screen, high-energy hero experience for
+// /agent-live — "Agent Live": a full-screen, high-energy hero experience for
 // event booths. Reuses the exact same backend plumbing as ClinicLiveAgent
 // (useClinicAgent() + /api/livekit-token's clinic/salon/agri industry
 // branching) but presents it as a character-first, futuristic showcase
@@ -133,6 +133,7 @@ export default function NamoExperience() {
   } = agent;
 
   const namoApi = useRef<NamoInstance | null>(null);
+  const lastHoverReactRef = useRef(0);
   const levelRafRef = useRef<number | null>(null);
   const dockRef = useRef<HTMLDivElement>(null);
 
@@ -308,7 +309,7 @@ export default function NamoExperience() {
           continue;
         }
 
-        const beats = 1 + Math.floor(Math.random() * 2);
+        const beats = 2 + Math.floor(Math.random() * 2);
         for (let i = 0; i < beats && !cancelled; i++) {
           const roll = Math.random();
           try {
@@ -318,9 +319,9 @@ export default function NamoExperience() {
               else await api.walkTo(x);
               if (cancelled) break;
               api.jump(Math.random() < 0.3);
-            } else if (roll < 0.5) {
+            } else if (roll < 0.45) {
               api.point(Math.random() < 0.5 ? "left" : "right");
-            } else if (roll < 0.78) {
+            } else if (roll < 0.8) {
               api.emote(pick(CARD_EMOTES));
               if (targetRef.current) spawnHologram(targetRef.current.x, targetRef.current.y);
             } else {
@@ -330,7 +331,7 @@ export default function NamoExperience() {
             // Namo may be mid-destroy on a fast state flip — just skip this beat.
           }
           if (cancelled) break;
-          await wait(1300 + Math.random() * 1000);
+          await wait(500 + Math.random() * 500);
         }
         if (cancelled) break;
 
@@ -339,16 +340,17 @@ export default function NamoExperience() {
         spawnPortal(from.x, from.y);
         api.emote("zap");
         setFlying(true);
-        await wait(180);
+        await wait(140);
         if (cancelled) break;
         const to = pickRoamTarget();
         applyTarget(to);
-        await wait(950);
+        await wait(650);
         setFlying(false);
         if (cancelled) break;
         spawnPortal(to.x, to.y);
         api.jump(true);
-        await wait(1600 + Math.random() * 1200);
+        spawnHologram(to.x, to.y);
+        await wait(700 + Math.random() * 500);
       }
     };
     const kickoff = window.setTimeout(loop, 0);
@@ -406,9 +408,11 @@ export default function NamoExperience() {
         <img src="/logo.png" alt="Namuste" className="brand-logo" style={{ height: "36px", width: "auto", objectFit: "contain" }} />
         <span className="namo-live-badge">
           <span className="namo-live-dot" />
-          Namo Live · event demo
+          Agent Live · event demo
         </span>
       </div>
+
+      <FeatureTicker active={!connected} />
 
       <div className="namo-theme-toggle">
         <ThemeToggle />
@@ -421,7 +425,19 @@ export default function NamoExperience() {
         <motion.div
           className={`namo-floor-wrap${roaming ? " is-interactive" : ""}${flying ? " is-flying" : ""}`}
           animate={{ left: target.x, top: target.y }}
-          transition={flying ? { type: "spring", stiffness: 55, damping: 8 } : { type: "spring", stiffness: 120, damping: 18 }}
+          transition={flying ? { type: "spring", stiffness: 95, damping: 11 } : { type: "spring", stiffness: 140, damping: 18 }}
+          onClick={() => {
+            if (!roaming) return;
+            namoApi.current?.react(pick(["surprised", "happy", "laugh"] as const));
+            if (targetRef.current) spawnHologram(targetRef.current.x, targetRef.current.y);
+          }}
+          onHoverStart={() => {
+            if (!roaming) return;
+            const now = Date.now();
+            if (now - lastHoverReactRef.current < 1200) return;
+            lastHoverReactRef.current = now;
+            namoApi.current?.emote(pick(["wave", "shy", "nod"] as const));
+          }}
         >
           <div className="namo-trail">
             <span className="namo-trail-dot" />
@@ -433,7 +449,7 @@ export default function NamoExperience() {
           <Namo
             className="namo-floor"
             mood={mood}
-            options={{ tapToWalk: roaming }}
+            options={{ tapToWalk: roaming, interactive: true, followPointer: true }}
             onReady={(api) => {
               namoApi.current = api;
             }}
@@ -768,6 +784,38 @@ export default function NamoExperience() {
             </div>
           </motion.div>
         )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+// A continuously-cycling slide-in banner — guarantees visible, legible
+// motion on the page every few seconds regardless of how the roam dice
+// rolls, independent of where Namo currently is.
+function FeatureTicker({ active }: { active: boolean }) {
+  const [index, setIndex] = useState(0);
+  useEffect(() => {
+    if (!active) return;
+    const id = window.setInterval(() => setIndex((i) => i + 1), 3000);
+    return () => window.clearInterval(id);
+  }, [active]);
+  if (!active) return null;
+  const fact = CAPABILITY_FACTS[index % CAPABILITY_FACTS.length];
+  return (
+    <div className="namo-ticker-wrap">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={index % CAPABILITY_FACTS.length}
+          className="namo-ticker"
+          initial={{ x: 70, opacity: 0 }}
+          animate={{ x: 0, opacity: 1 }}
+          exit={{ x: -70, opacity: 0 }}
+          transition={{ type: "spring", stiffness: 260, damping: 24 }}
+        >
+          <span className="namo-ticker-icon">{fact.icon}</span>
+          <span className="namo-ticker-title">{fact.title}</span>
+          <span className="namo-ticker-sub">{fact.sub}</span>
+        </motion.div>
       </AnimatePresence>
     </div>
   );
