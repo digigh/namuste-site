@@ -1,11 +1,16 @@
 import { NextResponse } from "next/server";
 import { createHmac, timingSafeEqual } from "node:crypto";
-import { composeSalonEvent, sendWhatsAppTemplate, toWhatsAppNumber } from "@/lib/whatsapp";
+import { composeSalonEvent, toWhatsAppNumber } from "@/lib/whatsapp";
 
 // Receives salon's own webhook (Admin -> Webhook & WhatsApp), verifies the
-// HMAC signature exactly as salon's own docs describe, and sends the
-// matching WhatsApp template. Salon needs zero code changes for this —
-// just point its webhook URL here and turn on the events.
+// HMAC signature exactly as salon's own docs describe, composes the
+// message, and relays it to an n8n webhook instead of calling Meta's
+// Cloud API directly — the n8n flow owns the actual send (and whichever
+// WhatsApp node/credentials it's configured with) from a clean, already-
+// composed {to, template, name, headline, details} payload, so it never
+// needs to parse salon's native webhook shape or pick content per event.
+// Salon needs zero code changes for this — just point its webhook URL
+// here and turn on the events.
 export async function POST(req: Request) {
   const secret = process.env.SALON_WEBHOOK_SECRET;
   if (!secret) {
@@ -44,11 +49,30 @@ export async function POST(req: Request) {
     return NextResponse.json({ sent: false, reason: !msg ? "unmapped event" : "no recipient number" });
   }
 
+  const n8nUrl = process.env.N8N_SALON_WEBHOOK_URL;
+  if (!n8nUrl) {
+    return NextResponse.json({ error: "N8N_SALON_WEBHOOK_URL not configured" }, { status: 503 });
+  }
+
   try {
-    await sendWhatsAppTemplate(toWhatsAppNumber(to), msg);
-    return NextResponse.json({ sent: true });
+    const res = await fetch(n8nUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        to: toWhatsAppNumber(to),
+        template: msg.template,
+        name: msg.name,
+        headline: msg.headline,
+        details: msg.details,
+        event,
+      }),
+    });
+    if (!res.ok) {
+      throw new Error(`n8n webhook responded ${res.status}`);
+    }
+    return NextResponse.json({ relayed: true });
   } catch (err) {
-    console.error("[salon-webhook] whatsapp send failed", err);
-    return NextResponse.json({ error: "send failed" }, { status: 502 });
+    console.error("[salon-webhook] relay to n8n failed", err);
+    return NextResponse.json({ error: "relay failed" }, { status: 502 });
   }
 }
