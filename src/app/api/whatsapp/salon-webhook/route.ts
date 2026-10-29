@@ -12,8 +12,11 @@ import { composeSalonEvent, toWhatsAppNumber } from "@/lib/whatsapp";
 // Salon needs zero code changes for this — just point its webhook URL
 // here and turn on the events.
 export async function POST(req: Request) {
+  console.log("[salon-webhook] request received");
+
   const secret = process.env.SALON_WEBHOOK_SECRET;
   if (!secret) {
+    console.error("[salon-webhook] SALON_WEBHOOK_SECRET not configured");
     return NextResponse.json({ error: "SALON_WEBHOOK_SECRET not configured" }, { status: 503 });
   }
 
@@ -23,6 +26,7 @@ export async function POST(req: Request) {
   const a = Buffer.from(expected);
   const b = Buffer.from(got);
   if (a.length !== b.length || !timingSafeEqual(a, b)) {
+    console.warn("[salon-webhook] invalid signature", { gotHeader: got || "(missing)" });
     return NextResponse.json({ error: "Invalid signature" }, { status: 401 });
   }
 
@@ -30,6 +34,7 @@ export async function POST(req: Request) {
   try {
     payload = JSON.parse(raw);
   } catch {
+    console.warn("[salon-webhook] invalid JSON body");
     return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
   }
 
@@ -41,8 +46,10 @@ export async function POST(req: Request) {
 
   const to = data.customer?.whatsapp_number || data.customer?.phone;
   const msg = composeSalonEvent(event, data);
+  console.log("[salon-webhook] parsed", { event, hasRecipient: !!to, mapped: !!msg });
 
   if (!msg || !to) {
+    console.log("[salon-webhook] skipping — not mapped or no recipient", { event, hasRecipient: !!to });
     // Always 200 — salon's webhook log treats non-2xx as a delivery
     // failure and will retry; an unmapped event or missing number isn't
     // an error on their end.
@@ -51,10 +58,12 @@ export async function POST(req: Request) {
 
   const n8nUrl = process.env.N8N_SALON_WEBHOOK_URL;
   if (!n8nUrl) {
+    console.error("[salon-webhook] N8N_SALON_WEBHOOK_URL not configured");
     return NextResponse.json({ error: "N8N_SALON_WEBHOOK_URL not configured" }, { status: 503 });
   }
 
   try {
+    console.log("[salon-webhook] relaying to n8n", { event, template: msg.template });
     const res = await fetch(n8nUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -68,8 +77,9 @@ export async function POST(req: Request) {
       }),
     });
     if (!res.ok) {
-      throw new Error(`n8n webhook responded ${res.status}`);
+      throw new Error(`n8n webhook responded ${res.status}: ${(await res.text()).slice(0, 300)}`);
     }
+    console.log("[salon-webhook] relayed successfully", { event });
     return NextResponse.json({ relayed: true });
   } catch (err) {
     console.error("[salon-webhook] relay to n8n failed", err);
