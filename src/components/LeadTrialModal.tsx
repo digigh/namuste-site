@@ -17,6 +17,10 @@ import {
 
 const STORAGE_KEY = "namuste_trial_popup_v1";
 const WEBHOOK_FALLBACK = "https://aiautomation.digicides.com/webhook/pop_up_data";
+// Full-screen kiosk/event pages run their own self-contained demo flow —
+// this marketing popup would interrupt a live booth demo, so it never
+// auto-triggers there (an explicit "open-lead-modal" dispatch still works).
+const KIOSK_ROUTE_PREFIXES = ["/namo-live"];
 
 const INDUSTRIES = [
   "Doctors & Clinics (Flagship)",
@@ -69,7 +73,9 @@ export default function LeadTrialModal() {
     };
     window.addEventListener("open-lead-modal", handleForceOpen);
 
-    if (alreadyHandled) {
+    const isKioskRoute = KIOSK_ROUTE_PREFIXES.some((p) => window.location.pathname.startsWith(p));
+
+    if (alreadyHandled || isKioskRoute) {
       // Still listen for forced opens from CTA buttons even if previously dismissed
       return () => {
         window.removeEventListener("open-lead-modal", handleForceOpen);

@@ -10,6 +10,7 @@ import {
   Room,
   RoomEvent,
   Track,
+  type DataPacket_Kind,
   type Participant,
   type RemoteParticipant,
   type RemoteTrack,
@@ -52,6 +53,16 @@ const TRANSCRIPTION_TOPIC = "lk.transcription";
 const CHAT_TOPIC = "lk.chat";
 const AGENT_JOIN_TIMEOUT_MS = 20_000;
 const MAX_SESSION_MS = 11 * 60_000; // the agent ends sessions at 10 min; this is a backstop
+
+// Salon and agri are separate agents (separate repos/LiveKit projects,
+// proxied through /api/livekit-token) that publish their own live-activity
+// feed over the *raw* data-channel API (`publish_data`) rather than this
+// project's text-stream convention, each on its own topic:
+//   - agri (namuste_agri):     topic "agent.activity", payload.type: "tool" | "snapshot" | "error"
+//   - salon (headlock-salon):  topic "agent-events",    payload.type: "tool" | "state" | "agent_state"
+// Neither uses "clinic.events", so this never overlaps with the clinic
+// agent's own events handled below.
+const RAW_ACTIVITY_TOPICS = new Set(["agent.activity", "agent-events"]);
 
 const isAgent = (p: Participant) => p.isAgent || p.identity.startsWith("agent-");
 
@@ -109,6 +120,12 @@ export function useClinicAgent() {
   const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [booking, setBooking] = useState<BookingEvent | null>(null);
   const [language, setLanguage] = useState("en-IN");
+  // Free-form key/value snapshot captured from salon/agri's own raw-data
+  // events (reference, stylist, crop, order number, ...) — each agent has a
+  // different shape, so this stays generic instead of forcing their data
+  // into the clinic-specific BookingEvent fields. Stays empty for clinic,
+  // which keeps using `booking` exclusively.
+  const [liveFields, setLiveFields] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
   const [muted, setMuted] = useState(false);
   const [userSpeaking, setUserSpeaking] = useState(false);
@@ -175,6 +192,7 @@ export function useClinicAgent() {
     setActivity([]);
     setBooking(null);
     setLanguage("en-IN");
+    setLiveFields({});
     setError(null);
     setElapsed(0);
     setEmergency(false);
@@ -201,6 +219,7 @@ export function useClinicAgent() {
       setBooking(null);
       setEmergency(false);
       setLanguage("en-IN");
+      setLiveFields({});
       setAgentState("initializing");
       setElapsed(0);
       setMuted(false);
@@ -263,6 +282,52 @@ export function useClinicAgent() {
             setLanguage(ev.code);
           }
         });
+
+        // Salon/agri publish their own live-activity feed over the raw data
+        // channel instead of a text stream — see RAW_ACTIVITY_TOPICS above.
+        room.on(
+          RoomEvent.DataReceived,
+          (payload: Uint8Array, _participant?: RemoteParticipant, _kind?: DataPacket_Kind, topic?: string) => {
+            if (!topic || !RAW_ACTIVITY_TOPICS.has(topic)) return;
+            let data: Record<string, unknown>;
+            try {
+              data = JSON.parse(new TextDecoder().decode(payload));
+            } catch {
+              return;
+            }
+            if (!data || typeof data !== "object") return;
+
+            if (data.type === "tool") {
+              const label =
+                (typeof data.label === "string" && data.label) ||
+                (typeof data.name === "string" && data.name) ||
+                (typeof data.tool === "string" && data.tool) ||
+                "Action";
+              const ok = !(data.ok === false || data.status === "failed" || data.status === "error");
+              activityIdRef.current += 1;
+              const item = { id: activityIdRef.current, label, ok, time: clock() };
+              setActivity((a) => [...a, item].slice(-20));
+            }
+
+            const snapshot =
+              (data.type === "snapshot" || data.type === "tool") && data.snapshot && typeof data.snapshot === "object"
+                ? (data.snapshot as Record<string, unknown>)
+                : data.type === "state" && data.state && typeof data.state === "object"
+                  ? (data.state as Record<string, unknown>)
+                  : null;
+            if (snapshot) {
+              setLiveFields((prev) => {
+                const next = { ...prev };
+                for (const [key, value] of Object.entries(snapshot)) {
+                  if ((typeof value === "string" || typeof value === "number") && value !== "") {
+                    next[key] = String(value);
+                  }
+                }
+                return next;
+              });
+            }
+          },
+        );
 
         room
           .on(RoomEvent.TrackSubscribed, (track: RemoteTrack, _pub, participant: RemoteParticipant) => {
@@ -416,6 +481,7 @@ export function useClinicAgent() {
     activity,
     booking,
     language,
+    liveFields,
     error,
     muted,
     userSpeaking,
