@@ -5,8 +5,10 @@ import { composeAgriEvent, sendWhatsAppTemplate } from "@/lib/whatsapp";
 // conversation triggers these, so a periodic check does: a restocked SKU
 // matching an open request, an order sitting in "dispatched" that hasn't
 // been announced yet, and a crop advisory old enough for a follow-up.
-// Configured as a Vercel Cron (see vercel.json) hitting this route on a
-// schedule; each branch marks what it sent so it never repeats.
+// Configured as a Vercel Cron (see vercel.json), once daily — Vercel's
+// Hobby plan caps cron frequency at once per day; a tighter schedule
+// needs the Pro plan. Each branch marks what it sent so it never repeats
+// regardless of how often this actually runs.
 
 const FOLLOWUP_AFTER_DAYS = 14;
 

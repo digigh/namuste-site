@@ -14,7 +14,7 @@
     },
     {
       "path": "/api/cron/agri-whatsapp",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 4 * * *"
     }
   ]
 }
