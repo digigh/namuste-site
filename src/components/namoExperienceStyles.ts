@@ -296,10 +296,13 @@ export const NAMO_EXPERIENCE_CSS = `
   .namo-panel-chip { display: inline-flex; align-items: center; gap: 5px; padding: 3px 9px; border-radius: 999px; background: var(--surface2); font-size: 11px; font-weight: 600; color: var(--text-ivory); white-space: nowrap; }
   .namo-panel-divider { height: 1px; border: none; background: var(--border); margin: 0; }
   .namo-panel-feed { display: flex; flex-direction: column; gap: 6px; max-height: 150px; overflow-y: auto; padding-right: 2px; }
-  .namo-panel-feed-item { display: flex; align-items: center; gap: 7px; font-size: 12px; color: var(--text-muted); }
-  .namo-panel-feed-item b { color: var(--text-ivory); font-weight: 500; flex: 1; }
-  .namo-panel-feed-ok { color: var(--green); flex-shrink: 0; }
-  .namo-panel-feed-bad { color: var(--coral); flex-shrink: 0; }
+  .namo-panel-feed-item { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: var(--text-muted); padding-top: 1px; }
+  .namo-panel-feed-item b { color: var(--text-ivory); font-weight: 500; }
+  .namo-panel-feed-text { display: flex; flex-direction: column; gap: 1px; flex: 1; min-width: 0; }
+  .namo-panel-feed-detail { font-size: 11px; color: var(--text-muted); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .namo-panel-feed-time { flex-shrink: 0; font-size: 11px; color: var(--text-muted); }
+  .namo-panel-feed-ok { color: var(--green); flex-shrink: 0; margin-top: 1px; }
+  .namo-panel-feed-bad { color: var(--coral); flex-shrink: 0; margin-top: 1px; }
   .namo-panel-empty { font-size: 11.5px; color: var(--text-muted); opacity: .7; text-align: center; padding: 4px 0; }
   .namo-panel-booking { border: 1px solid var(--border-green); border-radius: 14px; padding: 10px 12px; display: flex; flex-direction: column; gap: 5px; background: var(--green-glow); }
   .namo-panel-emergency { display: flex; align-items: center; gap: 8px; border-radius: 12px; padding: 8px 10px; background: var(--coral-bg); color: var(--coral); font-size: 12px; font-weight: 600; animation: namoGlowPulse 1.6s ease-in-out infinite; }

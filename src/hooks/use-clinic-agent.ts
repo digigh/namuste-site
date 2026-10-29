@@ -46,6 +46,9 @@ export interface ActivityItem {
   label: string;
   ok: boolean;
   time: string;
+  /** What was actually captured for this step (a name, a query, a
+   * product...), shown live under the label — not just that it happened. */
+  detail?: string;
 }
 
 const EVENTS_TOPIC = "clinic.events";
@@ -273,7 +276,7 @@ export function useClinicAgent() {
           if (!ev) return;
           if (ev.type === "tool") {
             activityIdRef.current += 1;
-            const item = { id: activityIdRef.current, label: ev.label, ok: ev.ok, time: clock() };
+            const item = { id: activityIdRef.current, label: ev.label, ok: ev.ok, time: clock(), detail: ev.detail };
             setActivity((a) => [...a, item].slice(-20));
             if (ev.name === "report_emergency") setEmergency(true);
           } else if (ev.type === "booking") {
@@ -304,8 +307,9 @@ export function useClinicAgent() {
                 (typeof data.tool === "string" && data.tool) ||
                 "Action";
               const ok = !(data.ok === false || data.status === "failed" || data.status === "error");
+              const detail = typeof data.detail === "string" && data.detail ? data.detail : undefined;
               activityIdRef.current += 1;
-              const item = { id: activityIdRef.current, label, ok, time: clock() };
+              const item = { id: activityIdRef.current, label, ok, time: clock(), detail };
               setActivity((a) => [...a, item].slice(-20));
             }
 

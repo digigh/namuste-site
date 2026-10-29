@@ -880,8 +880,11 @@ export default function NamoExperience() {
                           exit={{ opacity: 0 }}
                         >
                           {item.ok ? <CheckCircle2 size={13} className="namo-panel-feed-ok" /> : <XCircle size={13} className="namo-panel-feed-bad" />}
-                          <b>{item.label}</b>
-                          <span>{item.time}</span>
+                          <span className="namo-panel-feed-text">
+                            <b>{item.label}</b>
+                            {item.detail && <span className="namo-panel-feed-detail">{item.detail}</span>}
+                          </span>
+                          <span className="namo-panel-feed-time">{item.time}</span>
                         </motion.div>
                       ))}
                     </AnimatePresence>

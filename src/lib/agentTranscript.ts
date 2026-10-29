@@ -34,6 +34,10 @@ export interface ToolEvent {
   name: string;
   label: string;
   ok: boolean;
+  /** Whatever the agent actually captured for this step (a name, a query,
+   * a product, a reference...) — shown live under the label so the panel
+   * reflects real collected data, not just that a step happened. */
+  detail?: string;
 }
 
 export interface BookingEvent {
@@ -66,7 +70,13 @@ export function parseAgentEvent(raw: string): AgentEvent | null {
   if (!data || typeof data !== "object") return null;
   const d = data as Record<string, unknown>;
   if (d.type === "tool" && str(d.name)) {
-    return { type: "tool", name: d.name, label: str(d.label) ? d.label : d.name, ok: d.ok === true };
+    return {
+      type: "tool",
+      name: d.name,
+      label: str(d.label) ? d.label : d.name,
+      ok: d.ok === true,
+      detail: str(d.detail) ? d.detail : undefined,
+    };
   }
   if (d.type === "booking" && str(d.reference)) {
     return {
