@@ -88,7 +88,7 @@ export default function Navbar() {
               <span className="nav-top-tag">DOCTORS &amp; CLINIC PLATFORM</span>
               <span className="nav-top-divider">·</span>
               <span className="nav-top-msg">
-                Special Launch: <strong>1 Month Free Trial</strong> for Clinics with 1000 free voice minutes
+                Special Launch: <strong>1 Month Free Trial</strong> for Clinics
               </span>
             </div>
             <button

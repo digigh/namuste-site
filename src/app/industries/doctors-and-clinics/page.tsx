@@ -126,7 +126,6 @@ export default function DoctorsAndClinicsPage() {
                       <span>CLINIC LAUNCH OFFER</span>
                     </span>
                     <span className="dc-trial-pill">1 MONTH FREE TRIAL</span>
-                    <span className="dc-trial-badge-sub">1000 FREE VOICE MINUTES</span>
                   </div>
 
                   <h3 className="dc-trial-heading">
@@ -138,7 +137,6 @@ export default function DoctorsAndClinicsPage() {
                   </p>
 
                   <div className="dc-trial-perks-row">
-                    <span className="dc-trial-perk"><CheckCircle2 size={14} /> 1000 Free Voice Minutes</span>
                     <span className="dc-trial-perk"><CheckCircle2 size={14} /> OPD Calendar Integration</span>
                     <span className="dc-trial-perk"><CheckCircle2 size={14} /> WhatsApp Slot Confirmation</span>
                   </div>
