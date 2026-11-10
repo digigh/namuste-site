@@ -465,7 +465,6 @@ export default function LeadTrialModal() {
                   <div className="lead-modal-perks">
                     {[
                       "1000 Free Voice Minutes",
-                      "No Credit Card Needed",
                       "2-Min Activation",
                     ].map((perk, i) => (
                       <motion.span

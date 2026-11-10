@@ -134,14 +134,13 @@ export default function DoctorsAndClinicsPage() {
                   </h3>
 
                   <p className="dc-trial-subtext">
-                    Let Namuste answer patient enquiries, schedule consultations on your doctor calendar, and confirm bookings over WhatsApp. Zero hardware, setup in 2 minutes, and no credit card required.
+                    Let Namuste answer patient enquiries, schedule consultations on your doctor calendar, and confirm bookings over WhatsApp. Zero hardware and setup in 2 minutes.
                   </p>
 
                   <div className="dc-trial-perks-row">
                     <span className="dc-trial-perk"><CheckCircle2 size={14} /> 1000 Free Voice Minutes</span>
                     <span className="dc-trial-perk"><CheckCircle2 size={14} /> OPD Calendar Integration</span>
                     <span className="dc-trial-perk"><CheckCircle2 size={14} /> WhatsApp Slot Confirmation</span>
-                    <span className="dc-trial-perk"><CheckCircle2 size={14} /> No Credit Card Required</span>
                   </div>
                 </div>
 
