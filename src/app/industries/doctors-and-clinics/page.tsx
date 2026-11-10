@@ -125,12 +125,12 @@ export default function DoctorsAndClinicsPage() {
                       <Stethoscope size={13} />
                       <span>CLINIC LAUNCH OFFER</span>
                     </span>
-                    <span className="dc-trial-pill">7 DAYS FREE TRIAL</span>
+                    <span className="dc-trial-pill">1 MONTH FREE TRIAL</span>
                     <span className="dc-trial-badge-sub">100 FREE VOICE MINUTES</span>
                   </div>
 
                   <h3 className="dc-trial-heading">
-                    Try the Doctors &amp; Clinic AI Platform Free for 7 Days
+                    Try the Doctors &amp; Clinic AI Platform Free for 1 Month
                   </h3>
 
                   <p className="dc-trial-subtext">
@@ -150,7 +150,7 @@ export default function DoctorsAndClinicsPage() {
                     className="dc-trial-cta-btn"
                   >
                     <span className="dc-trial-btn-shine" />
-                    <span>Start 7-Day Free Trial</span>
+                    <span>Start 1-Month Free Trial</span>
                     <ArrowUpRight size={15} />
                   </LeadTrialTriggerButton>
                   <Link href="/pricing" className="dc-trial-pricing-link">

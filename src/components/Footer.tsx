@@ -16,7 +16,7 @@ export default function Footer() {
               <span>SPECIAL LAUNCH</span>
             </span>
             <span className="footer-trial-title">
-              7-Day Free Trial for Doctors &amp; Clinics
+              1-Month Free Trial for Doctors &amp; Clinics
             </span>
             <span className="footer-trial-divider">·</span>
             <span className="footer-trial-desc">

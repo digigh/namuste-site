@@ -285,7 +285,7 @@ export default function LeadTrialModal() {
     } catch {}
 
     // Dispatch full submitted payload
-    await dispatchWebhook("submitted", true, "activate_7_day_free_trial");
+    await dispatchWebhook("submitted", true, "activate_1_month_free_trial");
 
     setIsSubmitting(false);
     setIsSuccess(true);
@@ -333,7 +333,7 @@ export default function LeadTrialModal() {
                 <div className="lead-success-icon">
                   <Check size={28} strokeWidth={3} />
                 </div>
-                <h3 className="lead-success-title">Your 7-Day Free Trial is Activated!</h3>
+                <h3 className="lead-success-title">Your 1-Month Free Trial is Activated! 🎉</h3>
                 <p className="lead-success-desc">
                   Welcome to Namuste. We are redirecting you to your practice configuration dashboard with 100 free voice minutes...
                 </p>
@@ -351,12 +351,18 @@ export default function LeadTrialModal() {
                     <Zap size={11} strokeWidth={2.5} />
                     <span>SPECIAL LAUNCH OFFER</span>
                   </span>
-                  <span className="lead-modal-tag">7 DAYS FREE TRIAL</span>
+                  <span className="lead-modal-tag lead-modal-tag-big">
+                    <span className="lead-modal-tag-shine" />
+                    🎉 1 MONTH FREE TRIAL
+                  </span>
                 </div>
 
                 <h2 id="lead-modal-title" className="lead-modal-title">
                   Experience Namuste AI for Your Practice
                 </h2>
+                <p className="lead-modal-subtitle-exciting">
+                  A full month, on us — see real patients booked, real calls answered, before you decide anything.
+                </p>
 
                 <form onSubmit={handleSubmit} className="lead-modal-form" noValidate>
                   {/* Full Name */}
@@ -457,15 +463,21 @@ export default function LeadTrialModal() {
 
                   {/* Perk Checkmarks */}
                   <div className="lead-modal-perks">
-                    <span className="lead-perk-item">
-                      <Check size={12} strokeWidth={3} /> 100 Free Voice Minutes
-                    </span>
-                    <span className="lead-perk-item">
-                      <Check size={12} strokeWidth={3} /> No Credit Card Needed
-                    </span>
-                    <span className="lead-perk-item">
-                      <Check size={12} strokeWidth={3} /> 2-Min Activation
-                    </span>
+                    {[
+                      "100 Free Voice Minutes",
+                      "No Credit Card Needed",
+                      "2-Min Activation",
+                    ].map((perk, i) => (
+                      <motion.span
+                        key={perk}
+                        className="lead-perk-item"
+                        initial={{ opacity: 0, y: 6, scale: 0.9 }}
+                        animate={{ opacity: 1, y: 0, scale: 1 }}
+                        transition={{ delay: 0.15 + i * 0.1, type: "spring", stiffness: 300, damping: 20 }}
+                      >
+                        <Check size={12} strokeWidth={3} /> {perk}
+                      </motion.span>
+                    ))}
                   </div>
 
                   {/* Action Buttons */}
@@ -475,12 +487,13 @@ export default function LeadTrialModal() {
                       disabled={isSubmitting}
                       className="lead-btn-submit"
                     >
+                      <span className="lead-btn-submit-shine" />
                       {isSubmitting ? (
                         <span>Activating Trial…</span>
                       ) : (
                         <>
                           <Zap size={14} strokeWidth={2.5} />
-                          <span>Claim 7-Day Free Trial</span>
+                          <span>Claim 1-Month Free Trial</span>
                           <ArrowRight size={14} />
                         </>
                       )}
@@ -527,6 +540,25 @@ export default function LeadTrialModal() {
               overflow: hidden;
               z-index: 10;
               color: var(--text-ivory);
+            }
+            .lead-modal-box::before {
+              content: "";
+              position: absolute;
+              inset: -1px;
+              border-radius: 24px;
+              padding: 1.5px;
+              background: linear-gradient(135deg, #00E575, #9BEA16, #00B853, #00E575);
+              background-size: 300% 300%;
+              -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+              -webkit-mask-composite: xor;
+              mask-composite: exclude;
+              animation: leadBoxGlowSweep 5s linear infinite;
+              pointer-events: none;
+              z-index: 1;
+            }
+            @keyframes leadBoxGlowSweep {
+              0% { background-position: 0% 50%; }
+              100% { background-position: 300% 50%; }
             }
             .lead-modal-glow {
               position: absolute;
@@ -593,6 +625,37 @@ export default function LeadTrialModal() {
               border-radius: 999px;
               border: 1px solid var(--border-green);
             }
+            .lead-modal-tag-big {
+              position: relative;
+              font-size: 12.5px;
+              font-weight: 800;
+              padding: 5px 13px;
+              color: #05180D;
+              background: linear-gradient(135deg, #00E575 0%, #9BEA16 100%);
+              border: none;
+              overflow: hidden;
+              box-shadow: 0 0 18px rgba(0, 229, 117, 0.55);
+              animation: leadTagPulse 1.8s ease-in-out infinite;
+            }
+            @keyframes leadTagPulse {
+              0%, 100% { box-shadow: 0 0 14px rgba(0, 229, 117, 0.45); transform: scale(1); }
+              50% { box-shadow: 0 0 24px rgba(0, 229, 117, 0.75); transform: scale(1.03); }
+            }
+            .lead-modal-tag-shine {
+              position: absolute;
+              top: 0;
+              left: -60%;
+              width: 40%;
+              height: 100%;
+              background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+              transform: skewX(-20deg);
+              animation: leadTagShineSweep 2.4s ease-in-out infinite;
+            }
+            @keyframes leadTagShineSweep {
+              0% { left: -60%; }
+              60% { left: 130%; }
+              100% { left: 130%; }
+            }
             .lead-modal-title {
               font-size: 24px;
               font-weight: 800;
@@ -604,6 +667,13 @@ export default function LeadTrialModal() {
             .lead-modal-subtitle {
               font-size: 13.5px;
               color: var(--text-muted);
+              line-height: 1.5;
+              margin: 0 0 20px;
+            }
+            .lead-modal-subtitle-exciting {
+              font-size: 14px;
+              font-weight: 500;
+              color: var(--text-body);
               line-height: 1.5;
               margin: 0 0 20px;
             }
@@ -741,6 +811,22 @@ export default function LeadTrialModal() {
             .lead-btn-submit:disabled {
               opacity: 0.7;
               cursor: not-allowed;
+            }
+            .lead-btn-submit-shine {
+              position: absolute;
+              top: 0;
+              left: -50%;
+              width: 30%;
+              height: 100%;
+              background: linear-gradient(120deg, transparent, rgba(255, 255, 255, 0.55), transparent);
+              transform: skewX(-20deg);
+              animation: leadBtnShineSweep 2.8s ease-in-out infinite;
+              pointer-events: none;
+            }
+            @keyframes leadBtnShineSweep {
+              0% { left: -50%; }
+              55% { left: 130%; }
+              100% { left: 130%; }
             }
             .lead-btn-skip {
               background: none;

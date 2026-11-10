@@ -462,10 +462,10 @@ export default function ClinicLiveAgent() {
               type="button"
               onClick={openLeadModal}
               className="ai-dash-trial-cta"
-              title="Start 7-Day Free Trial for Doctors & Clinics"
+              title="Start 1-Month Free Trial for Doctors & Clinics"
             >
               <Zap size={13} strokeWidth={2.5} />
-              <span className="ai-trial-tag-text">Claim 7-Day Free Trial</span>
+              <span className="ai-trial-tag-text">Claim 1-Month Free Trial</span>
               <ArrowUpRight size={13} className="ai-trial-cta-arrow" />
             </button>
           </div>

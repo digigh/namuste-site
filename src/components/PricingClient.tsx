@@ -93,12 +93,12 @@ const COMPARISON_CATEGORIES: FeatureCategory[] = [
 
 const FAQS = [
   {
-    q: "How does the 7-Day Free Trial work for Doctors & Clinics?",
-    a: "You get full, unrestricted access to the Namuste Doctors & Clinic Platform for 7 days. This includes real-time voice call answering, 100 free voice minutes, and calendar booking. No credit card is required to begin.",
+    q: "How does the 1-Month Free Trial work for Doctors & Clinics?",
+    a: "You get full, unrestricted access to the Namuste Doctors & Clinic Platform for 1 month. This includes real-time voice call answering, 100 free voice minutes, and calendar booking. No credit card is required to begin.",
   },
   {
     q: "How do I start with Solo or Pro?",
-    a: "Click 'Upgrade' or 'Start 7-Day Free Trial' on either the Solo or Pro plan. You will be taken directly to our Doctors Platform portal where your clinic account is provisioned in under 2 minutes.",
+    a: "Click 'Upgrade' or 'Start 1-Month Free Trial' on either the Solo or Pro plan. You will be taken directly to our Doctors Platform portal where your clinic account is provisioned in under 2 minutes.",
   },
   {
     q: "Can I connect my clinic's existing phone number?",
@@ -166,11 +166,11 @@ export default function PricingClient() {
                   <BadgePercent size={13} />
                   <span>SPECIAL LAUNCH OFFER</span>
                 </span>
-                <span className="pr-funky-tag">7 DAYS FREE TRIAL</span>
+                <span className="pr-funky-tag">1 MONTH FREE TRIAL</span>
               </div>
 
               <h2 className="pr-funky-heading">
-                Try the Doctors &amp; Clinic AI Platform Free for 7 Days
+                Try the Doctors &amp; Clinic AI Platform Free for 1 Month
               </h2>
 
               <p className="pr-funky-desc">
@@ -193,7 +193,7 @@ export default function PricingClient() {
                 className="pr-funky-cta"
               >
                 <span className="pr-funky-cta-shine" />
-                <span className="pr-funky-cta-text">Start 7-Day Free Trial</span>
+                <span className="pr-funky-cta-text">Start 1-Month Free Trial</span>
                 <ArrowRight size={16} />
               </button>
               <span className="pr-funky-sub-hint">Instant 2-minute setup · No credit card required</span>
@@ -213,7 +213,7 @@ export default function PricingClient() {
                       <div className="pr-features-badge-row">
                         <span className="pr-features-title">PLAN MATRIX</span>
                         <span className="pr-features-free-badge">
-                          <Zap size={11} /> 7-Day Free Trial
+                          <Zap size={11} /> 1-Month Free Trial
                         </span>
                       </div>
                       <div className="pr-features-head-title">
@@ -411,7 +411,7 @@ export default function PricingClient() {
                   <td className="pr-action-td-empty">
                     <div className="pr-action-features-hint">
                       <div className="pr-action-features-title">Ready to launch?</div>
-                      <div className="pr-action-features-sub">7-Day Free Trial on Solo &amp; Pro</div>
+                      <div className="pr-action-features-sub">1-Month Free Trial on Solo &amp; Pro</div>
                     </div>
                   </td>
 
@@ -430,7 +430,7 @@ export default function PricingClient() {
                       <span className="pr-btn-shine" />
                       <span>Claim Free Trial</span>
                     </button>
-                    <span className="pr-action-sub">7-Day Free Trial · Solo</span>
+                    <span className="pr-action-sub">1-Month Free Trial · Solo</span>
                   </td>
 
                   {/* PRO ACTION -> DOS PORTAL */}
@@ -448,7 +448,7 @@ export default function PricingClient() {
                       <span className="pr-btn-shine" />
                       <span>Claim Free Trial</span>
                     </button>
-                    <span className="pr-action-sub">7-Day Free Trial · Most Popular</span>
+                    <span className="pr-action-sub">1-Month Free Trial · Most Popular</span>
                   </td>
 
                   {/* CLINIC ACTION -> CONTACT US */}
