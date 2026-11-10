@@ -335,7 +335,7 @@ export default function LeadTrialModal() {
                 </div>
                 <h3 className="lead-success-title">Your 1-Month Free Trial is Activated! 🎉</h3>
                 <p className="lead-success-desc">
-                  Welcome to Namuste. We are redirecting you to your practice configuration dashboard with 100 free voice minutes...
+                  Welcome to Namuste. We are redirecting you to your practice configuration dashboard with 1000 free voice minutes...
                 </p>
                 <div className="lead-success-loader">
                   <span className="lead-success-dot" />
@@ -464,7 +464,7 @@ export default function LeadTrialModal() {
                   {/* Perk Checkmarks */}
                   <div className="lead-modal-perks">
                     {[
-                      "100 Free Voice Minutes",
+                      "1000 Free Voice Minutes",
                       "No Credit Card Needed",
                       "2-Min Activation",
                     ].map((perk, i) => (

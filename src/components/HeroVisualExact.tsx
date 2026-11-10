@@ -75,7 +75,7 @@ export default function HeroVisualExact() {
               <span>DOCTORS &amp; CLINICS</span>
             </span>
             <span className="hero-chip-text">
-              Special Launch: <strong>1-Month Free Trial</strong> with 100 free voice minutes
+              Special Launch: <strong>1-Month Free Trial</strong> with 1000 free voice minutes
             </span>
             <span className="hero-chip-cta">
               <span>Claim Free Trial</span>

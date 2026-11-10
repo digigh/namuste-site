@@ -94,7 +94,7 @@ const COMPARISON_CATEGORIES: FeatureCategory[] = [
 const FAQS = [
   {
     q: "How does the 1-Month Free Trial work for Doctors & Clinics?",
-    a: "You get full, unrestricted access to the Namuste Doctors & Clinic Platform for 1 month. This includes real-time voice call answering, 100 free voice minutes, and calendar booking. No credit card is required to begin.",
+    a: "You get full, unrestricted access to the Namuste Doctors & Clinic Platform for 1 month. This includes real-time voice call answering, 1000 free voice minutes, and calendar booking. No credit card is required to begin.",
   },
   {
     q: "How do I start with Solo or Pro?",
@@ -174,12 +174,12 @@ export default function PricingClient() {
               </h2>
 
               <p className="pr-funky-desc">
-                Experience real-time patient appointment booking and 100 free voice minutes.
+                Experience real-time patient appointment booking and 1000 free voice minutes.
                 Zero risk, instant 2-minute setup, and no credit card required to start.
               </p>
 
               <div className="pr-funky-perks">
-                <span className="pr-perk-item"><Check size={13} strokeWidth={3} /> 100 Free Voice Minutes</span>
+                <span className="pr-perk-item"><Check size={13} strokeWidth={3} /> 1000 Free Voice Minutes</span>
                 <span className="pr-perk-item"><Check size={13} strokeWidth={3} /> No Credit Card Needed</span>
                 <span className="pr-perk-item"><Check size={13} strokeWidth={3} /> 2-Minute Activation</span>
                 <span className="pr-perk-item"><Check size={13} strokeWidth={3} /> Cancel Anytime</span>
