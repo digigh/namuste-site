@@ -6,13 +6,13 @@ import Link from "next/link";
 import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   ArrowRight,
+  ArrowUpRight,
   Mic,
   Calendar,
   MessageSquare,
   Stethoscope,
   Building2,
   ChevronDown,
-  Sparkles,
 } from "lucide-react";
 
 const AICoreScene = dynamic(() => import("./AICoreScene"), {
@@ -43,6 +43,13 @@ function useReducedMotionAndViewport() {
   return { reducedMotion, isMobile };
 }
 
+const NAV_LINKS = [
+  { label: "Home", href: "#exp-hero" },
+  { label: "Professionals", href: "#exp-professionals" },
+  { label: "Enterprises", href: "#exp-enterprises" },
+  { label: "How It Works", href: "#exp-how" },
+];
+
 function ExperienceNav() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -54,21 +61,21 @@ function ExperienceNav() {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  const links = [
-    { label: "Home", href: "#exp-hero" },
-    { label: "Professionals", href: "#exp-professionals" },
-    { label: "Enterprises", href: "#exp-enterprises" },
-    { label: "How It Works", href: "#exp-how" },
-  ];
+  useEffect(() => {
+    document.body.style.overflow = menuOpen ? "hidden" : "";
+    return () => {
+      document.body.style.overflow = "";
+    };
+  }, [menuOpen]);
 
   return (
-    <header className={`exp-nav ${scrolled ? "is-scrolled" : ""}`}>
+    <header className={`exp-nav ${scrolled || menuOpen ? "is-scrolled" : ""}`}>
       <div className="exp-nav-inner">
         <a href="#exp-hero" className="exp-nav-logo">
-          namusté<span className="exp-nav-logo-dot">.</span>
+          <img src="/logo.png" alt="Namusté" className="brand-logo" />
         </a>
         <nav className="exp-nav-links">
-          {links.map((l) => (
+          {NAV_LINKS.map((l) => (
             <a key={l.href} href={l.href} className="exp-nav-link">
               {l.label}
             </a>
@@ -84,15 +91,17 @@ function ExperienceNav() {
             onClick={() => setMenuOpen((v) => !v)}
             aria-label="Toggle menu"
           >
-            <span />
-            <span />
-            <span />
+            {menuOpen ? "CLOSE" : "MENU"}
+            <span className="exp-nav-burger-lines">
+              <span />
+              <span />
+            </span>
           </button>
         </div>
       </div>
       {menuOpen && (
         <div className="exp-nav-mobile">
-          {links.map((l) => (
+          {NAV_LINKS.map((l) => (
             <a key={l.href} href={l.href} className="exp-nav-mobile-link" onClick={() => setMenuOpen(false)}>
               {l.label}
             </a>
@@ -151,7 +160,7 @@ function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; i
         delay={0.5}
         icon={<MessageSquare size={15} />}
         label="Patient enquiry received"
-        sub="“Is Dr. Mehta available tomorrow?”"
+        sub="&ldquo;Is Dr. Mehta available tomorrow?&rdquo;"
       />
       <FloatingCard
         className="exp-float-card-b"
@@ -175,7 +184,8 @@ function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; i
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.1, duration: 0.6 }}
         >
-          <Sparkles size={13} /> NAMUSTÉ AI EXPERIENCE
+          <span className="exp-hero-kicker-dot" />
+          NAMUSTÉ AI EXPERIENCE
         </motion.span>
 
         <motion.h1
@@ -184,9 +194,10 @@ function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; i
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          Every Conversation.
+          Every conversation.
           <br />
-          <span className="exp-hero-title-accent">An Intelligent Possibility.</span>
+          An intelligent{" "}
+          <span className="exp-hero-title-accent serif-italic">possibility.</span>
         </motion.h1>
 
         <motion.p
@@ -196,7 +207,8 @@ function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; i
           transition={{ delay: 0.35, duration: 0.8 }}
         >
           Meet your AI-powered voice and chat workforce. From answering customer enquiries
-          to completing business workflows, Namusté turns conversations into action.
+          to completing business workflows, Namusté turns conversations into{" "}
+          <span className="exp-hero-sub-accent">action.</span>
         </motion.p>
 
         <motion.div
@@ -206,7 +218,9 @@ function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; i
           transition={{ delay: 0.5, duration: 0.7 }}
         >
           <a href="#exp-professionals" className="exp-btn-primary">
-            Explore the Experience <ArrowRight size={16} />
+            <span className="exp-btn-primary-shine" />
+            <span>Explore the Experience</span>
+            <ArrowRight size={16} />
           </a>
           <Link href="/contact" className="exp-btn-secondary">
             Book a Personalised Demo
@@ -265,12 +279,12 @@ function TiltCard({
       onMouseMove={handleMove}
       onMouseLeave={handleLeave}
       onClick={onClick}
-      whileHover={{ scale: 1.015 }}
+      whileHover={{ scale: 1.012 }}
     >
       <motion.div
         className="exp-tilt-glow"
         style={{
-          background: `radial-gradient(circle at ${glowX} ${glowY}, rgba(56,221,245,0.25), transparent 60%)`,
+          background: `radial-gradient(circle at ${glowX} ${glowY}, var(--green-glow-strong), transparent 60%)`,
         }}
       />
       {children}
@@ -282,13 +296,22 @@ function WorkforceSplit() {
   return (
     <section className="exp-workforce">
       <div className="exp-section-head">
+        <motion.span
+          className="exp-section-eyebrow"
+          initial={{ opacity: 0, y: 10 }}
+          whileInView={{ opacity: 1, y: 0 }}
+          viewport={{ once: true, margin: "-80px" }}
+          transition={{ duration: 0.6 }}
+        >
+          WHO IT&apos;S FOR
+        </motion.span>
         <motion.h2
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true, margin: "-80px" }}
           transition={{ duration: 0.7 }}
         >
-          One Intelligence. Multiple Possibilities.
+          One intelligence. Multiple possibilities.
         </motion.h2>
         <motion.p
           initial={{ opacity: 0, y: 16 }}
@@ -301,9 +324,10 @@ function WorkforceSplit() {
       </div>
 
       <div className="exp-workforce-grid">
-        <TiltCard className="exp-card-professionals" onClick={() => {
-          document.getElementById("exp-professionals")?.scrollIntoView({ behavior: "smooth" });
-        }}>
+        <TiltCard
+          className="exp-card-professionals"
+          onClick={() => document.getElementById("exp-professionals")?.scrollIntoView({ behavior: "smooth" })}
+        >
           <div id="exp-professionals" className="exp-card-anchor" />
           <div className="exp-card-icon-row">
             <Stethoscope size={22} />
@@ -314,13 +338,14 @@ function WorkforceSplit() {
             appointments, and keeps your operations moving.
           </p>
           <span className="exp-card-cta">
-            Explore Professionals <ArrowRight size={15} />
+            Explore Professionals <ArrowUpRight size={15} />
           </span>
         </TiltCard>
 
-        <TiltCard className="exp-card-enterprises" onClick={() => {
-          document.getElementById("exp-enterprises")?.scrollIntoView({ behavior: "smooth" });
-        }}>
+        <TiltCard
+          className="exp-card-enterprises"
+          onClick={() => document.getElementById("exp-enterprises")?.scrollIntoView({ behavior: "smooth" })}
+        >
           <div id="exp-enterprises" className="exp-card-anchor" />
           <div className="exp-card-icon-row">
             <Building2 size={22} />
@@ -331,7 +356,7 @@ function WorkforceSplit() {
             connect conversations with operational workflows.
           </p>
           <span className="exp-card-cta">
-            Explore Enterprises <ArrowRight size={15} />
+            Explore Enterprises <ArrowUpRight size={15} />
           </span>
         </TiltCard>
       </div>
@@ -363,7 +388,7 @@ export default function ExperiencePage() {
   const { reducedMotion, isMobile } = useReducedMotionAndViewport();
 
   return (
-    <div className="exp-root">
+    <div className="exp-root dark">
       <ExperienceNav />
       <ExperienceHero reducedMotion={reducedMotion} isMobile={isMobile} />
       <WorkforceSplit />
@@ -371,115 +396,105 @@ export default function ExperiencePage() {
 
       <style>{`
         .exp-root {
-          --exp-bg: #080A18;
-          --exp-bg2: #10132B;
-          --exp-violet: #795CFF;
-          --exp-cyan: #38DDF5;
-          --exp-blue: #547BFF;
-          --exp-white: #F7F8FF;
-          --exp-muted: #A4A9C5;
-          background: var(--exp-bg);
-          color: var(--exp-white);
-          font-family: 'Inter', 'Manrope', -apple-system, sans-serif;
+          background: var(--bg);
+          color: var(--text-body);
           overflow-x: hidden;
           position: relative;
         }
 
-        /* ---------- NAV ---------- */
+        /* ---------- NAV (mirrors the main site's Navbar: blurred glass bar,
+           real wordmark, ivory pill CTA, MENU-label burger) ---------- */
         .exp-nav {
           position: fixed;
           top: 0;
           left: 0;
           right: 0;
           z-index: 100;
-          padding: 20px 0;
-          transition: all 0.35s ease;
+          padding: 18px 0;
+          background: transparent;
+          border-bottom: 1px solid transparent;
+          transition: background 0.3s ease, border-color 0.3s ease, padding 0.3s ease;
         }
         .exp-nav.is-scrolled {
           padding: 12px 0;
-          background: rgba(8, 10, 24, 0.72);
-          backdrop-filter: blur(16px);
-          -webkit-backdrop-filter: blur(16px);
-          border-bottom: 1px solid rgba(255,255,255,0.06);
+          background: var(--nav-glass);
+          backdrop-filter: blur(20px);
+          -webkit-backdrop-filter: blur(20px);
+          border-bottom: 1px solid var(--border);
         }
         .exp-nav-inner {
-          max-width: 1280px;
+          max-width: 1360px;
           margin: 0 auto;
-          padding: 0 28px;
+          padding: 0 40px;
           display: flex;
           align-items: center;
           justify-content: space-between;
         }
-        .exp-nav-logo {
-          font-size: 19px;
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          color: var(--exp-white);
-          text-decoration: none;
-        }
-        .exp-nav-logo-dot { color: var(--exp-cyan); }
-        .exp-nav-links {
-          display: flex;
-          gap: 30px;
-        }
+        .exp-nav-logo { display: flex; align-items: center; }
+        .exp-nav-logo img { height: 28px; width: auto; display: block; object-fit: contain; }
+        .exp-nav-links { display: flex; gap: 30px; }
         .exp-nav-link {
           font-size: 13.5px;
           font-weight: 500;
-          color: var(--exp-muted);
+          color: var(--text-muted);
           text-decoration: none;
           transition: color 0.2s ease;
         }
-        .exp-nav-link:hover { color: var(--exp-white); }
-        .exp-nav-actions { display: flex; align-items: center; gap: 14px; }
+        .exp-nav-link:hover { color: var(--text-ivory); }
+        .exp-nav-actions { display: flex; align-items: center; gap: 16px; }
         .exp-nav-cta {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
           padding: 9px 18px;
           border-radius: 999px;
-          background: linear-gradient(135deg, var(--exp-violet), var(--exp-blue));
-          color: #fff;
+          background: var(--text-ivory);
+          color: var(--bg);
           font-size: 13px;
-          font-weight: 600;
+          font-weight: 700;
           text-decoration: none;
           white-space: nowrap;
+          transition: all 0.2s ease;
         }
+        .exp-nav-cta:hover { opacity: 0.85; }
         .exp-nav-burger {
-          display: none;
-          flex-direction: column;
-          gap: 4px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
           background: none;
           border: none;
           cursor: pointer;
-          padding: 6px;
+          color: var(--text-ivory);
+          font-size: 12.5px;
+          font-weight: 700;
+          letter-spacing: 0.05em;
+          padding: 8px 4px;
+          font-family: inherit;
         }
-        .exp-nav-burger span {
-          width: 20px;
-          height: 2px;
-          background: var(--exp-white);
-          border-radius: 2px;
-        }
-        .exp-nav-mobile {
-          display: none;
-        }
+        .exp-nav-burger-lines { display: flex; flex-direction: column; gap: 3px; }
+        .exp-nav-burger-lines span { width: 18px; height: 1.5px; background: var(--text-ivory); }
+        .exp-nav-mobile { display: none; }
 
         @media (max-width: 860px) {
           .exp-nav-links { display: none; }
-          .exp-nav-burger { display: flex; }
           .exp-nav-cta { display: none; }
           .exp-nav-mobile {
             display: flex;
             flex-direction: column;
-            gap: 4px;
-            padding: 12px 28px 20px;
-            background: rgba(8, 10, 24, 0.95);
-            backdrop-filter: blur(16px);
+            gap: 2px;
+            padding: 8px 24px 20px;
+            background: var(--nav-panel);
+            backdrop-filter: blur(20px);
           }
           .exp-nav-mobile-link {
-            color: var(--exp-muted);
+            color: var(--text-body);
             text-decoration: none;
-            padding: 10px 0;
-            font-size: 14px;
-            border-bottom: 1px solid rgba(255,255,255,0.06);
+            padding: 14px 0;
+            font-size: 15px;
+            font-weight: 600;
+            border-bottom: 1px solid var(--border);
           }
-          .exp-nav-cta-mobile { display: block; text-align: center; margin-top: 12px; }
+          .exp-nav-cta-mobile { display: inline-flex; justify-content: center; margin-top: 16px; }
         }
 
         /* ---------- HERO ---------- */
@@ -490,70 +505,73 @@ export default function ExperiencePage() {
           align-items: center;
           justify-content: center;
           overflow: hidden;
-          background: radial-gradient(ellipse at 50% 30%, var(--exp-bg2) 0%, var(--exp-bg) 65%);
+          background: var(--hero-bg-gradient);
         }
-        .exp-hero-canvas {
-          position: absolute;
-          inset: 0;
-          z-index: 1;
-        }
+        .exp-hero-canvas { position: absolute; inset: 0; z-index: 1; }
         .exp-hero-canvas-fallback {
           position: absolute;
           inset: 0;
-          background: radial-gradient(circle at 50% 50%, rgba(121,92,255,0.25), transparent 60%);
+          background: radial-gradient(circle at 50% 50%, var(--green-glow), transparent 60%);
         }
         .exp-hero-vignette {
           position: absolute;
           inset: 0;
           z-index: 2;
-          background: radial-gradient(ellipse at 50% 100%, rgba(8,10,24,0.9) 0%, transparent 55%),
-                      radial-gradient(ellipse 620px 420px at 50% 40%, rgba(8,10,24,0.55) 0%, transparent 70%),
-                      linear-gradient(to bottom, rgba(8,10,24,0.1) 0%, rgba(8,10,24,0.85) 100%);
+          background: radial-gradient(ellipse at 50% 100%, var(--bg) 0%, transparent 55%),
+                      radial-gradient(ellipse 640px 440px at 50% 40%, rgba(10, 13, 12, 0.6) 0%, transparent 72%),
+                      linear-gradient(to bottom, rgba(10, 13, 12, 0.12) 0%, rgba(10, 13, 12, 0.88) 100%);
           pointer-events: none;
         }
         .exp-hero-content {
           position: relative;
           z-index: 3;
           text-align: center;
-          max-width: 760px;
+          max-width: 780px;
           padding: 0 24px;
         }
         .exp-hero-kicker {
           display: inline-flex;
           align-items: center;
-          gap: 6px;
-          font-size: 11.5px;
+          gap: 8px;
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 11px;
           font-weight: 700;
-          letter-spacing: 0.1em;
-          color: var(--exp-cyan);
-          background: rgba(56,221,245,0.1);
-          border: 1px solid rgba(56,221,245,0.25);
-          padding: 6px 14px;
+          letter-spacing: 0.12em;
+          color: var(--green-luminous);
+          background: var(--green-glow);
+          border: 1px solid var(--border-green);
+          padding: 7px 15px;
           border-radius: 999px;
-          margin-bottom: 24px;
+          margin-bottom: 26px;
+        }
+        .exp-hero-kicker-dot {
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: var(--green-luminous);
+          box-shadow: 0 0 8px var(--green-luminous);
         }
         .exp-hero-title {
-          font-size: clamp(34px, 6vw, 68px);
           font-weight: 700;
-          line-height: 1.08;
-          letter-spacing: -0.03em;
+          font-size: clamp(36px, 6.4vw, 76px);
+          line-height: 1.04;
+          letter-spacing: -0.035em;
           margin: 0 0 22px;
-          color: var(--exp-white);
-          text-shadow: 0 2px 24px rgba(8,10,24,0.85), 0 8px 48px rgba(8,10,24,0.65);
+          color: var(--text-ivory);
+          text-shadow: 0 2px 24px rgba(10,13,12,0.85), 0 8px 48px rgba(10,13,12,0.65);
         }
-        .exp-hero-title-accent {
-          background: linear-gradient(135deg, var(--exp-cyan), var(--exp-violet));
-          -webkit-background-clip: text;
-          background-clip: text;
-          color: transparent;
+        .exp-hero-title .exp-hero-title-accent {
+          color: var(--green-luminous);
+          font-weight: 400;
         }
         .exp-hero-sub {
           font-size: clamp(14.5px, 1.6vw, 17.5px);
           line-height: 1.6;
-          color: var(--exp-muted);
+          color: var(--text-muted);
           max-width: 560px;
           margin: 0 auto 36px;
         }
+        .exp-hero-sub-accent { color: var(--green); font-weight: 600; }
         .exp-hero-ctas {
           display: flex;
           align-items: center;
@@ -561,41 +579,62 @@ export default function ExperiencePage() {
           gap: 14px;
           flex-wrap: wrap;
         }
+
+        /* Signature site CTA: lime/green gradient pill with a shine sweep —
+           the same recipe as the homepage hero / pricing / trial modal. */
         .exp-btn-primary {
+          position: relative;
           display: inline-flex;
           align-items: center;
-          gap: 8px;
-          padding: 13px 26px;
+          gap: 10px;
+          padding: 15px 30px;
           border-radius: 999px;
-          background: linear-gradient(135deg, var(--exp-violet), var(--exp-cyan));
-          color: #fff;
-          font-size: 14px;
-          font-weight: 700;
+          background: linear-gradient(135deg, #00E575 0%, #00B853 45%, #9BEA16 100%);
+          color: #05180D;
+          font-size: 14.5px;
+          font-weight: 800;
+          letter-spacing: -0.01em;
           text-decoration: none;
-          box-shadow: 0 0 32px rgba(121,92,255,0.4);
-          transition: transform 0.25s ease, box-shadow 0.25s ease;
+          border: none;
+          overflow: hidden;
+          box-shadow: 0 0 32px rgba(0, 229, 117, 0.42), 0 10px 26px rgba(0, 0, 0, 0.3);
+          transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
         }
         .exp-btn-primary:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 0 44px rgba(121,92,255,0.55);
+          transform: translateY(-2px) scale(1.01);
+          box-shadow: 0 0 42px rgba(0, 229, 117, 0.6), 0 14px 32px rgba(0, 0, 0, 0.4);
+        }
+        .exp-btn-primary-shine {
+          position: absolute;
+          top: 0;
+          left: -120%;
+          width: 55%;
+          height: 100%;
+          background: linear-gradient(90deg, transparent, rgba(255,255,255,0.5), transparent);
+          transform: skewX(-20deg);
+          animation: expBtnShine 3.2s infinite ease-in-out;
+        }
+        @keyframes expBtnShine {
+          0% { left: -120%; }
+          35%, 100% { left: 160%; }
         }
         .exp-btn-secondary {
           display: inline-flex;
           align-items: center;
           gap: 8px;
-          padding: 13px 24px;
+          padding: 14px 26px;
           border-radius: 999px;
-          background: rgba(255,255,255,0.05);
-          border: 1px solid rgba(255,255,255,0.15);
-          color: var(--exp-white);
+          background: var(--overlay-1);
+          border: 1px solid var(--border2);
+          color: var(--text-ivory);
           font-size: 14px;
           font-weight: 600;
           text-decoration: none;
           transition: all 0.25s ease;
         }
         .exp-btn-secondary:hover {
-          background: rgba(255,255,255,0.09);
-          border-color: rgba(255,255,255,0.3);
+          background: var(--overlay-2);
+          border-color: var(--border-green);
         }
         .exp-scroll-indicator {
           position: absolute;
@@ -603,7 +642,7 @@ export default function ExperiencePage() {
           left: 50%;
           transform: translateX(-50%);
           z-index: 3;
-          color: var(--exp-muted);
+          color: var(--text-dim);
           display: flex;
         }
 
@@ -615,11 +654,11 @@ export default function ExperiencePage() {
           gap: 10px;
           padding: 11px 15px;
           border-radius: 14px;
-          background: rgba(16, 19, 43, 0.55);
-          border: 1px solid rgba(255,255,255,0.1);
-          backdrop-filter: blur(14px);
-          -webkit-backdrop-filter: blur(14px);
-          box-shadow: 0 12px 32px -8px rgba(0,0,0,0.5);
+          background: var(--glass-bg);
+          border: 1px solid var(--glass-border);
+          backdrop-filter: var(--glass-blur);
+          -webkit-backdrop-filter: var(--glass-blur);
+          box-shadow: var(--shadow-subtle);
         }
         .exp-float-card-icon {
           width: 30px;
@@ -628,12 +667,12 @@ export default function ExperiencePage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, var(--exp-violet), var(--exp-cyan));
-          color: #fff;
+          background: linear-gradient(135deg, #00B853, #9BEA16);
+          color: #05180D;
           flex-shrink: 0;
         }
-        .exp-float-card-label { font-size: 12.5px; font-weight: 600; color: var(--exp-white); }
-        .exp-float-card-sub { font-size: 11px; color: var(--exp-muted); margin-top: 1px; }
+        .exp-float-card-label { font-size: 12.5px; font-weight: 600; color: var(--text-ivory); }
+        .exp-float-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
         .exp-float-card-a { top: 18%; left: 7%; }
         .exp-float-card-b { top: 24%; right: 6%; }
         .exp-float-card-c { bottom: 20%; left: 10%; }
@@ -654,15 +693,24 @@ export default function ExperiencePage() {
           max-width: 640px;
           margin: 0 auto 56px;
         }
+        .exp-section-eyebrow {
+          display: inline-block;
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 11px;
+          font-weight: 700;
+          letter-spacing: 0.12em;
+          color: var(--green);
+          margin-bottom: 14px;
+        }
         .exp-section-head h2 {
           font-size: clamp(26px, 3.6vw, 42px);
           font-weight: 700;
-          letter-spacing: -0.02em;
+          letter-spacing: -0.025em;
           margin: 0 0 14px;
-          color: var(--exp-white);
+          color: var(--text-ivory);
         }
         .exp-section-head p {
-          color: var(--exp-muted);
+          color: var(--text-muted);
           font-size: 15.5px;
           margin: 0;
         }
@@ -677,16 +725,19 @@ export default function ExperiencePage() {
         .exp-tilt-card {
           position: relative;
           padding: 44px 36px;
-          border-radius: 26px;
-          background: linear-gradient(160deg, rgba(255,255,255,0.05), rgba(255,255,255,0.015));
-          border: 1px solid rgba(255,255,255,0.1);
+          border-radius: 24px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          box-shadow: var(--shadow-subtle);
           cursor: pointer;
           overflow: hidden;
           min-height: 300px;
           display: flex;
           flex-direction: column;
           transform-style: preserve-3d;
+          transition: border-color 0.3s ease;
         }
+        .exp-tilt-card:hover { border-color: var(--border-green); }
         .exp-card-anchor { position: absolute; top: -90px; left: 0; }
         .exp-tilt-glow {
           position: absolute;
@@ -701,13 +752,11 @@ export default function ExperiencePage() {
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, var(--exp-violet), var(--exp-blue));
-          color: #fff;
+          background: linear-gradient(135deg, #00B853, #9BEA16);
+          color: #05180D;
           margin-bottom: 24px;
           position: relative;
-        }
-        .exp-card-enterprises .exp-card-icon-row {
-          background: linear-gradient(135deg, var(--exp-cyan), var(--exp-blue));
+          box-shadow: 0 0 20px var(--green-glow-strong);
         }
         .exp-tilt-card h3 {
           font-size: 26px;
@@ -715,12 +764,12 @@ export default function ExperiencePage() {
           letter-spacing: -0.01em;
           margin: 0 0 14px;
           position: relative;
-          color: var(--exp-white);
+          color: var(--text-ivory);
         }
         .exp-tilt-card p {
           font-size: 14.5px;
           line-height: 1.65;
-          color: var(--exp-muted);
+          color: var(--text-muted);
           margin: 0 0 28px;
           position: relative;
           flex: 1;
@@ -731,7 +780,7 @@ export default function ExperiencePage() {
           gap: 7px;
           font-size: 13.5px;
           font-weight: 700;
-          color: var(--exp-cyan);
+          color: var(--green);
           position: relative;
         }
 
@@ -744,17 +793,19 @@ export default function ExperiencePage() {
         .exp-roadmap-card {
           padding: 38px 36px;
           border-radius: 22px;
-          background: rgba(255,255,255,0.03);
-          border: 1px dashed rgba(255,255,255,0.18);
+          background: var(--surface);
+          border: 1px dashed var(--border2);
           text-align: center;
         }
         .exp-roadmap-tag {
           display: inline-block;
+          font-family: 'SF Mono', 'Menlo', monospace;
           font-size: 10.5px;
-          font-weight: 800;
-          letter-spacing: 0.08em;
-          color: var(--exp-cyan);
-          background: rgba(56,221,245,0.1);
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          color: var(--green-luminous);
+          background: var(--green-glow);
+          border: 1px solid var(--border-green);
           padding: 5px 12px;
           border-radius: 999px;
           margin-bottom: 16px;
@@ -763,10 +814,10 @@ export default function ExperiencePage() {
           font-size: 22px;
           font-weight: 700;
           margin: 0 0 12px;
-          color: var(--exp-white);
+          color: var(--text-ivory);
         }
         .exp-roadmap-card p {
-          color: var(--exp-muted);
+          color: var(--text-muted);
           font-size: 14px;
           line-height: 1.7;
           margin: 0 0 24px;

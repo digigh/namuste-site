@@ -36,11 +36,11 @@ function ParticleField({ count }: { count: number }) {
     <Points ref={pointsRef} positions={positions} stride={3} frustumCulled>
       <PointMaterial
         transparent
-        color="#38DDF5"
-        size={0.028}
+        color="#9BEA16"
+        size={0.026}
         sizeAttenuation
         depthWrite={false}
-        opacity={0.75}
+        opacity={0.6}
       />
     </Points>
   );
@@ -67,7 +67,7 @@ function OrbitRing({
   return (
     <mesh ref={ref} rotation={tilt}>
       <torusGeometry args={[radius, thickness, 16, 128]} />
-      <meshBasicMaterial color={color} transparent opacity={0.45} toneMapped={false} />
+      <meshBasicMaterial color={color} transparent opacity={0.4} toneMapped={false} />
     </mesh>
   );
 }
@@ -98,25 +98,30 @@ function AICore({ reducedMotion }: { reducedMotion: boolean }) {
 
   return (
     <group ref={groupRef}>
+      {/* Soft additive glow shell behind the core — cheap stand-in for bloom */}
+      <mesh scale={1.5}>
+        <icosahedronGeometry args={[1.35, 2]} />
+        <meshBasicMaterial color="#4E8C26" transparent opacity={0.12} depthWrite={false} />
+      </mesh>
       <mesh ref={coreRef}>
         <icosahedronGeometry args={[1.35, 6]} />
         <MeshDistortMaterial
-          color="#795CFF"
-          emissive="#38DDF5"
-          emissiveIntensity={0.25}
-          roughness={0.15}
-          metalness={0.3}
-          distort={reducedMotion ? 0.15 : 0.32}
-          speed={reducedMotion ? 0.4 : 1.4}
+          color="#1C2420"
+          emissive="#76C043"
+          emissiveIntensity={0.55}
+          roughness={0.25}
+          metalness={0.45}
+          distort={reducedMotion ? 0.15 : 0.3}
+          speed={reducedMotion ? 0.4 : 1.3}
           transparent
-          opacity={0.92}
+          opacity={0.95}
         />
       </mesh>
-      <OrbitRing radius={2.1} tilt={[Math.PI / 2.4, 0, 0]} speed={0.18} color="#38DDF5" />
-      <OrbitRing radius={2.55} tilt={[Math.PI / 1.7, Math.PI / 6, 0]} speed={-0.12} color="#547BFF" />
-      <OrbitRing radius={2.9} tilt={[Math.PI / 3, -Math.PI / 5, 0]} speed={0.08} color="#795CFF" thickness={0.008} />
-      <pointLight position={[0, 0, 0]} color="#795CFF" intensity={8} distance={6} />
-      <pointLight position={[3, 2, 3]} color="#38DDF5" intensity={3} distance={10} />
+      <OrbitRing radius={2.1} tilt={[Math.PI / 2.4, 0, 0]} speed={0.18} color="#9BEA16" />
+      <OrbitRing radius={2.55} tilt={[Math.PI / 1.7, Math.PI / 6, 0]} speed={-0.12} color="#76C043" />
+      <OrbitRing radius={2.9} tilt={[Math.PI / 3, -Math.PI / 5, 0]} speed={0.08} color="#4E8C26" thickness={0.008} />
+      <pointLight position={[0, 0, 0]} color="#9BEA16" intensity={7} distance={6} />
+      <pointLight position={[3, 2, 3]} color="#76C043" intensity={2.5} distance={10} />
     </group>
   );
 }
