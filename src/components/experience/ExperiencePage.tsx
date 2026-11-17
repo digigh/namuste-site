@@ -7,9 +7,6 @@ import { motion, useMotionValue, useSpring, useTransform } from "framer-motion";
 import {
   ArrowRight,
   ArrowUpRight,
-  Mic,
-  Calendar,
-  MessageSquare,
   Stethoscope,
   Building2,
   ChevronDown,
@@ -158,21 +155,21 @@ function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; i
       <FloatingCard
         className="exp-float-card-a"
         delay={0.5}
-        icon={<MessageSquare size={15} />}
+        icon={<img src="/experience-icons/chat-bubble.webp" alt="" width={22} height={22} />}
         label="Patient enquiry received"
         sub="&ldquo;Is Dr. Mehta available tomorrow?&rdquo;"
       />
       <FloatingCard
         className="exp-float-card-b"
         delay={0.7}
-        icon={<Calendar size={15} />}
+        icon={<img src="/experience-icons/calendar.webp" alt="" width={22} height={22} />}
         label="Appointment confirmed"
         sub="Slot booked · WhatsApp sent"
       />
       <FloatingCard
         className="exp-float-card-c"
         delay={0.9}
-        icon={<Mic size={15} />}
+        icon={<img src="/experience-icons/mic.webp" alt="" width={22} height={22} />}
         label="Voice call in progress"
         sub="Namuste AI · 00:42"
       />
@@ -225,6 +222,48 @@ function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; i
           <Link href="/contact" className="exp-btn-secondary">
             Book a Personalised Demo
           </Link>
+        </motion.div>
+
+        <motion.div
+          className="exp-hero-journeys"
+          initial={{ opacity: 0, y: 24 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.65, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+        >
+          <span className="exp-section-eyebrow">WHO IT&apos;S FOR</span>
+          <h2 className="exp-hero-journeys-title">One intelligence. Multiple possibilities.</h2>
+
+          <div className="exp-workforce-grid">
+            <TiltCard className="exp-card-professionals">
+              <div id="exp-professionals" className="exp-card-anchor" />
+              <div className="exp-card-icon-row">
+                <Stethoscope size={22} />
+              </div>
+              <h3>Built for Professionals</h3>
+              <p>
+                Give your business an intelligent assistant that answers enquiries, manages
+                appointments, and keeps your operations moving.
+              </p>
+              <span className="exp-card-cta">
+                Explore Professionals <ArrowUpRight size={15} />
+              </span>
+            </TiltCard>
+
+            <TiltCard className="exp-card-enterprises">
+              <div id="exp-enterprises" className="exp-card-anchor" />
+              <div className="exp-card-icon-row">
+                <Building2 size={22} />
+              </div>
+              <h3>Engineered for Enterprises</h3>
+              <p>
+                Automate complex customer interactions, capture business opportunities, and
+                connect conversations with operational workflows.
+              </p>
+              <span className="exp-card-cta">
+                Explore Enterprises <ArrowUpRight size={15} />
+              </span>
+            </TiltCard>
+          </div>
         </motion.div>
       </div>
 
@@ -292,78 +331,6 @@ function TiltCard({
   );
 }
 
-function WorkforceSplit() {
-  return (
-    <section className="exp-workforce">
-      <div className="exp-section-head">
-        <motion.span
-          className="exp-section-eyebrow"
-          initial={{ opacity: 0, y: 10 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.6 }}
-        >
-          WHO IT&apos;S FOR
-        </motion.span>
-        <motion.h2
-          initial={{ opacity: 0, y: 20 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7 }}
-        >
-          One intelligence. Multiple possibilities.
-        </motion.h2>
-        <motion.p
-          initial={{ opacity: 0, y: 16 }}
-          whileInView={{ opacity: 1, y: 0 }}
-          viewport={{ once: true, margin: "-80px" }}
-          transition={{ duration: 0.7, delay: 0.1 }}
-        >
-          Namusté adapts to different business environments.
-        </motion.p>
-      </div>
-
-      <div className="exp-workforce-grid">
-        <TiltCard
-          className="exp-card-professionals"
-          onClick={() => document.getElementById("exp-professionals")?.scrollIntoView({ behavior: "smooth" })}
-        >
-          <div id="exp-professionals" className="exp-card-anchor" />
-          <div className="exp-card-icon-row">
-            <Stethoscope size={22} />
-          </div>
-          <h3>Built for Professionals</h3>
-          <p>
-            Give your business an intelligent assistant that answers enquiries, manages
-            appointments, and keeps your operations moving.
-          </p>
-          <span className="exp-card-cta">
-            Explore Professionals <ArrowUpRight size={15} />
-          </span>
-        </TiltCard>
-
-        <TiltCard
-          className="exp-card-enterprises"
-          onClick={() => document.getElementById("exp-enterprises")?.scrollIntoView({ behavior: "smooth" })}
-        >
-          <div id="exp-enterprises" className="exp-card-anchor" />
-          <div className="exp-card-icon-row">
-            <Building2 size={22} />
-          </div>
-          <h3>Engineered for Enterprises</h3>
-          <p>
-            Automate complex customer interactions, capture business opportunities, and
-            connect conversations with operational workflows.
-          </p>
-          <span className="exp-card-cta">
-            Explore Enterprises <ArrowUpRight size={15} />
-          </span>
-        </TiltCard>
-      </div>
-    </section>
-  );
-}
-
 function RoadmapNote() {
   return (
     <section id="exp-how" className="exp-roadmap">
@@ -391,7 +358,6 @@ export default function ExperiencePage() {
     <div className="exp-root dark">
       <ExperienceNav />
       <ExperienceHero reducedMotion={reducedMotion} isMobile={isMobile} />
-      <WorkforceSplit />
       <RoadmapNote />
 
       <style>{`
@@ -526,8 +492,11 @@ export default function ExperiencePage() {
           position: relative;
           z-index: 3;
           text-align: center;
-          max-width: 780px;
-          padding: 0 24px;
+          max-width: 960px;
+          padding: 40px 24px 80px;
+          display: flex;
+          flex-direction: column;
+          align-items: center;
         }
         .exp-hero-kicker {
           display: inline-flex;
@@ -663,14 +632,12 @@ export default function ExperiencePage() {
         .exp-float-card-icon {
           width: 30px;
           height: 30px;
-          border-radius: 9px;
           display: flex;
           align-items: center;
           justify-content: center;
-          background: linear-gradient(135deg, #00B853, #9BEA16);
-          color: #05180D;
           flex-shrink: 0;
         }
+        .exp-float-card-icon img { width: 100%; height: 100%; object-fit: contain; }
         .exp-float-card-label { font-size: 12.5px; font-weight: 600; color: var(--text-ivory); }
         .exp-float-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
         .exp-float-card-a { top: 18%; left: 7%; }
@@ -681,17 +648,11 @@ export default function ExperiencePage() {
           .exp-float-card { display: none; }
         }
 
-        /* ---------- WORKFORCE SPLIT ---------- */
-        .exp-workforce {
-          position: relative;
-          padding: 110px 24px;
-          max-width: 1200px;
-          margin: 0 auto;
-        }
-        .exp-section-head {
-          text-align: center;
-          max-width: 640px;
-          margin: 0 auto 56px;
+        /* ---------- JOURNEYS (folded into the hero) ---------- */
+        .exp-hero-journeys {
+          margin-top: 64px;
+          max-width: 920px;
+          width: 100%;
         }
         .exp-section-eyebrow {
           display: inline-block;
@@ -699,25 +660,21 @@ export default function ExperiencePage() {
           font-size: 11px;
           font-weight: 700;
           letter-spacing: 0.12em;
-          color: var(--green);
-          margin-bottom: 14px;
+          color: var(--green-luminous);
+          margin-bottom: 12px;
         }
-        .exp-section-head h2 {
-          font-size: clamp(26px, 3.6vw, 42px);
+        .exp-hero-journeys-title {
+          font-size: clamp(22px, 2.8vw, 30px);
           font-weight: 700;
-          letter-spacing: -0.025em;
-          margin: 0 0 14px;
+          letter-spacing: -0.02em;
+          margin: 0 0 28px;
           color: var(--text-ivory);
-        }
-        .exp-section-head p {
-          color: var(--text-muted);
-          font-size: 15.5px;
-          margin: 0;
         }
         .exp-workforce-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 24px;
+          gap: 20px;
+          text-align: left;
         }
         @media (max-width: 860px) {
           .exp-workforce-grid { grid-template-columns: 1fr; }
