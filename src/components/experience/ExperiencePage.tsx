@@ -5,7 +5,6 @@ import dynamic from "next/dynamic";
 import Link from "next/link";
 import { motion } from "framer-motion";
 import {
-  ArrowRight,
   ArrowUpRight,
   Stethoscope,
   Building2,
@@ -138,59 +137,38 @@ function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; i
         </motion.p>
 
         <motion.div
-          className="exp-hero-ctas"
-          initial={{ opacity: 0, y: 14 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.7 }}
-        >
-          <Link href="/experience/professionals" className="exp-btn-primary">
-            <span className="exp-btn-primary-shine" />
-            <span>Explore the Experience</span>
-            <ArrowRight size={16} />
-          </Link>
-          <Link href="/contact" className="exp-btn-secondary">
-            Book a Personalised Demo
-          </Link>
-        </motion.div>
-
-        <motion.div
           className="exp-hero-journeys"
-          initial={{ opacity: 0, y: 24 }}
+          initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.65, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
-          <span className="exp-section-eyebrow">WHO IT&apos;S FOR</span>
-          <h2 className="exp-hero-journeys-title">One intelligence. Multiple possibilities.</h2>
-
           <div className="exp-workforce-grid">
-            <Link href="/experience/professionals" style={{ textDecoration: "none" }}>
-              <TiltCard className="exp-card-professionals">
+            <Link href="/experience/professionals" className="exp-hero-journey-link">
+              <TiltCard className="exp-hero-tilt-card">
                 <div className="exp-card-icon-row">
-                  <Stethoscope size={22} />
+                  <Stethoscope size={18} />
                 </div>
-                <h3>Built for Professionals</h3>
-                <p>
-                  Give your business an intelligent assistant that answers enquiries, manages
-                  appointments, and keeps your operations moving.
-                </p>
+                <div className="exp-hero-tilt-copy">
+                  <h3>Professionals</h3>
+                  <p>Answer enquiries, manage appointments, keep moving.</p>
+                </div>
                 <span className="exp-card-cta">
-                  Explore Professionals <ArrowUpRight size={15} />
+                  <ArrowUpRight size={15} />
                 </span>
               </TiltCard>
             </Link>
 
-            <Link href="/experience/enterprises" style={{ textDecoration: "none" }}>
-              <TiltCard className="exp-card-enterprises">
+            <Link href="/experience/enterprises" className="exp-hero-journey-link">
+              <TiltCard className="exp-hero-tilt-card">
                 <div className="exp-card-icon-row">
-                  <Building2 size={22} />
+                  <Building2 size={18} />
                 </div>
-                <h3>Engineered for Enterprises</h3>
-                <p>
-                  Automate complex customer interactions, capture business opportunities, and
-                  connect conversations with operational workflows.
-                </p>
+                <div className="exp-hero-tilt-copy">
+                  <h3>Enterprises</h3>
+                  <p>Automate interactions, capture opportunities, connect workflows.</p>
+                </div>
                 <span className="exp-card-cta">
-                  Explore Enterprises <ArrowUpRight size={15} />
+                  <ArrowUpRight size={15} />
                 </span>
               </TiltCard>
             </Link>

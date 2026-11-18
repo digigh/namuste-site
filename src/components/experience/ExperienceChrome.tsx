@@ -264,8 +264,8 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           position: relative;
           z-index: 3;
           text-align: center;
-          max-width: 960px;
-          padding: 40px 24px 80px;
+          max-width: 860px;
+          padding: 32px 24px 40px;
           display: flex;
           flex-direction: column;
           align-items: center;
@@ -283,7 +283,7 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           border: 1px solid var(--border-green);
           padding: 7px 15px;
           border-radius: 999px;
-          margin-bottom: 26px;
+          margin-bottom: 20px;
         }
         .exp-hero-kicker-dot {
           width: 6px;
@@ -294,10 +294,10 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
         }
         .exp-hero-title {
           font-weight: 700;
-          font-size: clamp(36px, 6.4vw, 76px);
-          line-height: 1.04;
+          font-size: clamp(32px, 5.6vw, 64px);
+          line-height: 1.05;
           letter-spacing: -0.035em;
-          margin: 0 0 22px;
+          margin: 0 0 16px;
           color: var(--text-ivory);
           text-shadow: 0 2px 24px rgba(10,13,12,0.85), 0 8px 48px rgba(10,13,12,0.65);
         }
@@ -306,11 +306,11 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           font-weight: 400;
         }
         .exp-hero-sub {
-          font-size: clamp(14.5px, 1.6vw, 17.5px);
-          line-height: 1.6;
+          font-size: clamp(14px, 1.5vw, 16.5px);
+          line-height: 1.55;
           color: var(--text-muted);
-          max-width: 560px;
-          margin: 0 auto 36px;
+          max-width: 520px;
+          margin: 0 auto 32px;
         }
         .exp-hero-sub-accent { color: var(--green); font-weight: 600; }
         .exp-hero-ctas {
@@ -427,8 +427,8 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
 
         /* ---------- JOURNEYS / GENERIC SECTION HEAD ---------- */
         .exp-hero-journeys {
-          margin-top: 64px;
-          max-width: 920px;
+          margin-top: 8px;
+          max-width: 640px;
           width: 100%;
         }
         .exp-section-eyebrow {
@@ -450,12 +450,13 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
         .exp-workforce-grid {
           display: grid;
           grid-template-columns: 1fr 1fr;
-          gap: 20px;
+          gap: 14px;
           text-align: left;
         }
-        @media (max-width: 860px) {
+        @media (max-width: 640px) {
           .exp-workforce-grid { grid-template-columns: 1fr; }
         }
+        .exp-hero-journey-link { text-decoration: none; display: block; }
         .exp-tilt-card {
           position: relative;
           padding: 44px 36px;
@@ -516,6 +517,43 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           font-weight: 700;
           color: var(--green);
           position: relative;
+        }
+
+        .exp-hero-tilt-card {
+          padding: 18px 20px;
+          border-radius: 18px;
+          min-height: 0;
+          flex-direction: row;
+          align-items: center;
+          gap: 14px;
+        }
+        .exp-hero-tilt-card .exp-card-icon-row {
+          width: 38px;
+          height: 38px;
+          border-radius: 11px;
+          margin-bottom: 0;
+          flex-shrink: 0;
+        }
+        .exp-hero-tilt-copy { flex: 1; min-width: 0; }
+        .exp-hero-tilt-card h3 {
+          font-size: 15px;
+          font-weight: 700;
+          margin: 0 0 3px;
+          color: var(--text-ivory);
+        }
+        .exp-hero-tilt-card p {
+          font-size: 12.5px;
+          line-height: 1.4;
+          margin: 0;
+          color: var(--text-muted);
+          flex: none;
+        }
+        .exp-hero-tilt-card .exp-card-cta {
+          color: var(--green);
+          flex-shrink: 0;
+        }
+        @media (max-width: 480px) {
+          .exp-hero-tilt-card p { display: none; }
         }
 
         /* ---------- GENERIC PICKER PAGE ---------- */
