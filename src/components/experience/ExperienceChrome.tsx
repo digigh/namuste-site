@@ -241,35 +241,26 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           min-height: 100vh;
           display: flex;
           align-items: center;
-          justify-content: center;
           overflow: hidden;
           background: var(--hero-bg-gradient);
+          padding: 128px 0 64px;
         }
-        .exp-hero-canvas { position: absolute; inset: 0; z-index: 1; }
-        .exp-hero-canvas-fallback {
-          position: absolute;
-          inset: 0;
-          background: radial-gradient(circle at 50% 50%, var(--green-glow), transparent 60%);
-        }
-        .exp-hero-vignette {
-          position: absolute;
-          inset: 0;
-          z-index: 2;
-          background: radial-gradient(ellipse at 50% 100%, var(--bg) 0%, transparent 55%),
-                      radial-gradient(ellipse 640px 440px at 50% 40%, rgba(10, 13, 12, 0.6) 0%, transparent 72%),
-                      linear-gradient(to bottom, rgba(10, 13, 12, 0.12) 0%, rgba(10, 13, 12, 0.88) 100%);
-          pointer-events: none;
-        }
-        .exp-hero-content {
+        .exp-hero-grid {
           position: relative;
-          z-index: 3;
-          text-align: center;
-          max-width: 860px;
-          padding: 32px 24px 40px;
-          display: flex;
-          flex-direction: column;
+          z-index: 2;
+          width: 100%;
+          max-width: 1220px;
+          margin: 0 auto;
+          padding: 0 32px;
+          display: grid;
+          grid-template-columns: 1.15fr 0.85fr;
+          gap: 56px;
           align-items: center;
         }
+        @media (max-width: 900px) {
+          .exp-hero-grid { grid-template-columns: 1fr; gap: 40px; padding: 0 20px; }
+        }
+        .exp-hero-copy { text-align: left; }
         .exp-hero-kicker {
           display: inline-flex;
           align-items: center;
@@ -283,7 +274,7 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           border: 1px solid var(--border-green);
           padding: 7px 15px;
           border-radius: 999px;
-          margin-bottom: 20px;
+          margin-bottom: 22px;
         }
         .exp-hero-kicker-dot {
           width: 6px;
@@ -292,33 +283,242 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           background: var(--green-luminous);
           box-shadow: 0 0 8px var(--green-luminous);
         }
-        .exp-hero-title {
+        .exp-hero-headline {
           font-weight: 700;
-          font-size: clamp(32px, 5.6vw, 64px);
-          line-height: 1.05;
-          letter-spacing: -0.035em;
-          margin: 0 0 16px;
+          font-size: clamp(32px, 4.6vw, 56px);
+          line-height: 1.08;
+          letter-spacing: -0.03em;
+          margin: 0 0 22px;
           color: var(--text-ivory);
-          text-shadow: 0 2px 24px rgba(10,13,12,0.85), 0 8px 48px rgba(10,13,12,0.65);
         }
-        .exp-hero-title .exp-hero-title-accent {
+        .exp-hero-headline em {
+          font-family: 'Newsreader', 'Playfair Display', Georgia, serif;
+          font-style: italic;
+          font-weight: 500;
           color: var(--green-luminous);
-          font-weight: 400;
         }
         .exp-hero-sub {
-          font-size: clamp(14px, 1.5vw, 16.5px);
-          line-height: 1.55;
+          font-size: clamp(14.5px, 1.4vw, 17px);
+          line-height: 1.6;
           color: var(--text-muted);
-          max-width: 520px;
-          margin: 0 auto 32px;
+          max-width: 480px;
+          margin: 0 0 36px;
         }
-        .exp-hero-sub-accent { color: var(--green); font-weight: 600; }
-        .exp-hero-ctas {
+        .exp-hero-sub strong { color: var(--text-ivory); font-weight: 600; }
+
+        /* ---------- JOURNEY LIST (editorial menu, replaces cards) ---------- */
+        .exp-journey-list {
+          border-top: 1px solid var(--border2);
+          max-width: 480px;
+        }
+        .exp-journey-row {
+          display: flex;
+          align-items: center;
+          gap: 16px;
+          padding: 18px 2px;
+          border-bottom: 1px solid var(--border2);
+          text-decoration: none;
+          color: inherit;
+          transition: gap 0.25s ease;
+        }
+        .exp-journey-row:hover { gap: 22px; }
+        .exp-journey-index {
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 12px;
+          font-weight: 700;
+          color: var(--green-luminous);
+          width: 22px;
+          flex-shrink: 0;
+        }
+        .exp-journey-icon {
+          width: 36px;
+          height: 36px;
+          border-radius: 10px;
           display: flex;
           align-items: center;
           justify-content: center;
-          gap: 14px;
-          flex-wrap: wrap;
+          background: var(--overlay-2);
+          border: 1px solid var(--border2);
+          color: var(--green-luminous);
+          flex-shrink: 0;
+          transition: all 0.25s ease;
+        }
+        .exp-journey-row:hover .exp-journey-icon {
+          background: var(--green-luminous);
+          border-color: transparent;
+          color: #05180D;
+        }
+        .exp-journey-text { flex: 1; min-width: 0; }
+        .exp-journey-text h3 {
+          font-size: 17px;
+          font-weight: 700;
+          margin: 0 0 2px;
+          color: var(--text-ivory);
+        }
+        .exp-journey-text p {
+          font-size: 12.5px;
+          margin: 0;
+          color: var(--text-muted);
+        }
+        .exp-journey-arrow {
+          color: var(--text-dim);
+          flex-shrink: 0;
+          transition: transform 0.25s ease, color 0.25s ease;
+        }
+        .exp-journey-row:hover .exp-journey-arrow {
+          color: var(--green-luminous);
+          transform: translate(3px, -3px);
+        }
+
+        /* ---------- CHAT MOCK (hero visual) ---------- */
+        .exp-hero-visual {
+          display: flex;
+          justify-content: center;
+        }
+        .exp-chatmock {
+          width: 100%;
+          max-width: 360px;
+          border-radius: 22px;
+          background: var(--surface);
+          border: 1px solid var(--border);
+          box-shadow: var(--shadow-subtle);
+          overflow: hidden;
+          display: flex;
+          flex-direction: column;
+        }
+        .exp-chatmock-head {
+          display: flex;
+          align-items: center;
+          gap: 10px;
+          padding: 16px 18px;
+          border-bottom: 1px solid var(--border);
+          font-size: 13px;
+          font-weight: 700;
+          color: var(--text-ivory);
+        }
+        .exp-chatmock-dot {
+          width: 8px;
+          height: 8px;
+          border-radius: 50%;
+          background: var(--green-luminous);
+          box-shadow: 0 0 8px var(--green-luminous);
+          flex-shrink: 0;
+        }
+        .exp-chatmock-status {
+          margin-left: auto;
+          font-size: 10.5px;
+          font-weight: 700;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          color: var(--text-dim);
+        }
+        .exp-chatmock-body {
+          padding: 18px;
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+          min-height: 230px;
+          justify-content: flex-end;
+        }
+        .exp-chatmock-bubble {
+          max-width: 84%;
+          padding: 10px 14px;
+          border-radius: 14px;
+          font-size: 13.5px;
+          line-height: 1.45;
+        }
+        .exp-chatmock-bubble-user {
+          align-self: flex-end;
+          background: var(--overlay-2);
+          border: 1px solid var(--border2);
+          color: var(--text-ivory);
+          border-bottom-right-radius: 4px;
+        }
+        .exp-chatmock-bubble-ai {
+          align-self: flex-start;
+          background: linear-gradient(135deg, rgba(0,229,117,0.16), rgba(155,234,22,0.1));
+          border: 1px solid var(--border-green);
+          color: var(--text-ivory);
+          border-bottom-left-radius: 4px;
+        }
+        .exp-chatmock-typing { display: flex; gap: 4px; padding: 13px 16px; }
+        .exp-chatmock-typing span {
+          width: 5px;
+          height: 5px;
+          border-radius: 50%;
+          background: var(--green-luminous);
+          animation: expTypingBounce 1s infinite ease-in-out;
+        }
+        .exp-chatmock-typing span:nth-child(2) { animation-delay: 0.15s; }
+        .exp-chatmock-typing span:nth-child(3) { animation-delay: 0.3s; }
+        @keyframes expTypingBounce {
+          0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
+          30% { transform: translateY(-4px); opacity: 1; }
+        }
+        .exp-chatmock-input {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 10px;
+          margin: 0 14px 14px;
+          padding: 11px 16px;
+          border-radius: 999px;
+          background: var(--overlay-1);
+          border: 1px solid var(--border2);
+          font-size: 12.5px;
+          color: var(--text-dim);
+        }
+        .exp-chatmock-mic {
+          width: 24px;
+          height: 24px;
+          border-radius: 50%;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          background: var(--green-luminous);
+          color: #05180D;
+          flex-shrink: 0;
+        }
+
+        /* ---------- MARQUEE ---------- */
+        .exp-marquee {
+          border-top: 1px solid var(--border2);
+          border-bottom: 1px solid var(--border2);
+          overflow: hidden;
+          white-space: nowrap;
+          background: var(--bg2);
+        }
+        .exp-marquee-track {
+          display: inline-flex;
+          width: max-content;
+          animation: expMarquee 32s linear infinite;
+        }
+        .exp-marquee-group {
+          display: inline-flex;
+          flex-shrink: 0;
+        }
+        .exp-marquee-group a {
+          display: inline-flex;
+          align-items: center;
+          gap: 10px;
+          padding: 18px 22px;
+          font-family: 'SF Mono', 'Menlo', monospace;
+          font-size: 12px;
+          font-weight: 600;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: var(--text-dim);
+          text-decoration: none;
+          transition: color 0.2s ease;
+        }
+        .exp-marquee-group a::after { content: "·"; margin-left: 22px; color: var(--border-green); }
+        .exp-marquee-group a:hover { color: var(--green-luminous); }
+        @keyframes expMarquee {
+          from { transform: translateX(0); }
+          to { transform: translateX(-50%); }
+        }
+        @media (prefers-reduced-motion: reduce) {
+          .exp-marquee-track { animation: none; }
         }
 
         .exp-btn-primary {
@@ -382,81 +582,6 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           background: var(--overlay-2);
           border-color: var(--border-green);
         }
-        .exp-scroll-indicator {
-          position: absolute;
-          bottom: 36px;
-          left: 50%;
-          transform: translateX(-50%);
-          z-index: 3;
-          color: var(--text-dim);
-          display: flex;
-        }
-
-        .exp-float-card {
-          position: absolute;
-          z-index: 3;
-          display: flex;
-          align-items: center;
-          gap: 10px;
-          padding: 11px 15px;
-          border-radius: 14px;
-          background: var(--glass-bg);
-          border: 1px solid var(--glass-border);
-          backdrop-filter: var(--glass-blur);
-          -webkit-backdrop-filter: var(--glass-blur);
-          box-shadow: var(--shadow-subtle);
-        }
-        .exp-float-card-icon {
-          width: 30px;
-          height: 30px;
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          flex-shrink: 0;
-        }
-        .exp-float-card-icon img { width: 100%; height: 100%; object-fit: contain; }
-        .exp-float-card-label { font-size: 12.5px; font-weight: 600; color: var(--text-ivory); }
-        .exp-float-card-sub { font-size: 11px; color: var(--text-muted); margin-top: 1px; }
-        .exp-float-card-a { top: 18%; left: 7%; }
-        .exp-float-card-b { top: 24%; right: 6%; }
-        .exp-float-card-c { bottom: 20%; left: 10%; }
-
-        @media (max-width: 900px) {
-          .exp-float-card { display: none; }
-        }
-
-        /* ---------- JOURNEYS / GENERIC SECTION HEAD ---------- */
-        .exp-hero-journeys {
-          margin-top: 8px;
-          max-width: 640px;
-          width: 100%;
-        }
-        .exp-section-eyebrow {
-          display: inline-block;
-          font-family: 'SF Mono', 'Menlo', monospace;
-          font-size: 11px;
-          font-weight: 700;
-          letter-spacing: 0.12em;
-          color: var(--green-luminous);
-          margin-bottom: 12px;
-        }
-        .exp-hero-journeys-title {
-          font-size: clamp(22px, 2.8vw, 30px);
-          font-weight: 700;
-          letter-spacing: -0.02em;
-          margin: 0 0 28px;
-          color: var(--text-ivory);
-        }
-        .exp-workforce-grid {
-          display: grid;
-          grid-template-columns: 1fr 1fr;
-          gap: 14px;
-          text-align: left;
-        }
-        @media (max-width: 640px) {
-          .exp-workforce-grid { grid-template-columns: 1fr; }
-        }
-        .exp-hero-journey-link { text-decoration: none; display: block; }
         .exp-tilt-card {
           position: relative;
           padding: 44px 36px;
@@ -517,43 +642,6 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
           font-weight: 700;
           color: var(--green);
           position: relative;
-        }
-
-        .exp-hero-tilt-card {
-          padding: 18px 20px;
-          border-radius: 18px;
-          min-height: 0;
-          flex-direction: row;
-          align-items: center;
-          gap: 14px;
-        }
-        .exp-hero-tilt-card .exp-card-icon-row {
-          width: 38px;
-          height: 38px;
-          border-radius: 11px;
-          margin-bottom: 0;
-          flex-shrink: 0;
-        }
-        .exp-hero-tilt-copy { flex: 1; min-width: 0; }
-        .exp-hero-tilt-card h3 {
-          font-size: 15px;
-          font-weight: 700;
-          margin: 0 0 3px;
-          color: var(--text-ivory);
-        }
-        .exp-hero-tilt-card p {
-          font-size: 12.5px;
-          line-height: 1.4;
-          margin: 0;
-          color: var(--text-muted);
-          flex: none;
-        }
-        .exp-hero-tilt-card .exp-card-cta {
-          color: var(--green);
-          flex-shrink: 0;
-        }
-        @media (max-width: 480px) {
-          .exp-hero-tilt-card p { display: none; }
         }
 
         /* ---------- GENERIC PICKER PAGE ---------- */
@@ -781,43 +869,31 @@ export function ExperienceShell({ children }: { children: React.ReactNode }) {
         .exp-sim-complete-ref { font-size: 15px; font-weight: 700; color: var(--text-ivory); }
         .exp-sim-complete-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 18px; }
 
-        /* ---------- ROADMAP ---------- */
-        .exp-roadmap {
-          padding: 40px 24px 140px;
-          max-width: 760px;
+        /* ---------- FOOTER NOTE ---------- */
+        .exp-footer-note {
+          padding: 56px 32px 120px;
+          max-width: 980px;
           margin: 0 auto;
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          gap: 24px;
+          flex-wrap: wrap;
         }
-        .exp-roadmap-card {
-          padding: 38px 36px;
-          border-radius: 22px;
-          background: var(--surface);
-          border: 1px dashed var(--border2);
-          text-align: center;
-        }
-        .exp-roadmap-tag {
+        .exp-footer-tag {
           display: inline-block;
           font-family: 'SF Mono', 'Menlo', monospace;
           font-size: 10.5px;
           font-weight: 700;
           letter-spacing: 0.1em;
           color: var(--green-luminous);
-          background: var(--green-glow);
-          border: 1px solid var(--border-green);
-          padding: 5px 12px;
-          border-radius: 999px;
-          margin-bottom: 16px;
         }
-        .exp-roadmap-card h3 {
-          font-size: 22px;
-          font-weight: 700;
-          margin: 0 0 12px;
-          color: var(--text-ivory);
-        }
-        .exp-roadmap-card p {
+        .exp-footer-note p {
           color: var(--text-muted);
-          font-size: 14px;
-          line-height: 1.7;
-          margin: 0 0 24px;
+          font-size: 13.5px;
+          line-height: 1.65;
+          margin: 8px 0 0;
+          max-width: 540px;
         }
 
         @media (prefers-reduced-motion: reduce) {

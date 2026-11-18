@@ -1,222 +1,133 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import dynamic from "next/dynamic";
+import React from "react";
 import Link from "next/link";
 import { motion } from "framer-motion";
-import {
-  ArrowUpRight,
-  Stethoscope,
-  Building2,
-  ChevronDown,
-} from "lucide-react";
-import { ExperienceShell, TiltCard } from "./ExperienceChrome";
+import { ArrowUpRight, Stethoscope, Building2 } from "lucide-react";
+import { ExperienceShell } from "./ExperienceChrome";
+import ChatMock from "./ChatMock";
+import { PROFESSIONS, INDUSTRIES } from "@/lib/experienceSimulations";
 
-const AICoreScene = dynamic(() => import("./AICoreScene"), {
-  ssr: false,
-  loading: () => <div className="exp-hero-canvas-fallback" />,
-});
+const JOURNEYS = [
+  {
+    index: "01",
+    href: "/experience/professionals",
+    icon: Stethoscope,
+    title: "Professionals",
+    desc: "Doctors, dentists, distributors, salon owners.",
+  },
+  {
+    index: "02",
+    href: "/experience/enterprises",
+    icon: Building2,
+    title: "Enterprises",
+    desc: "Agribusiness, FMCG, pharmaceuticals.",
+  },
+];
 
-function useReducedMotionAndViewport() {
-  const [reducedMotion, setReducedMotion] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-
-  useEffect(() => {
-    const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const widthQuery = window.matchMedia("(max-width: 767px)");
-    const update = () => {
-      setReducedMotion(motionQuery.matches);
-      setIsMobile(widthQuery.matches);
-    };
-    update();
-    motionQuery.addEventListener("change", update);
-    widthQuery.addEventListener("change", update);
-    return () => {
-      motionQuery.removeEventListener("change", update);
-      widthQuery.removeEventListener("change", update);
-    };
-  }, []);
-
-  return { reducedMotion, isMobile };
-}
-
-function FloatingCard({
-  className,
-  delay,
-  icon,
-  label,
-  sub,
-}: {
-  className: string;
-  delay: number;
-  icon: React.ReactNode;
-  label: string;
-  sub: string;
-}) {
+function ExperienceHero() {
   return (
-    <motion.div
-      className={`exp-float-card ${className}`}
-      initial={{ opacity: 0, y: 24, scale: 0.9 }}
-      animate={{ opacity: 1, y: 0, scale: 1 }}
-      transition={{ delay, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <div className="exp-float-card-icon">{icon}</div>
-      <div>
-        <div className="exp-float-card-label">{label}</div>
-        <div className="exp-float-card-sub">{sub}</div>
-      </div>
-    </motion.div>
-  );
-}
-
-function ExperienceHero({ reducedMotion, isMobile }: { reducedMotion: boolean; isMobile: boolean }) {
-  const particleCount = isMobile ? 220 : reducedMotion ? 180 : 650;
-
-  return (
-    <section id="exp-hero" className="exp-hero">
-      <div className="exp-hero-canvas">
-        <AICoreScene reducedMotion={reducedMotion} particleCount={particleCount} />
-      </div>
-
-      <div className="exp-hero-vignette" />
-
-      <FloatingCard
-        className="exp-float-card-a"
-        delay={0.5}
-        icon={<img src="/experience-icons/chat-bubble.webp" alt="" width={22} height={22} />}
-        label="Patient enquiry received"
-        sub="&ldquo;Is Dr. Mehta available tomorrow?&rdquo;"
-      />
-      <FloatingCard
-        className="exp-float-card-b"
-        delay={0.7}
-        icon={<img src="/experience-icons/calendar.webp" alt="" width={22} height={22} />}
-        label="Appointment confirmed"
-        sub="Slot booked · WhatsApp sent"
-      />
-      <FloatingCard
-        className="exp-float-card-c"
-        delay={0.9}
-        icon={<img src="/experience-icons/mic.webp" alt="" width={22} height={22} />}
-        label="Voice call in progress"
-        sub="Namuste AI · 00:42"
-      />
-
-      <div className="exp-hero-content">
-        <motion.span
-          className="exp-hero-kicker"
-          initial={{ opacity: 0, y: 10 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.1, duration: 0.6 }}
-        >
-          <span className="exp-hero-kicker-dot" />
-          NAMUSTÉ AI EXPERIENCE
-        </motion.span>
-
-        <motion.h1
-          className="exp-hero-title"
-          initial={{ opacity: 0, y: 24 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.2, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        >
-          Every conversation.
-          <br />
-          An intelligent{" "}
-          <span className="exp-hero-title-accent serif-italic">possibility.</span>
-        </motion.h1>
-
-        <motion.p
-          className="exp-hero-sub"
+    <section className="exp-hero">
+      <div className="exp-hero-grid">
+        <motion.div
+          className="exp-hero-copy"
           initial={{ opacity: 0, y: 18 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.35, duration: 0.8 }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
         >
-          Meet your AI-powered voice and chat workforce. From answering customer enquiries
-          to completing business workflows, Namusté turns conversations into{" "}
-          <span className="exp-hero-sub-accent">action.</span>
-        </motion.p>
+          <span className="exp-hero-kicker">
+            <span className="exp-hero-kicker-dot" />
+            NAMUSTÉ AI EXPERIENCE
+          </span>
+
+          <h1 className="exp-hero-headline">
+            Conversations that <em>run</em> your business.
+          </h1>
+
+          <p className="exp-hero-sub">
+            From the first hello to the booked appointment — Namusté&apos;s voice and chat AI
+            handles it live, in your business&apos;s own words. <strong>No scripts. No hold music.</strong>
+          </p>
+
+          <nav className="exp-journey-list" aria-label="Choose an experience">
+            {JOURNEYS.map((j) => (
+              <Link key={j.href} href={j.href} className="exp-journey-row">
+                <span className="exp-journey-index">{j.index}</span>
+                <span className="exp-journey-icon">
+                  <j.icon size={16} />
+                </span>
+                <span className="exp-journey-text">
+                  <h3>{j.title}</h3>
+                  <p>{j.desc}</p>
+                </span>
+                <ArrowUpRight size={18} className="exp-journey-arrow" />
+              </Link>
+            ))}
+          </nav>
+        </motion.div>
 
         <motion.div
-          className="exp-hero-journeys"
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: 0.5, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          className="exp-hero-visual"
+          initial={{ opacity: 0, y: 24, scale: 0.97 }}
+          animate={{ opacity: 1, y: 0, scale: 1 }}
+          transition={{ duration: 0.8, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
         >
-          <div className="exp-workforce-grid">
-            <Link href="/experience/professionals" className="exp-hero-journey-link">
-              <TiltCard className="exp-hero-tilt-card">
-                <div className="exp-card-icon-row">
-                  <Stethoscope size={18} />
-                </div>
-                <div className="exp-hero-tilt-copy">
-                  <h3>Professionals</h3>
-                  <p>Answer enquiries, manage appointments, keep moving.</p>
-                </div>
-                <span className="exp-card-cta">
-                  <ArrowUpRight size={15} />
-                </span>
-              </TiltCard>
-            </Link>
-
-            <Link href="/experience/enterprises" className="exp-hero-journey-link">
-              <TiltCard className="exp-hero-tilt-card">
-                <div className="exp-card-icon-row">
-                  <Building2 size={18} />
-                </div>
-                <div className="exp-hero-tilt-copy">
-                  <h3>Enterprises</h3>
-                  <p>Automate interactions, capture opportunities, connect workflows.</p>
-                </div>
-                <span className="exp-card-cta">
-                  <ArrowUpRight size={15} />
-                </span>
-              </TiltCard>
-            </Link>
-          </div>
+          <ChatMock />
         </motion.div>
       </div>
-
-      <motion.a
-        href="#exp-how"
-        className="exp-scroll-indicator"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1, y: [0, 8, 0] }}
-        transition={{ opacity: { delay: 1, duration: 0.6 }, y: { delay: 1.2, duration: 1.8, repeat: Infinity } }}
-        aria-label="Scroll down"
-      >
-        <ChevronDown size={20} />
-      </motion.a>
     </section>
   );
 }
 
-function RoadmapNote() {
-  return (
-    <section id="exp-how" className="exp-roadmap">
-      <div className="exp-roadmap-card">
-        <span className="exp-roadmap-tag">PREVIEW · PHASE 2</span>
-        <h3>All seven simulations are live.</h3>
-        <p>
-          Every Professionals and Enterprises card now opens a real, click-through simulation
-          with a live-updating business panel. Still to come: the Voice AI Playground, the
-          scroll-driven &quot;How It Works&quot; pipeline, and the features showcase. Nothing on
-          this page is wired into the live Namusté site yet.
-        </p>
-        <Link href="/contact" className="exp-btn-secondary">
-          Talk to us about this direction
+function ExperienceMarquee() {
+  const items = [
+    ...PROFESSIONS.map((p) => ({ label: p.title, href: `/experience/professionals/${p.slug}` })),
+    ...INDUSTRIES.map((i) => ({ label: i.title, href: `/experience/enterprises/${i.slug}` })),
+  ];
+  const row = (key: string) => (
+    <span className="exp-marquee-group" key={key}>
+      {items.map((item) => (
+        <Link key={`${key}-${item.href}`} href={item.href}>
+          {item.label}
         </Link>
+      ))}
+    </span>
+  );
+
+  return (
+    <div className="exp-marquee" aria-hidden="false">
+      <div className="exp-marquee-track">
+        {row("a")}
+        {row("b")}
       </div>
+    </div>
+  );
+}
+
+function FooterNote() {
+  return (
+    <section id="exp-how" className="exp-footer-note">
+      <div>
+        <span className="exp-footer-tag">PREVIEW · PHASE 2</span>
+        <p>
+          All seven simulations are live and click-through. Still to come: the Voice AI
+          Playground and a scroll-driven pipeline view. Nothing here is wired into the live
+          Namusté site yet.
+        </p>
+      </div>
+      <Link href="/contact" className="exp-btn-secondary">
+        Talk to us about this direction
+      </Link>
     </section>
   );
 }
 
 export default function ExperiencePage() {
-  const { reducedMotion, isMobile } = useReducedMotionAndViewport();
-
   return (
     <ExperienceShell>
-      <ExperienceHero reducedMotion={reducedMotion} isMobile={isMobile} />
-      <RoadmapNote />
+      <ExperienceHero />
+      <ExperienceMarquee />
+      <FooterNote />
     </ExperienceShell>
   );
 }
